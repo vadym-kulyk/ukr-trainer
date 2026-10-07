@@ -346,7 +346,8 @@ main { padding-block: 22px 60px; }
 
   /* ───── Надсилання результатів у Google Таблицю вчителя ───── */
   const RESULTS_URL = (window.MG_CONFIG && window.MG_CONFIG.resultsUrl || "").trim();
-  let syncTimer = null, syncing = false, syncAgain = false;
+  let syncTimer = null, syncing = false, syncAgain = false, pulledFor = null;
+  const resetIds = new Set();
   function setSync(mode) {
     const chip = $("#sync-chip"), txt = $("#sync-text");
     chip.classList.remove("ok", "bad");
@@ -363,15 +364,22 @@ main { padding-block: 22px 60px; }
   function scheduleSync(now) {
     if (!RESULTS_URL || !me()) return;
     clearTimeout(syncTimer); syncTimer = setTimeout(pushNow, now ? 50 : 1500);
+    // Поки не завантажено збережений прогрес учня, нічого не надсилаємо, щоб не перезаписати таблицю.
+    if (pulledFor !== store.current) { clearTimeout(syncTimer); syncTimer = setTimeout(() => scheduleSync(now), 700); }
   }
   async function pushNow() {
     if (!RESULTS_URL || !me()) return;
     if (syncing) { syncAgain = true; return; }
     syncing = true; setSync("saving");
     const s = me(), rec = { key: store.current, name: s.name, topics: {} };
-    for (const id in s.topics) rec.topics[id] = { r: s.topics[id].r };
+    for (const id in s.topics) {
+      const r = s.topics[id].r;
+      if (r !== EMPTY || resetIds.has(id)) rec.topics[id] = { r };
+    }
+    const sentResets = [...resetIds];
     try {
-      await fetch(RESULTS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(rec) });
+      await fetch(RESULTS_URL, { method: "POST", mode: "no-cors", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(rec) });
+      sentResets.forEach(id => resetIds.delete(id));
       setSync("saved");
     } catch (e) { setSync("error"); setTimeout(() => scheduleSync(true), 10000); }
     syncing = false;
@@ -381,17 +389,23 @@ main { padding-block: 22px 60px; }
   /* Підтягує збережений прогрес учня з таблиці (наприклад, якщо він перейшов на інший пристрій). */
   async function pullOwn() {
     if (!RESULTS_URL || !me()) return;
-    try {
-      const res = await fetch(RESULTS_URL + (RESULTS_URL.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(store.current));
-      const d = await res.json();
-      if (!d || !d.ok || !d.topics) return;
-      const loc = me();
-      for (const id in d.topics) {
-        const lt = loc.topics[id] || (loc.topics[id] = { r: EMPTY, ch: {} });
-        lt.r = mergeR(lt.r, d.topics[id].r);
-      }
-      saveLocal(); render();
-    } catch (e) {}
+    const key = store.current;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        const res = await fetch(RESULTS_URL + (RESULTS_URL.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(key), { credentials: "omit" });
+        const d = JSON.parse(await res.text());
+        if (d && d.ok) {
+          const loc = store.students[key];
+          if (loc && d.topics) for (const id in d.topics) {
+            const lt = loc.topics[id] || (loc.topics[id] = { r: EMPTY, ch: {} });
+            lt.r = mergeR(lt.r, d.topics[id].r);
+          }
+          saveLocal(); pulledFor = key; render(); return;
+        }
+      } catch (e) {}
+      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+    }
+    pulledFor = key; // таблиця недоступна — працюємо далі, надсилаючи лише теми з відповідями
   }
   async function initSync() {
     if (!RESULTS_URL) { setSync("local"); return; }
@@ -618,7 +632,7 @@ main { padding-block: 22px 60px; }
     if (act === "finish") { ui.view = "home"; render(); window.scrollTo(0, 0); toast("Прогрес збережено. Повернутися можна будь-коли."); return; }
     if (act === "reset") { confirmReset = true; render(); return; }
     if (act === "reset-no") { confirmReset = false; render(); return; }
-    if (act === "reset-yes") { const s = me(); if (s) { s.topics[ui.topic] = { r: EMPTY, ch: {} }; saveLocal(); scheduleSync(true); } confirmReset = false; ui.cur = 0; ui.reviewing = false; pend = null; render(); toast("Тему почато заново"); return; }
+    if (act === "reset-yes") { const s = me(); if (s) { s.topics[ui.topic] = { r: EMPTY, ch: {} }; resetIds.add(ui.topic); saveLocal(); scheduleSync(true); } confirmReset = false; ui.cur = 0; ui.reviewing = false; pend = null; render(); toast("Тему почато заново"); return; }
     if (act === "map") { ui.map = !ui.map; render(); return; }
     if (act === "review") { ui.reviewing = true; ui.cur = 0; ui.map = true; render(); return; }
     if (d.go !== undefined) { ui.cur = +d.go; ui.reviewing = true; pend = null; render(); scrollTask(); return; }
