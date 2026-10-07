@@ -2,10 +2,15 @@
  * Приймач результатів для «Мовного тренажера Midgard».
  * Вставте цей код у Google Таблицю: Розширення → Apps Script, потім
  * Розгорнути → Нове розгортання → Веб-застосунок (доступ: «Усі»).
- * Кожен учень — один рядок; рядок оновлюється після кожної відповіді.
+ * Аркуш «Результати»: кожен учень — один рядок, оновлюється після кожної відповіді.
+ * Аркуш «Спроби»: кожна відповідь учня — окремий рядок.
  */
 
 const SHEET_NAME = 'Результати';
+const LOG_SHEET = 'Спроби';
+const SERVICE_VERSION = 2;
+const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми №', 'Завдання №', 'Тип завдання', 'Результат', 'Запитання', 'Відповідь учня', 'Правильна відповідь'];
+const TYPE_NAMES = { one: 'одна відповідь', multi: 'кілька відповідей', sort: 'розподіл за групами', match: 'відповідність', order: 'порядок' };
 const TASKS_PER_TOPIC = 100;
 const TOPICS = [
   ['stress', '1.1 Склад. Наголос'],
@@ -49,6 +54,45 @@ function sheet_() {
   return sh;
 }
 
+function logSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(LOG_SHEET);
+  if (!sh) sh = ss.insertSheet(LOG_SHEET);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(LOG_HEADER);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, LOG_HEADER.length).setFontWeight('bold');
+  }
+  return sh;
+}
+
+/** Текст від учня: обрізаємо й не даємо таблиці сприйняти його як формулу. */
+function txt_(v, max) {
+  return String(v == null ? '' : v).replace(/^[=+\-@]+/, '').slice(0, max || 500);
+}
+
+function appendEvents_(name, events) {
+  if (!Array.isArray(events) || !events.length) return 0;
+  const titles = {};
+  TOPICS.forEach(([id, title]) => { titles[id] = title; });
+  const rows = events.slice(0, 300).filter(ev => ev && titles[ev.topic]).map(ev => [
+    ev.at ? new Date(Number(ev.at)) : new Date(),
+    name,
+    titles[ev.topic],
+    Number(ev.att) || 1,
+    Number(ev.n) || '',
+    TYPE_NAMES[ev.type] || txt_(ev.type, 30),
+    ev.ok ? '✓ правильно' : '✗ помилка',
+    txt_(ev.q),
+    txt_(ev.ans),
+    txt_(ev.right)
+  ]);
+  if (!rows.length) return 0;
+  const sh = logSheet_();
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, LOG_HEADER.length).setValues(rows);
+  return rows.length;
+}
+
 function out_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -76,6 +120,7 @@ function doPost(e) {
     const name = String(d.name || '').replace(/^[=+\-@]+/, '').slice(0, 100);
     if (!key || !name) return out_({ ok: false, error: 'no name' });
 
+    const logged = appendEvents_(name, d.events);
     const sh = sheet_();
     const rowNum = findRow_(sh, key);
     // Об’єднуємо з тим, що вже є в таблиці: виконане завдання не стає невиконаним.
@@ -84,6 +129,7 @@ function doPost(e) {
       try { stored = JSON.parse(sh.getRange(rowNum, DATA_COL).getValue() || '{}'); } catch (err) { stored = {}; }
     }
     const incoming = d.topics || {};
+    const att = stored._att || {};
     let answered = 0, correct = 0;
     const perTopic = TOPICS.map(([id]) => {
       const a = cleanR_(stored[id]) || '.'.repeat(TASKS_PER_TOPIC);
@@ -92,16 +138,18 @@ function doPost(e) {
       // (зокрема після «Почати тему заново») приймаємо як є; теми, яких немає в запиті, лишаються.
       const merged = b || a;
       stored[id] = merged;
+      if (incoming[id]) att[id] = Math.max(Number(att[id]) || 1, Number(incoming[id].att) || 1);
       const done = merged.replace(/\./g, '').length;
       const ok = merged.replace(/[^1]/g, '').length;
       answered += done; correct += ok;
       return done ? ok : '';
     });
+    stored._att = att;
     const total = Math.round(correct / (TOPICS.length * TASKS_PER_TOPIC) * 1000) / 10;
     const row = [key, name, new Date(), total, answered].concat(perTopic).concat([JSON.stringify(stored)]);
     if (rowNum > 0) sh.getRange(rowNum, 1, 1, row.length).setValues([row]);
     else sh.appendRow(row);
-    return out_({ ok: true });
+    return out_({ ok: true, logged });
   } catch (err) {
     return out_({ ok: false, error: String(err) });
   } finally {
@@ -112,13 +160,14 @@ function doPost(e) {
 /** Повертає збережений прогрес учня, щоб продовжити на іншому пристрої. */
 function doGet(e) {
   const key = String((e && e.parameter && e.parameter.key) || '');
-  if (!key) return out_({ ok: true, service: 'mg-ukr-trainer' });
+  if (!key) return out_({ ok: true, service: 'mg-ukr-trainer', v: SERVICE_VERSION });
   const sh = sheet_();
   const rowNum = findRow_(sh, key);
-  if (rowNum < 0) return out_({ ok: true, topics: {} });
+  if (rowNum < 0) return out_({ ok: true, v: SERVICE_VERSION, topics: {} });
   let stored = {};
   try { stored = JSON.parse(sh.getRange(rowNum, DATA_COL).getValue() || '{}'); } catch (err) {}
   const topics = {};
-  Object.keys(stored).forEach(id => { topics[id] = { r: stored[id] }; });
-  return out_({ ok: true, topics });
+  const att = stored._att || {};
+  TOPICS.forEach(([id]) => { if (stored[id]) topics[id] = { r: stored[id], att: Number(att[id]) || 1 }; });
+  return out_({ ok: true, v: SERVICE_VERSION, topics });
 }

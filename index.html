@@ -346,7 +346,7 @@ main { padding-block: 22px 60px; }
 
   /* ───── Надсилання результатів у Google Таблицю вчителя ───── */
   const RESULTS_URL = (window.MG_CONFIG && window.MG_CONFIG.resultsUrl || "").trim();
-  let syncTimer = null, syncing = false, syncAgain = false, pulledFor = null;
+  let syncTimer = null, syncing = false, syncAgain = false, pulledFor = null, serverV = 0;
   const resetIds = new Set();
   function setSync(mode) {
     const chip = $("#sync-chip"), txt = $("#sync-text");
@@ -374,12 +374,16 @@ main { padding-block: 22px 60px; }
     const s = me(), rec = { key: store.current, name: s.name, topics: {} };
     for (const id in s.topics) {
       const r = s.topics[id].r;
-      if (r !== EMPTY || resetIds.has(id)) rec.topics[id] = { r };
+      if (r !== EMPTY || resetIds.has(id)) rec.topics[id] = { r, att: s.topics[id].att || 1 };
     }
     const sentResets = [...resetIds];
+    // Журнал спроб надсилаємо лише новій версії скрипта, інакше записи лишаються в черзі.
+    const queue = s.queue || [], sentEvents = serverV >= 2 ? queue.slice(0, 200) : [];
+    if (sentEvents.length) rec.events = sentEvents;
     try {
       await fetch(RESULTS_URL, { method: "POST", mode: "no-cors", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(rec) });
       sentResets.forEach(id => resetIds.delete(id));
+      if (sentEvents.length) { s.queue = (s.queue || []).slice(sentEvents.length); saveLocal(); if (s.queue.length) syncAgain = true; }
       setSync("saved");
     } catch (e) { setSync("error"); setTimeout(() => scheduleSync(true), 10000); }
     syncing = false;
@@ -395,10 +399,13 @@ main { padding-block: 22px 60px; }
         const res = await fetch(RESULTS_URL + (RESULTS_URL.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(key), { credentials: "omit" });
         const d = JSON.parse(await res.text());
         if (d && d.ok) {
+          serverV = Number(d.v) || 1;
           const loc = store.students[key];
           if (loc && d.topics) for (const id in d.topics) {
             const lt = loc.topics[id] || (loc.topics[id] = { r: EMPTY, ch: {} });
+            if (resetIds.has(id)) continue;
             lt.r = mergeR(lt.r, d.topics[id].r);
+            lt.att = Math.max(lt.att || 1, Number(d.topics[id].att) || 1);
           }
           saveLocal(); pulledFor = key; render(); return;
         }
@@ -600,6 +607,27 @@ main { padding-block: 22px 60px; }
     }
     return "";
   }
+  function plain(h) {
+    const div = document.createElement("div");
+    div.innerHTML = String(h).replace(/<span class="gap">…<\/span>/g, "…").replace(/<span class="st">(.)<\/span>/g, (m, c) => c.toUpperCase());
+    return div.textContent.replace(/\s+/g, " ").trim();
+  }
+  function answerText(task, resp) {
+    if (task.t === "one") return plain(task.opts[resp]);
+    if (task.t === "multi") return resp.map(k => plain(task.opts[k])).join("; ");
+    if (task.t === "sort") return task.items.map((it, k) => plain(it.html) + " → " + plain(task.cats[resp[k]])).join("; ");
+    if (task.t === "match") return task.left.map((l, k) => plain(l) + " — " + plain(task.right[resp[k]].html)).join("; ");
+    if (task.t === "order") return resp.map(k => task.items[k]).join(" ");
+    return "";
+  }
+  function rightText(task) {
+    if (task.t === "one") return plain(task.opts[task.a]);
+    if (task.t === "multi") return task.a.map(k => plain(task.opts[k])).join("; ");
+    if (task.t === "sort") return task.items.map(it => plain(it.html) + " → " + plain(task.cats[it.c])).join("; ");
+    if (task.t === "match") return task.left.map((l, k) => plain(l) + " — " + plain(task.right.find(r => r.li === k).html)).join("; ");
+    if (task.t === "order") return task.items.join(" ");
+    return "";
+  }
   function nextOpen(st, from) {
     for (let k = 1; k <= N; k++) { const j = (from + k) % N; if (st.r[j] === ".") return j; }
     return -1;
@@ -610,6 +638,10 @@ main { padding-block: 22px 60px; }
     const ok = E.check(task, resp);
     st.r = st.r.slice(0, task.n) + (ok ? "1" : "0") + st.r.slice(task.n + 1);
     st.ch[task.n] = resp;
+    const s = me();
+    (s.queue = s.queue || []).push({ topic: t.id, att: st.att || 1, n: task.n + 1, type: task.t, ok, at: Date.now(),
+      q: plain(task.q) + (task.big ? " — " + plain(task.big) : ""), ans: answerText(task, resp), right: rightText(task) });
+    if (s.queue.length > 3000) s.queue = s.queue.slice(-3000);
     pend = null; saveLocal(); scheduleSync(); render();
   }
 
@@ -632,7 +664,7 @@ main { padding-block: 22px 60px; }
     if (act === "finish") { ui.view = "home"; render(); window.scrollTo(0, 0); toast("Прогрес збережено. Повернутися можна будь-коли."); return; }
     if (act === "reset") { confirmReset = true; render(); return; }
     if (act === "reset-no") { confirmReset = false; render(); return; }
-    if (act === "reset-yes") { const s = me(); if (s) { s.topics[ui.topic] = { r: EMPTY, ch: {} }; resetIds.add(ui.topic); saveLocal(); scheduleSync(true); } confirmReset = false; ui.cur = 0; ui.reviewing = false; pend = null; render(); toast("Тему почато заново"); return; }
+    if (act === "reset-yes") { const s = me(); if (s) { const prevAtt = (s.topics[ui.topic] && s.topics[ui.topic].att) || 1; s.topics[ui.topic] = { r: EMPTY, ch: {}, att: prevAtt + 1 }; resetIds.add(ui.topic); saveLocal(); scheduleSync(true); } confirmReset = false; ui.cur = 0; ui.reviewing = false; pend = null; render(); toast("Тему почато заново"); return; }
     if (act === "map") { ui.map = !ui.map; render(); return; }
     if (act === "review") { ui.reviewing = true; ui.cur = 0; ui.map = true; render(); return; }
     if (d.go !== undefined) { ui.cur = +d.go; ui.reviewing = true; pend = null; render(); scrollTask(); return; }
