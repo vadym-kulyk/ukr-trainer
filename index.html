@@ -58,9 +58,15 @@ button { cursor: pointer; }
 .namebox { display: grid; gap: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
 .namebox label { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
 .namerow { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-#student-name { flex: 1 1 220px; min-width: 0; border: 2px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; background: var(--surface); font-size: 17px; font-weight: 600; }
-#student-name:focus { border-color: var(--lime); outline: none; }
-.namebox.need #student-name { border-color: var(--yellow); }
+.namebox.need { border-color: var(--yellow); border-width: 2px; }
+.ptabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 999px; }
+.pform { display: grid; gap: 10px; margin: 0; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px 10px; }
+.pgrid label { display: grid; gap: 4px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); min-width: 0; }
+.pgrid input { width: 100%; min-width: 0; border: 2px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; background: var(--surface); font-size: 17px; font-weight: 600; text-transform: none; letter-spacing: 0; color: var(--text); }
+.pgrid input:focus { border-color: var(--lime); outline: none; }
+.pname { font-weight: 800; font-size: 17px; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.hint.bad { color: var(--wrong); font-weight: 700; }
 .hint { font-size: 13px; color: var(--muted); }
 .chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); white-space: normal; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--yellow); flex: none; }
@@ -264,16 +270,9 @@ main { padding-block: 22px 60px; }
     </div>
     <h1>Українська мова: <em>фонетика, орфографія, лексика</em></h1>
     <p class="sub">28 тем. У кожній є теорія з ілюстраціями і 100 завдань з автоматичною перевіркою. Кожне правильне завдання — це 1 %.</p>
-    <div class="namebox" id="namebox">
-      <label for="student-name">Ім’я та прізвище учня</label>
-      <div class="namerow">
-        <input id="student-name" type="text" autocomplete="name" placeholder="Наприклад: Олена Коваленко" maxlength="80">
-        <button class="btn small primary" id="name-save">Зберегти</button>
-      </div>
-      <span class="hint" id="name-hint">Впишіть ім’я та прізвище, щоб виконувати завдання й надсилати результати вчителю.</span>
-    </div>
+    <div class="namebox" id="profilebox"></div>
     <div class="overall" id="overall"></div>
-    <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Змінити</button></div>
+    <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
   </div>
 </header>
 
@@ -322,104 +321,203 @@ main { padding-block: 22px 60px; }
 
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600); }
 
-  /* ───── Ім’я ───── */
-  const nameInput = $("#student-name");
-  function nameValid(n) { return n.trim().split(/\s+/).filter(Boolean).length >= 2; }
-  function applyName() {
-    const n = nameInput.value.trim().replace(/\s+/g, " ");
-    if (!nameValid(n)) { $("#namebox").classList.add("need"); $("#name-hint").textContent = "Потрібні і ім’я, і прізвище (два слова)."; nameInput.focus(); return; }
-    const slug = slugOf(n);
-    if (!store.students[slug]) store.students[slug] = { name: n, topics: {} };
-    else store.students[slug].name = n;
-    const changed = store.current !== slug;
-    store.current = slug; saveLocal(); refreshName(); if (changed) pullOwn();
-    toast(changed ? "Вітаємо, " + n.split(" ")[0] + "! Можна працювати." : "Ім’я збережено.");
-    pend = null; render(); scheduleSync(true);
-  }
-  function refreshName() {
-    const s = me();
-    if (s && document.activeElement !== nameInput) nameInput.value = s.name;
-    $("#namebox").classList.toggle("need", !s);
-    $("#name-hint").textContent = s ? "Результати записуються для: " + s.name + ". Інший учень на цьому пристрої — просто впишіть своє ім’я." : "Впишіть ім’я та прізвище, щоб виконувати завдання й надсилати результати вчителю.";
-  }
-  $("#name-save").addEventListener("click", applyName);
-  $("#who-change").addEventListener("click", () => { ui.view = "home"; render(); window.scrollTo(0, 0); nameInput.focus(); nameInput.select(); });
-  nameInput.addEventListener("keydown", e => { if (e.key === "Enter") applyName(); });
-
-  /* ───── Надсилання результатів у Google Таблицю вчителя ───── */
+  /* ───── Профіль учня ───── */
   const RESULTS_URL = (window.MG_CONFIG && window.MG_CONFIG.resultsUrl || "").trim();
-  let syncTimer = null, syncing = false, syncAgain = false, pulledFor = null, serverV = 0;
+  const loggedIn = () => { const s = me(); return !!(s && (s.token || (!RESULTS_URL && s.cls))); };
+  const fullName = s => s.name + (s.cls ? " (" + s.cls + ")" : "");
+  const cleanPart = v => String(v || "").trim().replace(/\s+/g, " ").slice(0, 40);
+  const ERR = {
+    exists: "Такий профіль уже існує. Натисніть «Увійти».",
+    not_found: "Профіль не знайдено. Перевірте ім’я, прізвище й клас або створіть профіль.",
+    bad_pin: "Неправильний PIN-код.",
+    locked: "Забагато невдалих спроб. Зачекайте 15 хвилин або зверніться до вчителя.",
+    bad_name: "Впишіть ім’я, прізвище й клас.",
+    bad_pin_format: "PIN-код — від 4 до 6 цифр."
+  };
+  let pmode = "login", pbusy = false, pmsg = "", pmsgBad = false;
+  function readForm() {
+    const g = id => { const el = $("#" + id); return el ? el.value : ""; };
+    return { first: g("p-first"), last: g("p-last"), cls: g("p-cls"), pin: g("p-pin"), pin2: g("p-pin2") };
+  }
+  function fillForm(v) {
+    if (!v) return;
+    ["first", "last", "cls", "pin", "pin2"].forEach(k => { const el = $("#p-" + k); if (el && v[k]) el.value = v[k]; });
+  }
+  function renderProfile() {
+    const box = $("#profilebox"), s = me();
+    if (loggedIn()) {
+      box.classList.remove("need");
+      box.innerHTML = `<label>Профіль учня</label><div class="namerow"><span class="pname"></span><button class="btn small" id="p-logout" type="button">Вийти</button></div>
+        <span class="hint">${RESULTS_URL ? "Прогрес зберігається в профілі. На іншому пристрої увійдіть з тими самими ім’ям, класом і PIN-кодом." : "Прогрес зберігається на цьому пристрої."}</span>`;
+      box.querySelector(".pname").textContent = fullName(s);
+      return;
+    }
+    const reg = pmode === "register";
+    box.classList.add("need");
+    box.innerHTML = `<div class="ptabs" role="tablist"><button class="tab" type="button" role="tab" aria-selected="${!reg}" data-pmode="login">Увійти</button><button class="tab" type="button" role="tab" aria-selected="${reg}" data-pmode="register">Створити профіль</button></div>
+      <form id="pform" class="pform" novalidate>
+        <div class="pgrid">
+          <label>Ім’я<input id="p-first" autocomplete="given-name" maxlength="40"></label>
+          <label>Прізвище<input id="p-last" autocomplete="family-name" maxlength="40"></label>
+          <label>Клас<input id="p-cls" maxlength="12" placeholder="напр. 7-А" autocomplete="off"></label>
+          ${RESULTS_URL ? `<label>PIN-код<input id="p-pin" type="password" inputmode="numeric" maxlength="6" placeholder="4–6 цифр" autocomplete="${reg ? "new-password" : "current-password"}"></label>` : ""}
+          ${RESULTS_URL && reg ? `<label>Повторіть PIN<input id="p-pin2" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password"></label>` : ""}
+        </div>
+        <div class="namerow"><button class="btn primary" id="p-submit" type="submit" ${pbusy ? "disabled" : ""}>${pbusy ? "Зачекайте…" : reg ? "Створити профіль" : "Увійти"}</button></div>
+        <span class="hint ${pmsgBad ? "bad" : ""}" id="p-msg"></span>
+      </form>`;
+    $("#p-msg").textContent = pmsg || (reg
+      ? (RESULTS_URL ? "Придумайте PIN-код і запам’ятайте його: з ним ви ввійдете на будь-якому пристрої." : "Профіль зберігається на цьому пристрої.")
+      : "Ще немає профілю? Натисніть «Створити профіль».");
+  }
+  function profileFail(msg, v) { pbusy = false; pmsg = msg; pmsgBad = true; renderProfile(); fillForm(v); return false; }
+  async function api(body) {
+    for (let i = 0; i < 3; i++) {
+      try {
+        const res = await fetch(RESULTS_URL, { method: "POST", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) });
+        const d = JSON.parse(await res.text());
+        if (d && (d.ok || d.error !== "server")) return d;
+      } catch (e) {}
+      await new Promise(r => setTimeout(r, 1200 * (i + 1)));
+    }
+    return null;
+  }
+  function mergeTopics(rec, topics) {
+    for (const id in topics || {}) {
+      if (resetIds.has(id)) continue;
+      const lt = rec.topics[id] || (rec.topics[id] = { r: EMPTY, ch: {} });
+      lt.r = mergeR(lt.r, topics[id].r);
+      lt.att = Math.max(lt.att || 1, Number(topics[id].att) || 1);
+    }
+  }
+  /* Прогрес, збережений на цьому пристрої до появи профілів (лише за ім’ям), переносимо в профіль. */
+  function adoptLegacy(rec, name) {
+    for (const k in store.students) {
+      const o = store.students[k];
+      if (o === rec || o.token || o.cls || String(o.name || "").toLowerCase() !== name.toLowerCase()) continue;
+      for (const id in o.topics || {}) {
+        const lt = rec.topics[id] || (rec.topics[id] = { r: EMPTY, ch: {} });
+        lt.r = mergeR(lt.r, o.topics[id].r);
+        lt.att = Math.max(lt.att || 1, o.topics[id].att || 1);
+        lt.ch = Object.assign({}, o.topics[id].ch || {}, lt.ch || {});
+      }
+      rec.queue = (rec.queue || []).concat(o.queue || []);
+      delete store.students[k];
+    }
+  }
+  async function submitProfile() {
+    if (pbusy) return;
+    const v = readForm();
+    const first = cleanPart(v.first), last = cleanPart(v.last), cls = cleanPart(v.cls).toUpperCase().slice(0, 12);
+    if (!first || !last) return profileFail("Впишіть ім’я та прізвище.", v);
+    if (!cls) return profileFail("Вкажіть клас, наприклад 7-А.", v);
+    const name = first + " " + last;
+    if (!RESULTS_URL) {
+      const key = slugOf(name + " " + cls);
+      const rec = store.students[key] || (store.students[key] = { name, cls, topics: {} });
+      adoptLegacy(rec, name);
+      return finishLogin(key);
+    }
+    if (!/^\d{4,6}$/.test(v.pin)) return profileFail(ERR.bad_pin_format, v);
+    if (pmode === "register" && v.pin !== v.pin2) return profileFail("PIN-коди не збігаються.", v);
+    pbusy = true; pmsg = ""; pmsgBad = false; renderProfile(); fillForm(v);
+    const d = await api({ action: pmode, first, last, cls, pin: v.pin });
+    if (!d) return profileFail("Немає зв’язку з сервером. Перевірте інтернет і спробуйте ще раз.", v);
+    if (!d.ok) return profileFail(ERR[d.error] || "Не вдалося. Спробуйте ще раз.", Object.assign(v, { pin: "", pin2: "" }));
+    pbusy = false;
+    const rec = store.students[d.key] || (store.students[d.key] = { topics: {} });
+    Object.assign(rec, { name: d.name, cls: d.cls, token: d.token });
+    mergeTopics(rec, d.topics);
+    adoptLegacy(rec, d.name);
+    pulledFor = d.key;
+    finishLogin(d.key);
+  }
+  function finishLogin(key) {
+    store.current = key; pmsg = ""; pmsgBad = false; pmode = "login";
+    saveLocal(); pend = null; renderProfile(); render(); scheduleSync(true);
+    toast("Вітаємо, " + me().name.split(" ")[0] + "!");
+  }
+  async function logout() {
+    const s = me();
+    if (s && s.token && RESULTS_URL) { clearTimeout(syncTimer); await pushNow(); }
+    if (s) {
+      delete s.token;
+      // На спільному пристрої не лишаємо чужий прогрес, якщо все вже надіслано.
+      if (RESULTS_URL && !(s.queue && s.queue.length)) delete store.students[store.current];
+    }
+    store.current = ""; pulledFor = null; saveLocal();
+    ui.view = "home"; pend = null; renderProfile(); render(); window.scrollTo(0, 0);
+    toast("Ви вийшли з профілю");
+  }
+  const pbox = $("#profilebox");
+  pbox.addEventListener("submit", e => { e.preventDefault(); submitProfile(); });
+  pbox.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.pmode) { const v = readForm(); pmode = b.dataset.pmode; pmsg = ""; pmsgBad = false; renderProfile(); fillForm(v); }
+    if (b.id === "p-logout") logout();
+  });
+  $("#who-change").addEventListener("click", () => { ui.view = "home"; render(); window.scrollTo(0, 0); });
+
+  /* ───── Збереження прогресу в таблиці вчителя ───── */
+  let syncTimer = null, syncing = false, syncAgain = false, pulledFor = null;
   const resetIds = new Set();
   function setSync(mode) {
     const chip = $("#sync-chip"), txt = $("#sync-text");
     chip.classList.remove("ok", "bad");
     const M = {
       local: ["Прогрес зберігається на цьому пристрої", ""],
-      ready: ["Результати надходять учителю", "ok"],
-      saving: ["Надсилаю результат…", "ok"],
-      saved: ["Результат надіслано вчителю", "ok"],
-      error: ["Немає зв’язку — надішлю пізніше", "bad"]
+      ready: ["Прогрес зберігається в профілі", "ok"],
+      saving: ["Зберігаю прогрес…", "ok"],
+      saved: ["Прогрес збережено в профілі", "ok"],
+      error: ["Немає зв’язку — збережу пізніше", "bad"]
     };
     const m = M[mode] || M.local; txt.textContent = m[0]; if (m[1]) chip.classList.add(m[1]);
     chip.title = mode === "local" ? "Учитель ще не підключив таблицю результатів. Звіт можна скопіювати внизу сторінки." : "";
   }
   function scheduleSync(now) {
-    if (!RESULTS_URL || !me()) return;
-    clearTimeout(syncTimer); syncTimer = setTimeout(pushNow, now ? 50 : 1500);
-    // Поки не завантажено збережений прогрес учня, нічого не надсилаємо, щоб не перезаписати таблицю.
-    if (pulledFor !== store.current) { clearTimeout(syncTimer); syncTimer = setTimeout(() => scheduleSync(now), 700); }
+    const s = me();
+    if (!RESULTS_URL || !s || !s.token) return;
+    clearTimeout(syncTimer);
+    // Поки не завантажено збережений прогрес профілю, нічого не надсилаємо, щоб не перезаписати таблицю.
+    if (pulledFor !== store.current) { syncTimer = setTimeout(() => scheduleSync(now), 700); return; }
+    syncTimer = setTimeout(pushNow, now ? 50 : 1500);
   }
   async function pushNow() {
-    if (!RESULTS_URL || !me()) return;
+    const s = me();
+    if (!RESULTS_URL || !s || !s.token) return;
     if (syncing) { syncAgain = true; return; }
     syncing = true; setSync("saving");
-    const s = me(), rec = { key: store.current, name: s.name, topics: {} };
+    const key = store.current, body = { action: "save", key, token: s.token, topics: {} };
     for (const id in s.topics) {
       const r = s.topics[id].r;
-      if (r !== EMPTY || resetIds.has(id)) rec.topics[id] = { r, att: s.topics[id].att || 1 };
+      if (r !== EMPTY || resetIds.has(id)) body.topics[id] = { r, att: s.topics[id].att || 1 };
     }
     const sentResets = [...resetIds];
-    // Журнал спроб надсилаємо лише новій версії скрипта, інакше записи лишаються в черзі.
-    const queue = s.queue || [], sentEvents = serverV >= 3 ? queue.slice(0, 200) : [];
-    if (sentEvents.length) rec.events = sentEvents;
-    try {
-      await fetch(RESULTS_URL, { method: "POST", mode: "no-cors", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(rec) });
+    const events = (s.queue || []).slice(0, 200);
+    if (events.length) body.events = events;
+    const d = await api(body);
+    if (d && d.ok) {
       sentResets.forEach(id => resetIds.delete(id));
-      if (sentEvents.length) { s.queue = (s.queue || []).slice(sentEvents.length); saveLocal(); if (s.queue.length) syncAgain = true; }
+      if (events.length) { s.queue = (s.queue || []).slice(events.length); saveLocal(); if (s.queue.length) syncAgain = true; }
       setSync("saved");
-    } catch (e) { setSync("error"); setTimeout(() => scheduleSync(true), 10000); }
+    } else if (d && d.error === "auth") {
+      delete s.token; saveLocal(); setSync("error");
+      pmsg = "Увійдіть у профіль ще раз, щоб зберегти прогрес."; pmsgBad = true; renderProfile(); render();
+    } else { setSync("error"); setTimeout(() => scheduleSync(true), 10000); }
     syncing = false;
     if (syncAgain) { syncAgain = false; scheduleSync(true); }
   }
   function mergeR(a, b) { let o = ""; for (let i = 0; i < N; i++) { const x = (a || EMPTY)[i] || ".", y = (b || EMPTY)[i] || "."; o += x !== "." ? x : y; } return o; }
-  /* Підтягує збережений прогрес учня з таблиці (наприклад, якщо він перейшов на інший пристрій). */
-  async function pullOwn() {
-    if (!RESULTS_URL || !me()) return;
-    const key = store.current;
-    for (let attempt = 0; attempt < 4; attempt++) {
-      try {
-        const res = await fetch(RESULTS_URL + (RESULTS_URL.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(key), { credentials: "omit" });
-        const d = JSON.parse(await res.text());
-        if (d && d.ok) {
-          serverV = Number(d.v) || 1;
-          const loc = store.students[key];
-          if (loc && d.topics) for (const id in d.topics) {
-            const lt = loc.topics[id] || (loc.topics[id] = { r: EMPTY, ch: {} });
-            if (resetIds.has(id)) continue;
-            lt.r = mergeR(lt.r, d.topics[id].r);
-            lt.att = Math.max(lt.att || 1, Number(d.topics[id].att) || 1);
-          }
-          saveLocal(); pulledFor = key; render(); return;
-        }
-      } catch (e) {}
-      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
-    }
-    pulledFor = key; // таблиця недоступна — працюємо далі, надсилаючи лише теми з відповідями
-  }
   async function initSync() {
     if (!RESULTS_URL) { setSync("local"); return; }
     setSync("ready");
-    await pullOwn(); scheduleSync(true);
+    const s = me();
+    if (!s || !s.token) return;
+    const key = store.current;
+    const d = await api({ action: "load", key, token: s.token });
+    if (d && d.ok) { mergeTopics(s, d.topics); saveLocal(); pulledFor = key; render(); scheduleSync(true); }
+    else if (d && d.error === "auth") { delete s.token; saveLocal(); renderProfile(); render(); }
+    else { setSync("error"); pulledFor = key; }
   }
 
   /* ───── Рендер ───── */
@@ -432,9 +530,9 @@ main { padding-block: 22px 60px; }
   }
 
   function render() {
-    refreshName(); renderOverall();
+    renderOverall();
     document.body.classList.toggle("compact", ui.view !== "home");
-    const s0 = me(); $("#who-name").textContent = s0 ? s0.name : "не вказано";
+    $("#who-name").textContent = loggedIn() ? fullName(me()) : "не ввійшов";
     if (ui.view === "topic" && ui.topic) renderTopic();
     else renderHome();
   }
@@ -492,7 +590,7 @@ main { padding-block: 22px 60px; }
 
   function tasksHtml(t) {
     const s = me();
-    if (!s) return `<section class="tasks"><div class="gate"><h3 style="font-size:17px">Спершу впишіть ім’я та прізвище</h3><p style="margin:0">Так учитель побачить, чиї це результати. Поле — угорі сторінки.</p><div><button class="btn primary" data-act="focus-name">Вписати ім’я</button></div></div></section>`;
+    if (!loggedIn()) return `<section class="tasks"><div class="gate"><h3 style="font-size:17px">Увійдіть у профіль</h3><p style="margin:0">Прогрес зберігається у вашому профілі, тож продовжити можна на будь-якому пристрої. Теорію можна читати й без входу.</p><div><button class="btn primary" data-act="focus-name">Увійти або створити профіль</button></div></div></section>`;
     const st = tstate(t.id), tasks = tasksOf(t.id), stat = statsOf(st.r);
     if (ui.cur < 0 || ui.cur >= N) ui.cur = 0;
     let h = `<section class="tasks"><div class="tprog">
@@ -641,7 +739,7 @@ main { padding-block: 22px 60px; }
     st.r = st.r.slice(0, task.n) + (ok ? "1" : "0") + st.r.slice(task.n + 1);
     st.ch[task.n] = resp;
     const s = me();
-    (s.queue = s.queue || []).push({ topic: t.id, att: st.att || 1, n: task.n + 1, type: task.t, ok, at: Date.now(),
+    (s.queue = s.queue || []).push({ id: store.current + "|" + t.id + "|" + (st.att || 1) + "|" + task.n, topic: t.id, att: st.att || 1, n: task.n + 1, type: task.t, ok, at: Date.now(),
       q: plain(task.q) + (task.big ? " — " + plain(task.big) : ""), ans: answerText(task, resp), right: rightText(task) });
     if (s.queue.length > 3000) s.queue = s.queue.slice(-3000);
     pend = null; saveLocal(); scheduleSync(); render();
@@ -662,7 +760,7 @@ main { padding-block: 22px 60px; }
     if (b.id === "copy-report") { copyText(reportText(), $("#report-text")); return; }
     const act = d.act;
     if (act === "home") { ui.view = "home"; confirmReset = false; render(); window.scrollTo(0, 0); return; }
-    if (act === "focus-name") { ui.view = "home"; render(); window.scrollTo(0, 0); nameInput.focus(); return; }
+    if (act === "focus-name") { ui.view = "home"; render(); window.scrollTo(0, 0); const f = $("#p-first"); if (f) f.focus(); return; }
     if (act === "finish") { ui.view = "home"; render(); window.scrollTo(0, 0); toast("Прогрес збережено. Повернутися можна будь-коли."); return; }
     if (act === "reset") { confirmReset = true; render(); return; }
     if (act === "reset-no") { confirmReset = false; render(); return; }
@@ -673,7 +771,7 @@ main { padding-block: 22px 60px; }
     if (act === "prev") { ui.cur = Math.max(0, ui.cur - 1); ui.reviewing = true; pend = null; render(); scrollTask(); return; }
     if (act === "next") { ui.cur = Math.min(N - 1, ui.cur + 1); ui.reviewing = true; pend = null; render(); scrollTask(); return; }
     if (act === "next-open") { const st = tstate(ui.topic), j = nextOpen(st, ui.cur); if (j < 0) { ui.reviewing = false; } else ui.cur = j; pend = null; render(); scrollTask(); return; }
-    const t = T.find(x => x.id === ui.topic); if (!t || !me()) return;
+    const t = T.find(x => x.id === ui.topic); if (!t || !loggedIn()) return;
     const task = tasksOf(t.id)[ui.cur];
     if (d.one !== undefined) { answer(t, task, +d.one); return; }
     if (d.multi !== undefined) { const k = +d.multi, ix = pend.v.indexOf(k); if (ix >= 0) pend.v.splice(ix, 1); else pend.v.push(k); render(); return; }
@@ -697,6 +795,7 @@ main { padding-block: 22px 60px; }
   }
   function scrollTask() { const el = document.querySelector(".task"); if (el && el.getBoundingClientRect().top < 60) el.scrollIntoView({ block: "start" }); }
 
+  renderProfile();
   render();
   initSync();
 })();

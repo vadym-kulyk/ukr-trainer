@@ -4,11 +4,17 @@
  * Розгорнути → Нове розгортання → Веб-застосунок (доступ: «Усі»).
  * Аркуш «Результати»: кожен учень — один рядок, оновлюється після кожної відповіді.
  * Аркуш «Спроби»: кожна відповідь учня — окремий рядок.
+ * Аркуш «Профілі»: облікові записи учнів (ім’я, клас, захищений PIN-код).
+ *   Забув PIN? Очистіть клітинку «PIN (хеш)» у рядку учня — під час наступного входу
+ *   учень задасть новий PIN.
  */
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 3;
+const SERVICE_VERSION = 4;
+const PROFILE_SHEET = 'Профілі';
+const PROFILE_HEADER = ['Ключ', 'Учень', 'Клас', 'PIN (хеш)', 'Сіль', 'Створено', 'Останній вхід'];
+const MAX_FAILS = 8;
 const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми №', 'Завдання №', 'Тип завдання', 'Результат', 'Запитання', 'Відповідь учня', 'Правильна відповідь'];
 const TYPE_NAMES = { one: 'одна відповідь', multi: 'кілька відповідей', sort: 'розподіл за групами', match: 'відповідність', order: 'порядок' };
 const TASKS_PER_TOPIC = 100;
@@ -144,63 +150,198 @@ function findRow_(sh, key) {
   return -1;
 }
 
+/* ───────── Профілі ───────── */
+
+function profileSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(PROFILE_SHEET);
+  if (!sh) sh = ss.insertSheet(PROFILE_SHEET);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(PROFILE_HEADER);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, PROFILE_HEADER.length).setFontWeight('bold');
+    sh.hideColumns(1);
+    sh.hideColumns(5);
+  }
+  return sh;
+}
+
+/** Такий самий ключ, як на сайті: малі літери, пробіли й апострофи → «_». */
+function slug_(s) {
+  return String(s).trim().toLowerCase().replace(/\s+/g, ' ')
+    .replace(/[^\p{L}\p{N} ’'-]/gu, '').replace(/[ ’'-]+/g, '_').slice(0, 80);
+}
+
+function hash_(s) {
+  return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, s, Utilities.Charset.UTF_8));
+}
+
+function secret_() {
+  const p = PropertiesService.getScriptProperties();
+  let s = p.getProperty('SECRET');
+  if (!s) { s = Utilities.getUuid() + Utilities.getUuid(); p.setProperty('SECRET', s); }
+  return s;
+}
+
+/** Токен сесії: підпис ключа секретом скрипта. Його не можна підробити без секрету. */
+function token_(key) {
+  return hash_(secret_() + '|' + key).replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
+}
+
+function cleanPart_(v) {
+  return txt_(v, 40).trim().replace(/\s+/g, ' ');
+}
+
+function readStored_(sh, rowNum) {
+  if (rowNum < 0) return {};
+  try { return JSON.parse(sh.getRange(rowNum, DATA_COL).getValue() || '{}'); } catch (err) { return {}; }
+}
+
+function topicsOut_(stored) {
+  const topics = {}, att = stored._att || {};
+  TOPICS.forEach(([id]) => { if (stored[id]) topics[id] = { r: stored[id], att: Number(att[id]) || 1 }; });
+  return topics;
+}
+
+function failCount_(key) {
+  return Number(CacheService.getScriptCache().get('fail_' + key) || 0);
+}
+
+function addFail_(key) {
+  const c = CacheService.getScriptCache();
+  c.put('fail_' + key, String(failCount_(key) + 1), 15 * 60);
+}
+
+function register_(d) {
+  const first = cleanPart_(d.first), last = cleanPart_(d.last), cls = cleanPart_(d.cls).toUpperCase().slice(0, 12);
+  const pin = String(d.pin || '');
+  if (!first || !last || !cls) return { ok: false, error: 'bad_name' };
+  if (!/^\d{4,6}$/.test(pin)) return { ok: false, error: 'bad_pin_format' };
+  const name = first + ' ' + last;
+  const key = slug_(name + ' ' + cls);
+  const ps = profileSheet_();
+  if (findRow_(ps, key) > 0) return { ok: false, error: 'exists' };
+  const salt = Utilities.getUuid();
+  ps.appendRow([key, name, cls, hash_(salt + '|' + pin), salt, new Date(), new Date()]);
+
+  // Переносимо прогрес, збережений раніше лише за ім’ям (до появи профілів).
+  const rs = sheet_();
+  let rowNum = findRow_(rs, key);
+  if (rowNum < 0) {
+    const legacy = findRow_(rs, slug_(name));
+    if (legacy > 0 && findRow_(ps, slug_(name)) < 0) {
+      rs.getRange(legacy, 1, 1, 2).setValues([[key, name + ' (' + cls + ')']]);
+      rowNum = legacy;
+    }
+  }
+  return { ok: true, key, token: token_(key), name, cls, topics: topicsOut_(readStored_(rs, rowNum)), v: SERVICE_VERSION };
+}
+
+function login_(d) {
+  const first = cleanPart_(d.first), last = cleanPart_(d.last), cls = cleanPart_(d.cls).toUpperCase().slice(0, 12);
+  const pin = String(d.pin || '');
+  const name = first + ' ' + last;
+  const key = slug_(name + ' ' + cls);
+  const ps = profileSheet_();
+  const row = findRow_(ps, key);
+  if (row < 0) return { ok: false, error: 'not_found' };
+  if (failCount_(key) >= MAX_FAILS) return { ok: false, error: 'locked' };
+  if (!/^\d{4,6}$/.test(pin)) return { ok: false, error: 'bad_pin_format' };
+  const vals = ps.getRange(row, 1, 1, PROFILE_HEADER.length).getValues()[0];
+  let pinHash = String(vals[3] || ''), salt = String(vals[4] || '');
+  if (!pinHash) {
+    // Учитель скинув PIN: цей вхід задає новий.
+    salt = Utilities.getUuid();
+    ps.getRange(row, 4, 1, 2).setValues([[hash_(salt + '|' + pin), salt]]);
+  } else if (hash_(salt + '|' + pin) !== pinHash) {
+    addFail_(key);
+    return { ok: false, error: 'bad_pin' };
+  }
+  CacheService.getScriptCache().remove('fail_' + key);
+  ps.getRange(row, 7).setValue(new Date());
+  const rs = sheet_();
+  return { ok: true, key, token: token_(key), name: String(vals[1]), cls: String(vals[2]), topics: topicsOut_(readStored_(rs, findRow_(rs, key))), v: SERVICE_VERSION };
+}
+
+/** Перевіряє токен і повертає профіль учня або null. */
+function auth_(d) {
+  const key = String(d.key || '').slice(0, 100);
+  if (!key || String(d.token || '') !== token_(key)) return null;
+  const ps = profileSheet_();
+  const row = findRow_(ps, key);
+  if (row < 0) return null;
+  const vals = ps.getRange(row, 1, 1, 3).getValues()[0];
+  return { key, name: String(vals[1]), cls: String(vals[2]) };
+}
+
+/** Відкидає записи журналу, які вже надходили (на випадок повторного надсилання). */
+function freshEvents_(events) {
+  if (!Array.isArray(events)) return [];
+  const c = CacheService.getScriptCache(), out = [];
+  events.slice(0, 300).forEach(ev => {
+    const id = ev && ev.id ? 'ev_' + String(ev.id).slice(0, 200) : null;
+    if (id && c.get(id)) return;
+    if (id) c.put(id, '1', 6 * 60 * 60);
+    out.push(ev);
+  });
+  return out;
+}
+
+function save_(d, p) {
+  const display = p.name + ' (' + p.cls + ')';
+  const logged = appendEvents_(display, freshEvents_(d.events));
+  const sh = sheet_();
+  const rowNum = findRow_(sh, p.key);
+  const stored = readStored_(sh, rowNum);
+  const incoming = d.topics || {};
+  const att = stored._att || {};
+  let answered = 0, correct = 0;
+  const perTopic = TOPICS.map(([id]) => {
+    const a = cleanR_(stored[id]) || '.'.repeat(TASKS_PER_TOPIC);
+    const b = incoming[id] ? cleanR_(incoming[id].r) : null;
+    // Сайт перед надсиланням уже об’єднав прогрес із таблицею, тож новий стан теми
+    // (зокрема після «Почати тему заново») приймаємо як є; теми, яких немає в запиті, лишаються.
+    const merged = b || a;
+    stored[id] = merged;
+    if (incoming[id]) att[id] = Math.max(Number(att[id]) || 1, Number(incoming[id].att) || 1);
+    const done = merged.replace(/\./g, '').length;
+    const ok = merged.replace(/[^1]/g, '').length;
+    answered += done; correct += ok;
+    return done ? ok : '';
+  });
+  stored._att = att;
+  const total = Math.round(correct / (TOPICS.length * TASKS_PER_TOPIC) * 1000) / 10;
+  const row = [p.key, display, new Date(), total, answered].concat(perTopic).concat([JSON.stringify(stored)]);
+  if (rowNum > 0) sh.getRange(rowNum, 1, 1, row.length).setValues([row]);
+  else sh.appendRow(row);
+  return { ok: true, logged, v: SERVICE_VERSION };
+}
+
 function doPost(e) {
   const lock = LockService.getScriptLock();
-  lock.waitLock(15000);
+  lock.waitLock(20000);
   try {
     const d = JSON.parse(e.postData.contents);
-    const key = String(d.key || '').slice(0, 100);
-    const name = String(d.name || '').replace(/^[=+\-@]+/, '').slice(0, 100);
-    if (!key || !name) return out_({ ok: false, error: 'no name' });
-
-    const logged = appendEvents_(name, d.events);
-    const sh = sheet_();
-    const rowNum = findRow_(sh, key);
-    // Об’єднуємо з тим, що вже є в таблиці: виконане завдання не стає невиконаним.
-    let stored = {};
-    if (rowNum > 0) {
-      try { stored = JSON.parse(sh.getRange(rowNum, DATA_COL).getValue() || '{}'); } catch (err) { stored = {}; }
+    if (d.action === 'register') return out_(register_(d));
+    if (d.action === 'login') return out_(login_(d));
+    if (d.action === 'load' || d.action === 'save') {
+      const p = auth_(d);
+      if (!p) return out_({ ok: false, error: 'auth' });
+      if (d.action === 'load') {
+        const sh = sheet_();
+        return out_({ ok: true, topics: topicsOut_(readStored_(sh, findRow_(sh, p.key))), v: SERVICE_VERSION });
+      }
+      return out_(save_(d, p));
     }
-    const incoming = d.topics || {};
-    const att = stored._att || {};
-    let answered = 0, correct = 0;
-    const perTopic = TOPICS.map(([id]) => {
-      const a = cleanR_(stored[id]) || '.'.repeat(TASKS_PER_TOPIC);
-      const b = incoming[id] ? cleanR_(incoming[id].r) : null;
-      // Сайт уже об’єднав прогрес із таблицею під час завантаження, тож новий стан теми
-      // (зокрема після «Почати тему заново») приймаємо як є; теми, яких немає в запиті, лишаються.
-      const merged = b || a;
-      stored[id] = merged;
-      if (incoming[id]) att[id] = Math.max(Number(att[id]) || 1, Number(incoming[id].att) || 1);
-      const done = merged.replace(/\./g, '').length;
-      const ok = merged.replace(/[^1]/g, '').length;
-      answered += done; correct += ok;
-      return done ? ok : '';
-    });
-    stored._att = att;
-    const total = Math.round(correct / (TOPICS.length * TASKS_PER_TOPIC) * 1000) / 10;
-    const row = [key, name, new Date(), total, answered].concat(perTopic).concat([JSON.stringify(stored)]);
-    if (rowNum > 0) sh.getRange(rowNum, 1, 1, row.length).setValues([row]);
-    else sh.appendRow(row);
-    return out_({ ok: true, logged });
+    return out_({ ok: false, error: 'auth' });
   } catch (err) {
-    return out_({ ok: false, error: String(err) });
+    return out_({ ok: false, error: 'server', detail: String(err) });
   } finally {
     lock.releaseLock();
   }
 }
 
-/** Повертає збережений прогрес учня, щоб продовжити на іншому пристрої. */
-function doGet(e) {
-  const key = String((e && e.parameter && e.parameter.key) || '');
-  if (!key) return out_({ ok: true, service: 'mg-ukr-trainer', v: SERVICE_VERSION });
-  const sh = sheet_();
-  const rowNum = findRow_(sh, key);
-  if (rowNum < 0) return out_({ ok: true, v: SERVICE_VERSION, topics: {} });
-  let stored = {};
-  try { stored = JSON.parse(sh.getRange(rowNum, DATA_COL).getValue() || '{}'); } catch (err) {}
-  const topics = {};
-  const att = stored._att || {};
-  TOPICS.forEach(([id]) => { if (stored[id]) topics[id] = { r: stored[id], att: Number(att[id]) || 1 }; });
-  return out_({ ok: true, v: SERVICE_VERSION, topics });
+/** Перевірка, що скрипт працює. Прогрес без входу в профіль не видаємо. */
+function doGet() {
+  return out_({ ok: true, service: 'mg-ukr-trainer', v: SERVICE_VERSION });
 }
