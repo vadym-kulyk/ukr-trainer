@@ -49,9 +49,11 @@ button { cursor: pointer; }
 .mark--r { right: -150px; top: -60px; }
 .mark--l { left: -170px; bottom: -150px; opacity: .09; }
 .hero .wrap { position: relative; z-index: 1; padding-block: 20px 18px; display: grid; gap: 14px; }
-.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.logo { width: clamp(132px, 34vw, 170px); height: auto; display: block; }
-.brand-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap; min-width: 0; }
+.logo { width: clamp(132px, 34vw, 170px); height: auto; display: block; flex: none; }
+.brand-tools { display: flex; gap: 8px; align-items: center; min-width: 0; }
+#sync-chip { white-space: nowrap; min-width: 0; max-width: 100%; height: 30px; }
+#sync-text { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .hero h1 { font-size: clamp(22px, 5.4vw, 32px); font-weight: 800; }
 .hero h1 em { font-style: normal; background: linear-gradient(transparent 62%, color-mix(in srgb, var(--lime) 55%, transparent) 62%); }
 .sub { margin: 0; color: var(--muted); max-width: 62ch; }
@@ -110,7 +112,7 @@ main { padding-block: 22px 60px; }
 .report textarea { width: 100%; min-height: 120px; font-family: var(--f-mono); font-size: 12px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--bg); color: var(--text); padding: 8px; }
 
 /* ── Екран теми ── */
-.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
 .topbar .wrap { display: grid; gap: 8px; padding-block: 10px; }
 .tb-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .tb-row .btn { flex: none; white-space: nowrap; }
@@ -265,7 +267,7 @@ main { padding-block: 22px 60px; }
     <div class="brand">
       <img class="logo" src="img/logo-wordmark.png" alt="Midgard">
       <div class="brand-tools">
-        <span class="chip" id="sync-chip"><span class="dot"></span><span id="sync-text">Прогрес зберігається на цьому пристрої</span></span>
+        <span class="chip" id="sync-chip"><span class="dot"></span><span id="sync-text">Прогрес у профілі</span></span>
       </div>
     </div>
     <h1>Українська мова: <em>фонетика, орфографія, лексика</em></h1>
@@ -465,14 +467,14 @@ main { padding-block: 22px 60px; }
     const chip = $("#sync-chip"), txt = $("#sync-text");
     chip.classList.remove("ok", "bad");
     const M = {
-      local: ["Прогрес зберігається на цьому пристрої", ""],
-      ready: ["Прогрес зберігається в профілі", "ok"],
-      saving: ["Зберігаю прогрес…", "ok"],
-      saved: ["Прогрес збережено в профілі", "ok"],
-      error: ["Немає зв’язку — збережу пізніше", "bad"]
+      local: ["Лише на пристрої", ""],
+      ready: ["Прогрес у профілі", "ok"],
+      saving: ["Зберігаю…", "ok"],
+      saved: ["Збережено", "ok"],
+      error: ["Немає зв’язку", "bad"]
     };
     const m = M[mode] || M.local; txt.textContent = m[0]; if (m[1]) chip.classList.add(m[1]);
-    chip.title = mode === "local" ? "Учитель ще не підключив таблицю результатів. Звіт можна скопіювати внизу сторінки." : "";
+    chip.title = mode === "local" ? "Учитель ще не підключив таблицю результатів. Звіт можна скопіювати внизу сторінки." : mode === "error" ? "Прогрес збережено на пристрої й буде надіслано, щойно з’явиться інтернет." : "";
   }
   function scheduleSync(now) {
     const s = me();
@@ -793,7 +795,17 @@ main { padding-block: 22px 60px; }
     const st = tstate(ui.topic), j = st.r.indexOf(".");
     ui.cur = j >= 0 ? j : 0; ui.reviewing = false;
   }
-  function scrollTask() { const el = document.querySelector(".task"); if (el && el.getBoundingClientRect().top < 60) el.scrollIntoView({ block: "start" }); }
+  /* Після переходу до іншого завдання показуємо його початок одразу під закріпленою панеллю. */
+  function scrollTask() {
+    const el = document.querySelector(".task"), bar = document.querySelector(".topbar");
+    if (!el) return;
+    const barBottom = bar ? bar.getBoundingClientRect().bottom : 0;
+    const top = el.getBoundingClientRect().top;
+    if (top < barBottom + 8 || top > window.innerHeight * 0.6) {
+      const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollBy({ top: top - barBottom - 8, behavior: smooth ? "smooth" : "auto" });
+    }
+  }
 
   renderProfile();
   render();
