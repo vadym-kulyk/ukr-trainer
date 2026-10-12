@@ -42,7 +42,8 @@
       return { g: x[0], grp: g, w: x[1], c: x[2], n: x[3] || "", f: fills };
     }).filter(it => it.grp);
   }
-  const gapHtml = it => it.grp.cls ? esc(it.w) : esc(it.w).replace("_", '<span class="gap">…</span>');
+  const markStress = s => esc(s).replace(/([а-яґєії])([АЕЄИІЇОУЮЯ])/g, (m, a, v) => a + '<span class="st">' + v.toLowerCase() + "</span>");
+  const gapHtml = it => it.grp.cls ? (it.grp.stress ? markStress(it.w) : esc(it.w)) : esc(it.w).replace("_", '<span class="gap">…</span>');
   const full = (it, k) => it.w.replace("_", it.f[k]);
   const fullHtml = (it, k) => esc(full(it, k));
   const labelOf = (it, k) => it.grp.cats[k];
@@ -99,7 +100,7 @@
       if (a.length < 1 || a.length > 5) return null;
       const grp = chosen[0].grp;
       return { t: "multi", key: "M" + k + chosen.map(i => i.w).sort().join("|"),
-        q: grp.cls ? "Позначте всі приклади, де " + esc(grp.cats[k]) + "." : "Позначте всі варіанти, де треба вставити " + q(esc(grp.cats[k])) + ".",
+        q: grp.multiQ ? grp.multiQ.replace("{c}", esc(grp.cats[k])) : grp.cls ? "Позначте всі приклади, де " + esc(grp.cats[k]) + "." : "Позначте всі варіанти, де треба вставити " + q(esc(grp.cats[k])) + ".",
         opts: chosen.map(gapHtml), a, note: chosen.filter(i => i.c === k).map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b>").join(", ") + ". " + esc(grp.rule) };
     });
     if (spellIt.length) gens.push(function tf(r) {
@@ -117,7 +118,7 @@
       const order = shuffle(r, [0, 1, 2, 3]), b = order.indexOf(3);
       const grp = pool[0].grp, oddIt = chosen[3];
       return { t: "one", key: "O" + chosen.map(i => i.w).sort().join("|"),
-        q: grp.cls ? "Який приклад зайвий у цьому ряду?" : "Знайдіть зайве: де треба вставити інше?",
+        q: grp.oddQ ? grp.oddQ : grp.cls ? "Який приклад зайвий у цьому ряду?" : "Знайдіть зайве: де треба вставити інше?",
         opts: order.map(i => gapHtml(chosen[i])), a: b,
         note: "Зайве — <b>" + esc(oddIt.grp.cls ? oddIt.w : full(oddIt, oddIt.c)) + "</b> (" + esc(grp.cats[oddIt.c]) + "), в інших — " + esc(grp.cats[A]) + ". " + esc(grp.rule) };
     });
@@ -141,7 +142,7 @@
       const order = shuffle(r, [0, 1, 2, 3]);
       const grp = pool[0].grp;
       return { t: "one", key: "Rw" + A + rows[0].map(i => i.w).sort().join("|"),
-        q: grp.cls ? "У якому рядку всі приклади — " + esc(grp.cats[A]) + "?" : "У якому рядку в усіх словах треба вставити " + q(esc(grp.cats[A])) + "?",
+        q: grp.rowQ ? grp.rowQ.replace("{c}", esc(grp.cats[A])) : grp.cls ? "У якому рядку всі приклади — " + esc(grp.cats[A]) + "?" : "У якому рядку в усіх словах треба вставити " + q(esc(grp.cats[A])) + "?",
         opts: order.map(i => rows[i].map(gapHtml).join(", ")), a: order.indexOf(0), wide: true,
         note: rows[0].map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b>").join(", ") + ". " + esc(grp.rule) };
     });
@@ -179,33 +180,43 @@
   /* ───────── pairs ───────── */
   function pairGens(topic) {
     const P = topic.pairs.map(p => ({ a: p[0], b: p[1] }));
-    const ant = !!topic.antonym, phr = !!topic.phrase;
+    const ant = !!topic.antonym, phr = !!topic.phrase, L = topic.pq || null;
+    const distinctB = (r, n) => { const out = [], seen = new Set(); for (const p of shuffle(r, P)) { if (!seen.has(p.b) && !out.some(o => o.a === p.a)) { seen.add(p.b); out.push(p); } if (out.length === n) break; } return out; };
     const S = (topic.synonyms || []).map(p => ({ a: p[0], b: p[1] }));
     const gens = [
       function match(r) {
-        const ch = sample(r, P, 4), right = shuffle(r, ch.map((p, i) => ({ html: esc(p.b), li: i })));
+        const ch = L ? distinctB(r, 4) : sample(r, P, 4); if (ch.length < 4) return null;
+        const right = shuffle(r, ch.map((p, i) => ({ html: esc(p.b), li: i })));
         return { t: "match", key: "P" + ch.map(p => p.a).sort().join("|"),
-          q: ant ? "Поєднайте слова-антоніми." : phr ? "Поєднайте фразеологізм з його значенням." : "Поєднайте слово з його значенням.",
+          q: L ? L.match : ant ? "Поєднайте слова-антоніми." : phr ? "Поєднайте фразеологізм з його значенням." : "Поєднайте слово з його значенням.",
           left: ch.map(p => esc(p.a)), right, note: ch.map(p => "<b>" + esc(p.a) + "</b> — " + esc(p.b)).join("; ") + "." };
       },
       function ab(r) {
-        const p = pick(r, P), others = sample(r, P.filter(x => x !== p && x.b !== p.b), 3);
-        return oneTask(r, { key: "A" + p.a, q: ant ? "Доберіть антонім до слова." : phr ? "Що означає фразеологізм?" : "Що означає слово?", big: esc(p.a),
+        const p = pick(r, P);
+        const others = L ? distinctB(r, 12).filter(x => x !== p && x.b !== p.b).slice(0, 3) : sample(r, P.filter(x => x !== p && x.b !== p.b), 3);
+        if (others.length < 2) return null;
+        return oneTask(r, { key: "A" + p.a, q: L ? L.ab : ant ? "Доберіть антонім до слова." : phr ? "Що означає фразеологізм?" : "Що означає слово?", big: esc(p.a),
           note: "<b>" + esc(p.a) + "</b> — " + esc(p.b) + "." }, [p.b].concat(others.map(x => x.b)).map(esc), 0);
       },
       function ba(r) {
-        const p = pick(r, P), others = sample(r, P.filter(x => x !== p && x.a !== p.a), 3);
-        return oneTask(r, { key: "B" + p.b, q: ant ? "Доберіть антонім до слова." : phr ? "Який фразеологізм має таке значення?" : "Яке слово має таке значення?", big: esc(p.b),
+        const p = pick(r, P), others = sample(r, P.filter(x => x !== p && x.a !== p.a && (!L || x.b !== p.b)), 3);
+        return oneTask(r, { key: L ? "B" + p.b + "|" + p.a : "B" + p.b, q: L ? L.ba : ant ? "Доберіть антонім до слова." : phr ? "Який фразеологізм має таке значення?" : "Яке слово має таке значення?", big: esc(p.b),
           note: "<b>" + esc(p.a) + "</b> — " + esc(p.b) + "." }, [p.a].concat(others.map(x => x.a)).map(esc), 0);
       },
       function tf(r) {
-        const p = pick(r, P), ok = r() < 0.5, b = ok ? p.b : pick(r, P.filter(x => x !== p)).b;
+        const p = pick(r, P), ok = r() < 0.5, b = ok ? p.b : pick(r, P.filter(x => x !== p && (!L || x.b !== p.b))).b;
         return oneTask(r, { key: "T" + p.a + b, keepOrder: true,
-          q: ant ? "Чи є ці слова антонімами?" : phr ? "Чи правильно пояснено фразеологізм?" : "Чи правильно пояснено значення?",
+          q: L ? L.tf : ant ? "Чи є ці слова антонімами?" : phr ? "Чи правильно пояснено фразеологізм?" : "Чи правильно пояснено значення?",
           big: ant ? esc(p.a) + " — " + esc(b) : "<b>" + esc(p.a) + "</b> — " + esc(b), note: "<b>" + esc(p.a) + "</b> — " + esc(p.b) + "." },
           ant ? ["Так", "Ні"] : ["Правильно", "Неправильно"], ok ? 0 : 1);
       }
     ];
+    if (L && L.multi) gens.push(function multiB(r) {
+      const ch = sample(r, P, 6), target = pick(r, ch).b, a = ch.map((p, i) => p.b === target ? i : -1).filter(i => i >= 0);
+      if (a.length < 1 || a.length > 5) return null;
+      return { t: "multi", key: "MB" + target + ch.map(p => p.a).sort().join("|"), q: L.multi.replace("{b}", esc(target)),
+        opts: ch.map(p => esc(p.a)), a, note: ch.map(p => "<b>" + esc(p.a) + "</b> — " + esc(p.b)).join("; ") + "." };
+    });
     if (phr) gens.push(function order(r) {
       const p = pick(r, P.filter(x => x.a.split(" ").length >= 3));
       return { t: "order", key: "Or" + p.a, q: "Складіть фразеологізм зі значенням " + q(esc(p.b)) + ".", items: p.a.split(" "), note: "<b>" + esc(p.a) + "</b> — " + esc(p.b) + "." };

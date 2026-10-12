@@ -107,6 +107,7 @@ main { padding-block: 22px 60px; }
 .topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .topbar .wrap { display: grid; gap: 8px; padding-block: 10px; }
 .tb-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tb-row .btn { flex: none; white-space: nowrap; }
 .tb-title { font-family: var(--f-display); font-weight: 700; font-size: 15px; line-height: 1.2; min-width: 0; overflow-wrap: anywhere; }
 .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 999px; }
 .tab { border: 0; background: transparent; border-radius: 999px; padding: 8px 10px; font-weight: 700; min-height: 40px; }
@@ -262,7 +263,7 @@ main { padding-block: 22px 60px; }
       </div>
     </div>
     <h1>Українська мова: <em>фонетика, орфографія, лексика</em></h1>
-    <p class="sub">19 тем. У кожній є теорія з ілюстраціями і 100 завдань з автоматичною перевіркою. Кожне правильне завдання — це 1 %.</p>
+    <p class="sub">28 тем. У кожній є теорія з ілюстраціями і 100 завдань з автоматичною перевіркою. Кожне правильне завдання — це 1 %.</p>
     <div class="namebox" id="namebox">
       <label for="student-name">Ім’я та прізвище учня</label>
       <div class="namerow">
@@ -281,6 +282,7 @@ main { padding-block: 22px 60px; }
 
 <script src="config.js"></script>
 <script src="data.js"></script>
+<script src="data-extra.js"></script>
 <script src="engine.js"></script>
 <script>
 (function () {
@@ -290,8 +292,8 @@ main { padding-block: 22px 60px; }
   const LS = "mg-ukr-trainer-v1";
   const EMPTY = ".".repeat(N);
   const TYPE = { one: "Оберіть одну відповідь", multi: "Кілька правильних відповідей", sort: "Розподіл за групами", match: "Встановіть відповідність", order: "Розташуйте в правильному порядку" };
-  const IMG = { phonetics: "img/phonetics.jpg", ortho: "img/ortho.jpg", lexic: "img/lexic.jpg", foreign: "img/foreign.jpg", phraseo: "img/phraseo.jpg", compound: "img/compound.jpg", antonym: "img/antonym.jpg", error: "img/error.jpg" };
-  const ALT = { phonetics: "Мікрофон на тлі звукових хвиль", ortho: "Зошит, ручка й маркер на столі", lexic: "Відкритий словник і лупа", foreign: "Книжки, глобус і паспорт", phraseo: "Керамічний кіт біля мішка на вишитому рушнику", compound: "Кубики, з яких складено місток", antonym: "Чорні й білі шахові фігури одна навпроти одної", error: "Червоний і зелений олівці на аркуші з текстом" };
+  const IMG = { phonetics: "img/phonetics.jpg", ortho: "img/ortho.jpg", lexic: "img/lexic.jpg", foreign: "img/foreign.jpg", phraseo: "img/phraseo.jpg", compound: "img/compound.jpg", antonym: "img/antonym.jpg", error: "img/error.jpg", assim: "img/assim.jpg", alter: "img/alter.jpg", nn: "img/nn.jpg" };
+  const ALT = { phonetics: "Мікрофон на тлі звукових хвиль", ortho: "Зошит, ручка й маркер на столі", lexic: "Відкритий словник і лупа", foreign: "Книжки, глобус і паспорт", phraseo: "Керамічний кіт біля мішка на вишитому рушнику", compound: "Кубики, з яких складено місток", antonym: "Чорні й білі шахові фігури одна навпроти одної", error: "Червоний і зелений олівці на аркуші з текстом", assim: "Дві скляні кульки, що торкаються, кольори яких змішуються", alter: "Зелені, фіолетова й жовта шестерні", nn: "Дві зелені нитки й одна фіолетова на п’яльцях" };
   const TASKS = {};
   const tasksOf = id => TASKS[id] || (TASKS[id] = E.buildTasks(T.find(t => t.id === id)));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

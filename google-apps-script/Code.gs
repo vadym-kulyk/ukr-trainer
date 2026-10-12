@@ -31,13 +31,24 @@ const TOPICS = [
   ['meaning', '1.3 Лексичне значення слова'],
   ['antonym', '1.3 Антоніми'],
   ['lexerr', '1.3 Лексична помилка'],
-  ['phraseo', '1.3 Фразеологія']
+  ['phraseo', '1.3 Фразеологія'],
+  // Теми, додані пізніше, — в кінці, щоб не зсувати наявні стовпці.
+  ['assim_place', '1.1 Уподібнення за місцем творення'],
+  ['assim_manner', '1.1 Уподібнення за способом творення'],
+  ['alt_vowels', '1.1 Чергування голосних'],
+  ['alt_cons', '1.1 Чергування приголосних'],
+  ['unst_ph', '1.1 Ненаголошені [е], [и], [о]'],
+  ['nn_adj', '1.2 Н та нн у прикметниках'],
+  ['nn_part', '1.2 Н та нн у дієприкметниках'],
+  ['comp_tog', '1.2 Складні слова разом'],
+  ['comp_hyph', '1.2 Складні слова через дефіс']
 ];
 // Стовпці: Ключ | Учень | Оновлено | Разом % | Виконано | 19 тем (% правильних) | Дані
 const HEADER = ['Ключ', 'Учень', 'Оновлено', 'Разом, %', 'Виконано завдань']
   .concat(TOPICS.map(t => t[1]))
   .concat(['Дані (не змінювати)']);
 const DATA_COL = HEADER.length;
+const DATA_TITLE = HEADER[HEADER.length - 1];
 
 function sheet_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -51,7 +62,29 @@ function sheet_() {
     sh.hideColumns(1);
     sh.hideColumns(DATA_COL);
   }
+  migrate_(sh);
   return sh;
+}
+
+/** Якщо додано нові теми, переносимо стовпець «Дані» в кінець і оновлюємо заголовок. */
+function migrate_(sh) {
+  const lastCol = sh.getLastColumn();
+  const header = sh.getRange(1, 1, 1, lastCol).getValues()[0];
+  const oldCol = header.indexOf(DATA_TITLE) + 1;
+  if (oldCol === DATA_COL && lastCol === DATA_COL) return;
+  if (oldCol > 0 && oldCol !== DATA_COL) {
+    const rows = sh.getLastRow() - 1;
+    if (rows > 0) {
+      const data = sh.getRange(2, oldCol, rows, 1).getValues();
+      if (sh.getMaxColumns() < DATA_COL) sh.insertColumnsAfter(sh.getMaxColumns(), DATA_COL - sh.getMaxColumns());
+      sh.getRange(2, DATA_COL, rows, 1).setValues(data);
+      sh.getRange(2, oldCol, rows, 1).clearContent();
+    }
+    sh.showColumns(oldCol);
+  }
+  if (sh.getMaxColumns() < DATA_COL) sh.insertColumnsAfter(sh.getMaxColumns(), DATA_COL - sh.getMaxColumns());
+  sh.getRange(1, 1, 1, HEADER.length).setValues([HEADER]).setFontWeight('bold').setWrap(true);
+  sh.hideColumns(DATA_COL);
 }
 
 function logSheet_() {
