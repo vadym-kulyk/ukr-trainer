@@ -19,19 +19,70 @@
       multi: "Позначте всі слова, де сполучення приголосних вимовляємо {b}."
     },
     theory: `
-<p class="lead"><b>Уподібнення (асиміляція)</b> — це зміна звука під впливом сусіднього. За <b>місцем творення</b> уподібнюються <b>свистячі</b> [з], [с], [ц] і <b>шиплячі</b> [ж], [ш], [ч].</p>
-<div class="scheme flow">
-  <div class="box"><b>свистячий → шиплячий</b><span>[з], [с] перед [ж], [ш], [ч]</span><em><i>зшити</i> [шш], <i>безжурний</i> [жж], <i>розчесати</i> [шч]</em></div>
-  <div class="box"><b>шиплячий → свистячий</b><span>[ж], [ш], [ч] перед [с’], [ц’]</span><em><i>книжці</i> [з’ц’], <i>мишці</i> [с’ц’], <i>річці</i> [ц’:], <i>вчишся</i> [с’:]</em></div>
-</div>
-<h3>Де це трапляється найчастіше</h3>
-<ul>
-  <li>На межі префікса <b>з-, роз-, без-</b> і кореня на шиплячий: <i>зшити, розжарити, безчесний</i>.</li>
-  <li>На межі прийменника <b>з</b> і слова: <i>з шафи</i> [шш], <i>з жуком</i> [жж].</li>
-  <li>У давальному й місцевому відмінках іменників на <b>-жка, -шка, -чка</b>: <i>книжці, пташці, дочці</i>.</li>
-  <li>У дієсловах на <b>-шся, -жся, -чся</b>: <i>смієшся</i> [с’:], <i>мажся</i> [з’с’], <i>не морочся</i> [ц’с’].</li>
-</ul>
-<div class="mg-pair"><span class="mg-chip mg-chip--wrong">пишемо так, як чуємо: «шшити»</span><span class="mg-arrow">→</span><span class="mg-chip mg-chip--right">пишемо зшити, вимовляємо [шш]</span></div>
+<p class="lead"><b>Уподібнення (асиміляція)</b> — це зміна звука під впливом сусіднього. За <b>місцем творення</b> уподібнюються шиплячі й свистячі.</p>
+<p>Шиплячі й свистячі утворюють пари [ш] — [c], [с΄]; [ч] — [ц], [ц΄]; [ж] — [з], [з΄]; [дж] — [дз], [дз΄].</p>
+<figure class="scheme assim-pairs" style="margin:0">
+  <svg viewBox="0 0 360 228" width="100%" role="img" aria-label="Пари шиплячих і свистячих: [ш] — [с], [с΄]; [ч] — [ц], [ц΄]; [ж] — [з], [з΄]; [дж] — [дз], [дз΄]. Свистячий перед шиплячим стає шиплячим, шиплячий перед свистячим стає свистячим." style="display:block;max-width:520px;margin:0 auto">
+    <defs>
+      <marker id="ap-up" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--lime)"/></marker>
+      <marker id="ap-down" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" style="fill:var(--violet)"/></marker>
+    </defs>
+    <text x="5" y="15" style="fill:var(--muted);font:700 11px var(--f-text);letter-spacing:.06em">ШИПЛЯЧІ</text>
+    <rect x="5" y="24" width="80" height="46" rx="10" style="fill:var(--bg);stroke:var(--violet);stroke-width:2"/>
+    <text x="45" y="54" text-anchor="middle" style="fill:var(--text);font:700 18px var(--f-display)">[ш]</text>
+    <line x1="31" y1="150" x2="31" y2="82" style="stroke:var(--lime);stroke-width:3" marker-end="url(#ap-up)"/>
+    <line x1="59" y1="78" x2="59" y2="146" style="stroke:var(--violet);stroke-width:3" marker-end="url(#ap-down)"/>
+    <rect x="5" y="158" width="80" height="46" rx="10" style="fill:var(--bg);stroke:var(--lime);stroke-width:2"/>
+    <text x="45" y="187" text-anchor="middle" style="fill:var(--text);font:700 14px var(--f-display)">[с] [с΄]</text>
+    <rect x="95" y="24" width="80" height="46" rx="10" style="fill:var(--bg);stroke:var(--violet);stroke-width:2"/>
+    <text x="135" y="54" text-anchor="middle" style="fill:var(--text);font:700 18px var(--f-display)">[ч]</text>
+    <line x1="121" y1="150" x2="121" y2="82" style="stroke:var(--lime);stroke-width:3" marker-end="url(#ap-up)"/>
+    <line x1="149" y1="78" x2="149" y2="146" style="stroke:var(--violet);stroke-width:3" marker-end="url(#ap-down)"/>
+    <rect x="95" y="158" width="80" height="46" rx="10" style="fill:var(--bg);stroke:var(--lime);stroke-width:2"/>
+    <text x="135" y="187" text-anchor="middle" style="fill:var(--text);font:700 14px var(--f-display)">[ц] [ц΄]</text>
+    <rect x="185" y="24" width="80" height="46" rx="10" style="fill:var(--bg);stroke:var(--violet);stroke-width:2"/>
+    <text x="225" y="54" text-anchor="middle" style="fill:var(--text);font:700 18px var(--f-display)">[ж]</text>
+    <line x1="211" y1="150" x2="211" y2="82" style="stroke:var(--lime);stroke-width:3" marker-end="url(#ap-up)"/>
+    <line x1="239" y1="78" x2="239" y2="146" style="stroke:var(--violet);stroke-width:3" marker-end="url(#ap-down)"/>
+    <rect x="185" y="158" width="80" height="46" rx="10" style="fill:var(--bg);stroke:var(--lime);stroke-width:2"/>
+    <text x="225" y="187" text-anchor="middle" style="fill:var(--text);font:700 14px var(--f-display)">[з] [з΄]</text>
+    <rect x="275" y="24" width="80" height="46" rx="10" style="fill:var(--bg);stroke:var(--violet);stroke-width:2"/>
+    <text x="315" y="54" text-anchor="middle" style="fill:var(--text);font:700 18px var(--f-display)">[дж]</text>
+    <line x1="301" y1="150" x2="301" y2="82" style="stroke:var(--lime);stroke-width:3" marker-end="url(#ap-up)"/>
+    <line x1="329" y1="78" x2="329" y2="146" style="stroke:var(--violet);stroke-width:3" marker-end="url(#ap-down)"/>
+    <rect x="275" y="158" width="80" height="46" rx="10" style="fill:var(--bg);stroke:var(--lime);stroke-width:2"/>
+    <text x="315" y="187" text-anchor="middle" style="fill:var(--text);font:700 14px var(--f-display)">[дз] [дз΄]</text>
+    <text x="5" y="222" style="fill:var(--muted);font:700 11px var(--f-text);letter-spacing:.06em">СВИСТЯЧІ</text>
+  </svg>
+  <figcaption class="assim-legend">
+    <span><i class="lg lg-up"></i>↑ свистячий перед шиплячим вимовляємо як парний шиплячий</span>
+    <span><i class="lg lg-down"></i>↓ шиплячий перед свистячим вимовляємо як парний свистячий</span>
+  </figcaption>
+</figure>
+<h3>Свистячий + шиплячий → шиплячий + шиплячий</h3>
+<p>Свистячі приголосні перед шиплячими вимовляються як парні їм шиплячі.</p>
+<div class="tbl-wrap"><table class="tbl">
+<tr><th>Сполучення</th><th>Вимова</th><th>Приклад</th></tr>
+<tr><td>с + ш</td><td>[ш:]</td><td>винісши – [ви́нˊіш:и]</td></tr>
+<tr><td>з + ж</td><td>[ж:]</td><td>зжати – [ж:а́ти]</td></tr>
+<tr><td>з + ш у середині слова</td><td>[жш]</td><td>безшумний [беижшу́мний]</td></tr>
+<tr><td>з + ш на початку слова</td><td>[жш] → [ш:]</td><td>зшити [ш:и́ти]</td></tr>
+<tr><td>з + ч у середині слова</td><td>[жч]</td><td>безчинство – [беижчи́нство]</td></tr>
+<tr><td>з + ч на початку слова</td><td>[шч]</td><td>зчепити [шчеипи́тие]</td></tr>
+<tr><td>з + дж</td><td>[ждж]</td><td>з джерела [жджеиреила́]</td></tr>
+</table></div>
+<h3>Шиплячий + свистячий → свистячий + свистячий</h3>
+<p>Шиплячі приголосні перед свистячими вимовляються як парні їм свистячі.</p>
+<div class="tbl-wrap"><table class="tbl">
+<tr><th>Сполучення</th><th>Вимова</th><th>Приклад</th></tr>
+<tr><td>ш + с΄</td><td>[с΄:]</td><td>милуєшся [миелу́йеис:а]</td></tr>
+<tr><td>ж + с΄</td><td>[з΄с΄]</td><td>поріжся [поурˊі́зˊсˊа]</td></tr>
+<tr><td>ч + с΄</td><td>[ц΄с΄]</td><td>мучся [муцˊсˊа]</td></tr>
+<tr><td>ш + ц΄</td><td>[с΄ц΄]</td><td>дошці [до́сˊцˊі]</td></tr>
+<tr><td>ж + ц΄</td><td>[з΄ц΄]</td><td>мережці [меире́зˊцˊі]</td></tr>
+<tr><td>ч + ц΄</td><td>[ц΄:]</td><td>качці [ка́цˊ:і]</td></tr>
+</table></div>
+<div class="mg-pair"><span class="mg-chip mg-chip--wrong">пишемо так, як чуємо: «шшити»</span><span class="mg-arrow">→</span><span class="mg-chip mg-chip--right">пишемо зшити, вимовляємо [ш:и́ти]</span></div>
 <p class="note">Уподібнення стосується лише <b>вимови</b>. На письмі зберігаємо букви за правилами орфографії.</p>`,
     pairs: [
       ["зшити","[шш]"],["безшумний","[шш]"],["розшукати","[шш]"],["з шафи","[шш]"],
