@@ -8,7 +8,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 2;
+const SERVICE_VERSION = 3;
 const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми №', 'Завдання №', 'Тип завдання', 'Результат', 'Запитання', 'Відповідь учня', 'Правильна відповідь'];
 const TYPE_NAMES = { one: 'одна відповідь', multi: 'кілька відповідей', sort: 'розподіл за групами', match: 'відповідність', order: 'порядок' };
 const TASKS_PER_TOPIC = 100;

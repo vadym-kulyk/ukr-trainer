@@ -380,7 +380,7 @@ main { padding-block: 22px 60px; }
     }
     const sentResets = [...resetIds];
     // Журнал спроб надсилаємо лише новій версії скрипта, інакше записи лишаються в черзі.
-    const queue = s.queue || [], sentEvents = serverV >= 2 ? queue.slice(0, 200) : [];
+    const queue = s.queue || [], sentEvents = serverV >= 3 ? queue.slice(0, 200) : [];
     if (sentEvents.length) rec.events = sentEvents;
     try {
       await fetch(RESULTS_URL, { method: "POST", mode: "no-cors", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(rec) });
