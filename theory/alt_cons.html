@@ -1,0 +1,91 @@
+<p class="lead"><b>Чергування звуків</b> — закономірна заміна одного звука іншим у тому самому чи спорідненому слові. Приголосні чергуються під час <b>словозміни</b> і <b>творення нових слів</b>.</p>
+
+<h3>Три трійки: [к] [г] [х]</h3>
+<div class="scheme trees">
+<svg class="tree" viewBox="0 0 240 124" role="img" aria-label="рука: [к] чергується з [ч] (ручка) і [ц΄] ((в) руці)">
+  <text x="30" y="58" text-anchor="middle" style="fill:var(--text);font:800 22px var(--f-display)">[к]</text>
+  <text x="30" y="80" text-anchor="middle" style="fill:var(--muted);font:600 13px var(--f-text)">рука</text>
+  <line x1="58" y1="56" x2="108" y2="30" style="stroke:var(--violet);stroke-width:2.5"/>
+  <line x1="58" y1="64" x2="108" y2="94" style="stroke:var(--lime);stroke-width:2.5"/>
+  <text x="114" y="27" style="fill:var(--violet-ink);font:800 18px var(--f-display)">[ч]</text>
+  <text x="114" y="46" style="fill:var(--text);font:600 13px var(--f-text)">ручка</text>
+  <text x="114" y="91" style="fill:var(--right);font:800 18px var(--f-display)">[ц΄]</text>
+  <text x="114" y="110" style="fill:var(--text);font:600 13px var(--f-text)">(в) руці</text>
+</svg>
+<svg class="tree" viewBox="0 0 240 124" role="img" aria-label="нога: [г] чергується з [ж] (ніжка) і [з΄] ((на) нозі)">
+  <text x="30" y="58" text-anchor="middle" style="fill:var(--text);font:800 22px var(--f-display)">[г]</text>
+  <text x="30" y="80" text-anchor="middle" style="fill:var(--muted);font:600 13px var(--f-text)">нога</text>
+  <line x1="58" y1="56" x2="108" y2="30" style="stroke:var(--violet);stroke-width:2.5"/>
+  <line x1="58" y1="64" x2="108" y2="94" style="stroke:var(--lime);stroke-width:2.5"/>
+  <text x="114" y="27" style="fill:var(--violet-ink);font:800 18px var(--f-display)">[ж]</text>
+  <text x="114" y="46" style="fill:var(--text);font:600 13px var(--f-text)">ніжка</text>
+  <text x="114" y="91" style="fill:var(--right);font:800 18px var(--f-display)">[з΄]</text>
+  <text x="114" y="110" style="fill:var(--text);font:600 13px var(--f-text)">(на) нозі</text>
+</svg>
+<svg class="tree" viewBox="0 0 240 124" role="img" aria-label="вухо: [х] чергується з [ш] (вушко) і [с΄] ((у) вусі)">
+  <text x="30" y="58" text-anchor="middle" style="fill:var(--text);font:800 22px var(--f-display)">[х]</text>
+  <text x="30" y="80" text-anchor="middle" style="fill:var(--muted);font:600 13px var(--f-text)">вухо</text>
+  <line x1="58" y1="56" x2="108" y2="30" style="stroke:var(--violet);stroke-width:2.5"/>
+  <line x1="58" y1="64" x2="108" y2="94" style="stroke:var(--lime);stroke-width:2.5"/>
+  <text x="114" y="27" style="fill:var(--violet-ink);font:800 18px var(--f-display)">[ш]</text>
+  <text x="114" y="46" style="fill:var(--text);font:600 13px var(--f-text)">вушко</text>
+  <text x="114" y="91" style="fill:var(--right);font:800 18px var(--f-display)">[с΄]</text>
+  <text x="114" y="110" style="fill:var(--text);font:600 13px var(--f-text)">(у) вусі</text>
+</svg>
+</div>
+<div class="tbl-wrap"><table class="tbl">
+<tr><th>Звуки</th><th>Приклади</th></tr>
+<tr><td><b>[к] → [ч], [ц΄]</b></td><td>рука — ручка — (в) руці; пекти — печу, юнак — юначе, квітка — квітці</td></tr>
+<tr><td><b>[г] → [ж], [з΄]</b></td><td>нога — ніжка — (на) нозі; берегти — бережу, друг — друже, перемога — перемозі</td></tr>
+<tr><td><b>[х] → [ш], [с΄]</b></td><td>вухо — вушко — (у) вусі; колихати — колишу, пастух — пастуше, птах — пташеня</td></tr>
+<tr><td><b>[ґ] → [з΄]</b></td><td>дзиґа — на дзизі; Ломаґа (прізвище) — Ломазі</td></tr>
+</table></div>
+
+<h3>Коли саме: алгоритм</h3>
+<ol class="algo">
+  <li><b>Знайди останній приголосний основи</b><span>рук-а → [к], ног-а → [г], вух-о → [х]</span></li>
+  <li><b>Іменник у давальному або місцевому відмінку (закінчення -і)?</b><span>→ [ц΄], [з΄], [с΄]: рік — у році, книга — (на) книзі, муха — (на) мусі</span></li>
+  <li><b>Новий суфікс (-к-, -еньк-, -ок-) або дієслівна форма?</b><span>→ [ч], [ж], [ш]: ручка, ніженька, вушко, печу, бережу, колишу</span></li>
+</ol>
+
+<h3>Чергування в дієсловах (1-ша особа однини)</h3>
+<div class="tbl-wrap"><table class="tbl">
+<tr><th>Чергування</th><th>Приклади</th></tr>
+<tr><td><b>[д] → [дж]</b></td><td>садити — саджу, ходити — ходжу</td></tr>
+<tr><td><b>[т] → [ч]</b></td><td>платити — плачу</td></tr>
+<tr><td><b>[з] → [ж]</b></td><td>казати — кажу</td></tr>
+<tr><td><b>[с] → [ш]</b></td><td>косити — кошу</td></tr>
+<tr><td><b>[зд] → [ждж]</b></td><td>їздити — їжджу</td></tr>
+<tr><td><b>[ст] → [шч]</b></td><td>захистити — захищу</td></tr>
+<tr><td><b>[б], [п], [ф] → + [л΄]</b></td><td>любити — люблю, топити — топлю, графити — графлю</td></tr>
+</table></div>
+<div class="scheme flow">
+  <div class="box"><b>губний + [л΄]</b><span>після [б], [п], [в], [м], [ф]</span><em>люб<span class="hl">л</span>ю, топ<span class="hl">л</span>ю, граф<span class="hl">л</span>ю</em></div>
+  <div class="box"><b>зубний → шиплячий</b><span>[д], [т], [з], [с]</span><em>са<span class="hl">дж</span>у, пла<span class="hl">ч</span>у, ка<span class="hl">ж</span>у, ко<span class="hl">ш</span>у</em></div>
+</div>
+
+<h3>Перед суфіксами -ськ-, -ств-</h3>
+<p>Приголосні змінюються, коли від основ на [к], [ч], [ц], [г], [ж], [з], [х], [ш], [с΄] творимо прикметники із суфіксом <b>-ськ-</b> та іменники із суфіксом <b>-ств-</b>.</p>
+<div class="triads">
+  <div class="triad"><span class="tri-in">г · ж · <b>з</b></span><span class="tri-arrow">→</span><span class="tri-out"><b>з</b>ьк, <b>з</b>тв</span><em>Прага — празький, убогий — убозтво, Кавказ — кавказький, Париж — паризький, Запоріжжя — запорізький</em></div>
+  <div class="triad"><span class="tri-in">к · ч · <b>ц</b></span><span class="tri-arrow">→</span><span class="tri-out"><b>ц</b>ьк, <b>ц</b>тв</span><em>пророк — пророцький, молодець — молодецтво, юнак — юнацький — юнацтво</em></div>
+  <div class="triad"><span class="tri-in">х · ш · <b>с</b></span><span class="tri-arrow">→</span><span class="tri-out"><b>с</b>ьк, <b>с</b>тв</span><em>чех — чеський, волох — волоський, Полісся — поліський, товариш — товариство, Сиваш — сиваський</em></div>
+</div>
+<p class="note"><b>Підказка:</b> суфікс завжди починається з <b>останньої</b> букви своєї трійки: г, ж, з → <b>з</b>ьк; к, ч, ц → <b>ц</b>ьк; х, ш, с → <b>с</b>ьк.</p>
+<p>При цьому відбувається й спрощення: <i>козак — коза-цьк-ий, чех — че-ськ-ий, Запоріжжя — запорі-зьк-ий, птах — пта-ств-о</i>.</p>
+<ol class="algo">
+  <li><b>Відкинь закінчення й знайди останній приголосний основи</b><span>Праг-а → г</span></li>
+  <li><b>Визнач його трійку</b><span>г належить до трійки г · ж · з</span></li>
+  <li><b>Заміни цей приголосний разом із суфіксом на «останню букву + ьк / тв»</b><span>Пра + зьк + ий → празький</span></li>
+</ol>
+<h3>Винятки: запозичені слова без змін</h3>
+<p><i>герцог — герцогський, Кембридж — кембриджський, Нью-Йорк — нью-йоркський, баски — баскський, Ірак — іракський, Мекка — меккський, Малакка — малаккський, казах — казахський, Карабах — карабахський, тюрк — тюркський, падишах — падишахський, Цюрих — цюрихський, Ла-Манш — ла-маншський, ацтеки — ацтекський</i>.</p>
+<p>Інші приголосні перед -ськ-, -ств- змінюються лише у вимові, а на письмі зберігаються: <i>брат — братський</i> [брац΄кий], <i>солдат — солдатський</i> [солдац΄кий].</p>
+
+<h3>Перед суфіксом -ин-</h3>
+<div class="triads">
+  <div class="triad"><span class="tri-in">-цьк- + -ин-</span><span class="tri-arrow">→</span><span class="tri-out">-чч- [ч:]</span><em>козацький — козаччина, вінницький — Вінниччина (два подвоєння). Виняток: галицький — Галичина</em></div>
+  <div class="triad"><span class="tri-in">-зьк- + -ин-</span><span class="tri-arrow">→</span><span class="tri-out">-жч-</span><em>острозький — Острожчина</em></div>
+  <div class="triad"><span class="tri-in">-ськ- + -ин-</span><span class="tri-arrow">→</span><span class="tri-out">-щ- [шч]</span><em>одеський — Одещина</em></div>
+</div>
+<p>Також основи на <b>-с-, -сок-, -ск-, -шк-</b> чергуються з <b>-щ-</b> [шч]: <i>віск — вощина, пісок — піщина, дошка — дощаний, зморшка — зморщений</i>.</p>

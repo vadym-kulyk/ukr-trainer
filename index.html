@@ -331,6 +331,57 @@ main { padding-block: 22px 60px; }
   .mark--l { display: none; }
 }
 
+
+/* ── Теорія: читабельність і блоки для запам’ятовування ── */
+.tbody { font-size: 17px; line-height: 1.6; gap: 16px; }
+.tbody .note, .tbody .cap, .tbody .box span, .tbody .box em, .tbody .algo li span, .tbody .fork-b span, .tbody .triad em, .tbody .assim-legend, .tbody .mg-chip { font-size: 16px; }
+.tbody .tbl { font-size: 16px; }
+.tbody .tbl th { font-size: 15px; text-transform: none; letter-spacing: 0; }
+.tbody .algo li b { font-size: 17px; }
+.tbody .box b { font-size: 17px; }
+.tbody .syl-tag { font-size: 14px; }
+.tbody h3 { font-size: 19px; margin-top: 10px; padding-top: 14px; border-top: 2px solid var(--line); }
+.tbody h3:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.tbody h4 { font-size: 17px; margin: 0; font-family: var(--f-display); }
+.rule { background: color-mix(in srgb, var(--lime) 16%, var(--surface)); border: 2px solid var(--lime); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 6px; font-size: 18px; }
+.rule > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--lime-ink); }
+.mnemo { position: relative; background: color-mix(in srgb, var(--violet) 12%, var(--surface)); border: 2px dashed var(--violet); border-radius: var(--r); padding: 14px 16px 14px 58px; display: grid; gap: 6px; }
+.mnemo::before { content: "💡"; position: absolute; left: 16px; top: 12px; font-size: 26px; }
+.mnemo > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--violet-ink); }
+.mnemo .say { font-family: var(--f-display); font-size: 20px; font-weight: 700; line-height: 1.3; }
+.mnemo .say u { text-decoration-color: var(--lime); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.exc { background: color-mix(in srgb, var(--yellow) 16%, var(--surface)); border-left: 6px solid var(--yellow); border-radius: var(--r-sm); padding: 12px 14px; display: grid; gap: 6px; }
+.exc > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.trap { background: var(--wrong-bg); border-left: 6px solid var(--wrong); border-radius: var(--r-sm); padding: 12px 14px; display: grid; gap: 8px; }
+.trap > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--wrong); }
+.pairs { display: grid; gap: 6px; }
+.pairs div { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.pairs s { color: var(--wrong); text-decoration-thickness: 2px; }
+.pairs ins { color: var(--right); text-decoration: none; font-weight: 700; }
+.pairs ins::before { content: "→ "; color: var(--muted); font-weight: 400; }
+.quiz { display: grid; gap: 8px; }
+.quiz > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--violet-ink); }
+.quiz details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.quiz summary { cursor: pointer; padding: 12px 14px; font-weight: 700; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+.quiz summary::before { content: "?"; flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--violet); color: #fff; display: grid; place-items: center; font: 800 15px var(--f-display); }
+.quiz details[open] summary::before { content: "✓"; background: var(--lime); color: #1e1b26; }
+.quiz details > div { padding: 0 14px 12px 50px; }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.wl-box { display: grid; gap: 10px; }
+.wl-filter { width: 100%; border: 2px solid var(--line); border-radius: 999px; padding: 10px 16px; font-size: 17px; background: var(--surface); color: var(--text); }
+.wl-filter:focus { outline: none; border-color: var(--lime); }
+.wl { display: grid; gap: 10px; }
+.wl section { display: grid; gap: 6px; }
+.wl h4 { font-size: 18px; color: var(--violet-ink); }
+.wl ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.wl li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 5px 10px; font-size: 17px; }
+.wl li small { font-size: 14px; color: var(--muted); }
+.wl dl { margin: 0; display: grid; gap: 6px; }
+.wl dl > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.wl dt { font-weight: 800; }
+.wl dd { margin: 2px 0 0; }
+.wl [hidden] { display: none !important; }
+.wl-empty { color: var(--muted); }
 /* ── Три розділи на головній ── */
 .hometabs.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .hometabs.three .tab { padding-inline: 6px; line-height: 1.2; font-size: 15px; }
@@ -574,6 +625,21 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
   function statsOf(r) { let a = 0, c = 0; for (const ch of r || "") { if (ch !== ".") a++; if (ch === "1") c++; } return { a, c }; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
+  /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
+  const VER = "6", THEORY = {}, theoryLoading = {};
+  function loadTheoryFile(id) {
+    if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
+    if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
+      .catch(() => { const t = T.find(x => x.id === id); return t && t.theory ? t.theory : '<p class="empty">Не вдалося завантажити теорію. Перевірте інтернет.</p>'; })
+      .then(x => { THEORY[id] = x; return x; });
+    return theoryLoading[id];
+  }
+  function theoryOf(id) {
+    if (THEORY[id] != null) return THEORY[id];
+    loadTheoryFile(id).then(() => render());
+    return null;
+  }
+
   /* ───── UI-стан ───── */
   let ui = { view: "home", topic: null, tab: "theory", cur: 0, map: false };
   let pend = null, confirmReset = false;
@@ -583,7 +649,8 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
     me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
     saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), toast: m => toast(m),
     render: () => render(), scrollTask: () => scrollTask(), gateHtml: () => gateHtml(),
-    trainerTopic: id => T.find(t => t.id === id),
+    trainerTopic: id => { const t = T.find(x => x.id === id); if (!t) return null; const th = theoryOf(id); return { title: t.title, theory: th == null ? '<p class="empty">Завантажую теорію…</p>' : th }; },
+    loadTrainerTheory: id => loadTheoryFile(id),
     setZnoUnique: n => { store.znoUnique = n; }, getZnoUnique: () => store.znoUnique || 0
   });
   const NM = window.MGNmt({
@@ -882,7 +949,7 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
     return `<article class="theory">
       <h2>${esc(t.title)}</h2>
       <figure class="photo"><img src="${IMG[t.img]}" alt="${esc(ALT[t.img])}" loading="lazy"><figcaption>Ілюстрацію згенеровано ШІ (Hugging Face, Z-Image Turbo)</figcaption></figure>
-      <div class="tbody">${t.theory}</div>
+      <div class="tbody">${theoryOf(t.id) ?? '<p class="empty">Завантажую теорію…</p>'}</div>
       <button class="btn primary to-tasks" data-tabto="tasks">До завдань →</button>
     </article>`;
   }
@@ -1138,7 +1205,8 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
     if (kind === "t") {
       const t = T.find(x => x.id === id); if (!t) return;
       openSheet("Теорія: " + t.title);
-      sheetBody.innerHTML = `<article class="theory in-sheet"><div class="tbody">${t.theory}</div></article>`;
+      sheetBody.innerHTML = '<p class="empty">Завантажую теорію…</p>';
+      loadTheoryFile(id).then(x => { sheetBody.innerHTML = `<article class="theory in-sheet"><div class="tbody">${x}</div></article>`; sheetBody.scrollTop = 0; });
     } else {
       openSheet("Теорія");
       sheetBody.innerHTML = '<p class="empty">Завантажую теорію…</p>';
@@ -1202,6 +1270,15 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
   selchip.addEventListener("pointerdown", e => e.preventDefault());
   selchip.addEventListener("click", () => { const w = selWord; selchip.hidden = true; if (window.getSelection) window.getSelection().removeAllRanges(); if (w) openDict(w); });
 
+  /* Пошук у словничках теорії (наголоси, фразеологізми). */
+  document.addEventListener("input", e => {
+    const f = e.target.closest && e.target.closest(".wl-filter"); if (!f) return;
+    const box = f.closest(".wl-box"), q = f.value.trim().toLowerCase().replace(/\u0301/g, "");
+    let shown = 0;
+    box.querySelectorAll(".wl [data-w]").forEach(el => { const hit = !q || el.dataset.w.includes(q); el.hidden = !hit; if (hit) shown++; });
+    box.querySelectorAll(".wl section").forEach(sec => { sec.hidden = !sec.querySelector("[data-w]:not([hidden])"); });
+    const em = box.querySelector(".wl-empty"); if (em) em.hidden = shown > 0;
+  });
   NM.bindDrag(app);
   { const run = loggedIn() && NM.activeRun(); if (run) Object.assign(ui, { view: "nmt", ntest: run, nstage: "exam" }); }
   renderProfile();

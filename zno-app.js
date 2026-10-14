@@ -334,7 +334,7 @@
       return Promise.resolve(loadIndex()).then(() => {
         const t = topicMeta(id);
         if (!t) throw new Error("no topic");
-        return (t.theory ? fetch(t.theory).then(r => r.text()) : Promise.resolve("")).then(x => {
+        return Promise.all((t.trainer || []).map(tid => host.loadTrainerTheory(tid))).then(() => t.theory ? fetch(t.theory).then(r => r.text()) : Promise.resolve("")).then(x => {
           let body = x ? `<div class="tbody">${x}</div>` : "";
           const trainer = (t.trainer || []).map(tid => host.trainerTopic(tid)).filter(Boolean);
           trainer.forEach(tt => { body += `<section class="ztheory-part">${trainer.length > 1 || x ? `<h3 class="ztheory-h">${esc(tt.title)}</h3>` : ""}<div class="tbody">${tt.theory}</div></section>`; });
