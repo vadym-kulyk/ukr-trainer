@@ -333,7 +333,9 @@ main { padding-block: 22px 60px; }
 
 
 /* ── Теорія: читабельність і блоки для запам’ятовування ── */
-.tbody { font-size: 17px; line-height: 1.6; gap: 16px; }
+.tbody { font-size: 17px; line-height: 1.6; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.tbody > * { min-width: 0; }
+.mnemo, .rule, .exc, .trap, .quiz, .pairs div, .wl li, .wl dl > div { overflow-wrap: anywhere; min-width: 0; }
 .tbody .note, .tbody .cap, .tbody .box span, .tbody .box em, .tbody .algo li span, .tbody .fork-b span, .tbody .triad em, .tbody .assim-legend, .tbody .mg-chip { font-size: 16px; }
 .tbody .tbl { font-size: 16px; }
 .tbody .tbl th { font-size: 15px; text-transform: none; letter-spacing: 0; }
@@ -543,6 +545,7 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
 @media (max-width: 480px) { .dict-btn .lbl { display: none; } }
 .fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 30; border: 0; border-radius: 999px; background: var(--violet-ink); color: #fff; font-weight: 800; font-size: 16px; padding: 12px 18px; min-height: 48px; box-shadow: 0 8px 24px rgb(0 0 0 / .25); }
 .fab[hidden], .selchip[hidden] { display: none; }
+body.has-fab main { padding-bottom: 110px; }
 .selchip { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 31; border: 0; border-radius: 999px; background: var(--lime); color: #1e1b26; font-size: 16px; font-weight: 600; padding: 12px 18px; min-height: 48px; max-width: calc(100vw - 32px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 8px 24px rgb(0 0 0 / .25); }
 @media (prefers-reduced-motion: no-preference) { .bar i, .bar b { transition: width .3s ease; } }
 </style>
@@ -1242,6 +1245,7 @@ html.sheet-open, html.sheet-open body { overflow: hidden; }
     if (ui.view === "topic" && ui.tab === "tasks" && ui.topic) ref = "t:" + ui.topic;
     if (ui.view === "ztopic" && ui.tab === "tasks" && ui.ztopic) ref = "z:" + ui.ztopic;
     fab.hidden = !ref; if (ref) fab.dataset.ref = ref;
+    document.body.classList.toggle("has-fab", !!ref);
   }
   fab.addEventListener("click", () => openTheory(fab.dataset.ref));
 

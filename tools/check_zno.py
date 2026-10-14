@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Перевірка цілісності банку ЗНО (zno/): відповіді, картинки, теорія, Code.gs.
+"""Перевірка цілісності даних: банк ЗНО (zno/), тести НМТ (nmt/), теорія тренажера (theory/), Code.gs.
 
 Запуск: python3 tools/check_zno.py  — код виходу 0, якщо помилок немає.
 """
@@ -89,9 +89,63 @@ for t in index["topics"]:
     if t["id"] not in gs:
         err("Code.gs: немає теми %s" % t["id"])
 
+# ── Теорія тренажера ──
+for tid in sorted(trainer_ids):
+    p = os.path.join(ROOT, "theory", tid + ".html")
+    if not os.path.exists(p):
+        err("theory/%s.html: немає файлу теорії" % tid)
+    else:
+        check_html(p)
+
+# ── Тести НМТ ──
+nmt_index = json.load(open(os.path.join(ROOT, "nmt", "index.json"), encoding="utf-8"))
+zno_ids = {t["id"] for t in index["topics"]}
+scale = {int(k): v for k, v in nmt_index["scale"].items()}
+if min(scale) != 8 or scale[45] != 200 or any(scale[a] > scale[b] for a, b in zip(sorted(scale), sorted(scale)[1:])):
+    err("nmt: таблиця переведення має бути зростаючою, 8 → 100 … 45 → 200")
+for t in nmt_index["tests"]:
+    data = json.load(open(os.path.join(ROOT, "nmt", "t", t["id"] + ".json"), encoding="utf-8"))
+    tasks = data["tasks"]
+    if len(tasks) != 30:
+        err("nmt/%s: %d завдань замість 30" % (t["id"], len(tasks)))
+    maxp = 0
+    for i, x in enumerate(tasks, 1):
+        k = "nmt/%s #%d" % (t["id"], i)
+        texts = [x["q"], x.get("ex", "")]
+        if x["type"] == "single":
+            keys = [o[0] for o in x["opts"]]
+            texts += [o[1] for o in x["opts"]]
+            if x["a"] not in keys:
+                err("%s: відповідь поза варіантами" % k)
+            maxp += 1
+        elif x["type"] == "matching":
+            lk = [o[0] for o in x["left"]]; rk = [o[0] for o in x["right"]]
+            texts += [o[1] for o in x["left"] + x["right"]]
+            if sorted(x["a"]) != sorted(lk) or any(v not in rk for v in x["a"].values()):
+                err("%s: відповідь не відповідає колонкам" % k)
+            maxp += len(lk)
+        else:
+            err("%s: невідомий тип" % k)
+        for t_ in texts:
+            for src in re.findall(r'src="([^"]+)"', t_):
+                if not src.startswith("data:") and not os.path.exists(os.path.join(ROOT, src)):
+                    err("%s: немає картинки %s" % (k, src))
+            if re.search(r"<script|on\w+=", t_, re.I):
+                err("%s: небезпечна розмітка" % k)
+        if not x.get("th"):
+            err("%s: немає прив’язки до теорії" % k)
+        for ref in x.get("th", []):
+            kind, rid = ref.split(":")
+            if (kind == "z" and rid not in zno_ids) or (kind == "t" and rid not in trainer_ids):
+                err("%s: невідома тема теорії %s" % (k, ref))
+    if maxp != t["max"] or maxp != 45:
+        err("nmt/%s: максимум %d балів замість 45" % (t["id"], maxp))
+    if t["id"] not in gs:
+        err("Code.gs: немає тесту НМТ %s" % t["id"])
+
 if errors:
     print("\n".join(errors))
     print("ПОМИЛОК: %d" % len(errors))
     sys.exit(1)
-print("OK: тем %d, завдань %d (унікальних %d), теорій %d" % (
-    len(index["topics"]), total, len(seen_ids), sum(1 for t in index["topics"] if t.get("theory"))))
+print("OK: ЗНО — тем %d, завдань %d (унікальних %d), теорій %d; НМТ — тестів %d; теорій тренажера %d" % (
+    len(index["topics"]), total, len(seen_ids), sum(1 for t in index["topics"] if t.get("theory")), len(nmt_index["tests"]), len(trainer_ids)))
