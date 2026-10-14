@@ -329,6 +329,21 @@
       return lines;
     }
 
-    return { homeHtml, topicHtml, onClick, payload, sent, merge, reportLines, loadIndex, md: M };
+    /* Теорія теми для бічної панелі (під час завдань і в розборі НМТ). */
+    function theoryFor(id) {
+      return Promise.resolve(loadIndex()).then(() => {
+        const t = topicMeta(id);
+        if (!t) throw new Error("no topic");
+        return (t.theory ? fetch(t.theory).then(r => r.text()) : Promise.resolve("")).then(x => {
+          let body = x ? `<div class="tbody">${x}</div>` : "";
+          const trainer = (t.trainer || []).map(tid => host.trainerTopic(tid)).filter(Boolean);
+          trainer.forEach(tt => { body += `<section class="ztheory-part">${trainer.length > 1 || x ? `<h3 class="ztheory-h">${esc(tt.title)}</h3>` : ""}<div class="tbody">${tt.theory}</div></section>`; });
+          return { title: t.title, html: body || '<p class="empty">Теорію до цієї теми ще готуємо.</p>' };
+        });
+      });
+    }
+    const titleOf = id => { const t = topicMeta(id); return t ? t.title : null; };
+
+    return { homeHtml, topicHtml, onClick, payload, sent, merge, reportLines, loadIndex, theoryFor, titleOf, md: M };
   };
 })();
