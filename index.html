@@ -165,6 +165,33 @@ main { padding-block: 22px 60px; }
 .mg-chip--right { background: var(--right-bg); color: var(--right); }
 .mg-arrow { color: var(--muted); font-size: 20px; }
 .to-tasks { justify-self: start; }
+.syl-pair { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.syl-col { display: grid; gap: 6px; justify-items: center; text-align: center; }
+.syl-col em { font-style: normal; font-family: var(--f-display); font-weight: 700; color: var(--violet-ink); }
+.syl-tag { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.syl-arrow { font-size: 24px; color: var(--muted); }
+.algo { list-style: none; counter-reset: step; padding: 0; margin: 0; display: grid; gap: 8px; }
+.algo li { counter-increment: step; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 2px 10px; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; }
+.algo li::before { content: counter(step); grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; background: var(--lime); color: #1e1b26; font: 800 14px var(--f-display); display: grid; place-items: center; }
+.algo li b { font-size: 15px; }
+.algo li span { font-size: 14px; color: var(--muted); }
+.fork { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.fork-q { background: var(--surface-2); padding: 10px 14px; font-size: 15px; text-align: center; }
+.fork-a { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.fork-b { padding: 12px 14px; display: grid; gap: 4px; min-width: 0; }
+.fork-b b { font-family: var(--f-display); font-size: 15px; }
+.fork-b span { font-size: 14px; font-style: italic; color: var(--violet-ink); }
+.fork-soft { border-top: 4px solid var(--lime); }
+.fork-hard { border-top: 4px solid var(--violet); }
+.nolist { padding-left: 1.2em; }
+.trees { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.tree { width: 100%; max-width: 280px; height: auto; display: block; justify-self: center; }
+.triads { display: grid; gap: 8px; }
+.triad { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--yellow); border-radius: var(--r-sm); padding: 10px 12px; }
+.triad em { flex-basis: 100%; font-style: italic; font-size: 14px; color: var(--violet-ink); }
+.tri-in, .tri-out { font-family: var(--f-display); font-weight: 700; font-size: 16px; }
+.tri-in b, .tri-out b { color: var(--right); text-decoration: underline 3px var(--lime); text-underline-offset: 3px; }
+.tri-arrow { color: var(--muted); font-size: 18px; }
 .assim-pairs { display: grid; gap: 10px; }
 .assim-legend { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
 .assim-legend span { display: flex; gap: 8px; align-items: baseline; }
