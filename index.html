@@ -276,6 +276,49 @@ main { padding-block: 22px 60px; }
 .gate { background: var(--surface); border: 2px dashed var(--yellow); border-radius: var(--r); padding: 18px; display: grid; gap: 10px; }
 .done-card { background: color-mix(in srgb, var(--lime) 16%, var(--surface)); border: 1px solid var(--lime); border-radius: var(--r); padding: 16px; display: grid; gap: 8px; }
 
+/* ── Завдання ЗНО ── */
+.hometabs { margin-bottom: 18px; }
+.zsum { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; margin-bottom: 22px; }
+.zq { font-size: 17px; line-height: 1.55; overflow-wrap: anywhere; }
+.zq u, .otext u, .zex-body u { text-decoration-thickness: 2px; text-underline-offset: 3px; text-decoration-color: var(--violet); }
+.zimg { display: block; max-width: 100%; height: auto; max-height: 340px; object-fit: contain; border-radius: 8px; background: #fff; margin: 6px 0; }
+.zopt { align-items: flex-start; }
+.zshape { display: inline-block; min-width: 1.5em; font-size: 1.2em; font-weight: 700; color: var(--violet-ink); line-height: 1; }
+.zopt .otext { min-width: 0; flex: 1 1 auto; overflow-wrap: anywhere; }
+.zopt.has-img .otext { width: 100%; }
+.zopt.has-img .zimg { max-height: 220px; margin: 0; }
+.zright { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; }
+.zright ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.zright li { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; overflow-wrap: anywhere; min-width: 0; }
+.zright .key, .zmatch .key { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--bg); border: 1px solid var(--line); font: 600 13px var(--f-mono); }
+.zcol-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 6px; }
+.zmatch .w { display: flex; gap: 10px; align-items: flex-start; }
+.zmatch .znum { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.zex { border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); }
+.zex summary { cursor: pointer; padding: 10px 14px; font-weight: 700; }
+.zex-body { padding: 0 14px 12px; font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+.ztheory-part { display: grid; gap: 10px; }
+.ztheory-h { font-size: 18px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+.syn-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0; }
+.syn-row span { padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--bg); font-size: 14px; }
+.syn-row .syn-core { background: var(--violet-ink); color: #fff; border-color: var(--violet-ink); font-weight: 700; }
+.morph { display: flex; justify-content: center; align-items: flex-end; flex-wrap: wrap; font-family: var(--f-display); font-size: 28px; padding: 22px 8px 10px; margin: 6px 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.morph span { padding: 0 3px; position: relative; }
+.morph .m-pre { border-top: 3px solid var(--violet); border-right: 3px solid var(--violet); }
+.morph .m-root { border: 3px solid transparent; border-top-color: var(--lime-ink); border-bottom: 0; border-radius: 50% 50% 0 0 / 16px 16px 0 0; padding-top: 4px; }
+.morph .m-suf::before { content: ""; position: absolute; left: 50%; top: -14px; width: 14px; height: 14px; border-left: 3px solid var(--yellow); border-top: 3px solid var(--yellow); transform: translateX(-50%) rotate(45deg); }
+.morph .m-end { border: 3px solid var(--text); }
+.pos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 6px 0; }
+.pos-col { background: var(--bg); border: 1px solid var(--line); border-top: 4px solid var(--violet); border-radius: var(--r-sm); padding: 10px 12px; display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start; min-width: 0; }
+.pos-col h4 { width: 100%; margin: 0 0 4px; font-family: var(--f-display); font-size: 16px; }
+.pos-col > span { padding: 4px 10px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; }
+.pos-col.pos-serv { border-top-color: var(--lime); }
+.pos-col.pos-int { border-top-color: var(--yellow); }
+.phrase-scheme { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.phrase-scheme span { padding: 6px 12px; border-radius: var(--r-sm); font-weight: 700; }
+.ph-main { background: var(--violet-ink); color: #fff; }
+.ph-arrow { color: var(--muted); font-weight: 400 !important; padding: 0 !important; }
+.ph-dep { background: var(--lime); color: #111; }
 .toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; z-index: 50; max-width: calc(100% - 32px); text-align: center; }
 
 @media (max-width: 560px) {
@@ -287,6 +330,223 @@ main { padding-block: 22px 60px; }
   .mark--r { right: -120px; top: -70px; opacity: .08; }
   .mark--l { display: none; }
 }
+
+
+/* ── Теорія: читабельність і блоки для запам’ятовування ── */
+.tbody { font-size: 17px; line-height: 1.6; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+.tbody > * { min-width: 0; }
+.mnemo, .rule, .exc, .trap, .quiz, .pairs div, .wl li, .wl dl > div { overflow-wrap: anywhere; min-width: 0; }
+.tbody .note, .tbody .cap, .tbody .box span, .tbody .box em, .tbody .algo li span, .tbody .fork-b span, .tbody .triad em, .tbody .assim-legend, .tbody .mg-chip { font-size: 16px; }
+.tbody .tbl { font-size: 16px; }
+.tbody .tbl th { font-size: 15px; text-transform: none; letter-spacing: 0; }
+.tbody .algo li b { font-size: 17px; }
+.tbody .box b { font-size: 17px; }
+.tbody .syl-tag { font-size: 14px; }
+.tbody h3 { font-size: 19px; margin-top: 10px; padding-top: 14px; border-top: 2px solid var(--line); }
+.tbody h3:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.tbody h4 { font-size: 17px; margin: 0; font-family: var(--f-display); }
+.rule { background: color-mix(in srgb, var(--lime) 16%, var(--surface)); border: 2px solid var(--lime); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 6px; font-size: 18px; }
+.rule > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--lime-ink); }
+.mnemo { position: relative; background: color-mix(in srgb, var(--violet) 12%, var(--surface)); border: 2px dashed var(--violet); border-radius: var(--r); padding: 14px 16px 14px 58px; display: grid; gap: 6px; }
+.mnemo::before { content: "💡"; position: absolute; left: 16px; top: 12px; font-size: 26px; }
+.mnemo > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--violet-ink); }
+.mnemo .say { font-family: var(--f-display); font-size: 20px; font-weight: 700; line-height: 1.3; }
+.mnemo .say u { text-decoration-color: var(--lime); text-decoration-thickness: 3px; text-underline-offset: 4px; }
+.exc { background: color-mix(in srgb, var(--yellow) 16%, var(--surface)); border-left: 6px solid var(--yellow); border-radius: var(--r-sm); padding: 12px 14px; display: grid; gap: 6px; }
+.exc > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.trap { background: var(--wrong-bg); border-left: 6px solid var(--wrong); border-radius: var(--r-sm); padding: 12px 14px; display: grid; gap: 8px; }
+.trap > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--wrong); }
+.pairs { display: grid; gap: 6px; }
+.pairs div { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+.pairs s { color: var(--wrong); text-decoration-thickness: 2px; }
+.pairs ins { color: var(--right); text-decoration: none; font-weight: 700; }
+.pairs ins::before { content: "→ "; color: var(--muted); font-weight: 400; }
+.quiz { display: grid; gap: 8px; }
+.quiz > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--violet-ink); }
+.quiz details { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.quiz summary { cursor: pointer; padding: 12px 14px; font-weight: 700; list-style: none; display: flex; gap: 10px; align-items: baseline; }
+.quiz summary::before { content: "?"; flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--violet); color: #fff; display: grid; place-items: center; font: 800 15px var(--f-display); }
+.quiz details[open] summary::before { content: "✓"; background: var(--lime); color: #1e1b26; }
+.quiz details > div { padding: 0 14px 12px 50px; }
+.cols2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.wl-box { display: grid; gap: 10px; }
+.wl-filter { width: 100%; border: 2px solid var(--line); border-radius: 999px; padding: 10px 16px; font-size: 17px; background: var(--surface); color: var(--text); }
+.wl-filter:focus { outline: none; border-color: var(--lime); }
+.wl { display: grid; gap: 10px; }
+.wl section { display: grid; gap: 6px; }
+.wl h4 { font-size: 18px; color: var(--violet-ink); }
+.wl ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.wl li { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 5px 10px; font-size: 17px; }
+.wl li small { font-size: 14px; color: var(--muted); }
+.wl dl { margin: 0; display: grid; gap: 6px; }
+.wl dl > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.wl dt { font-weight: 800; }
+.wl dd { margin: 2px 0 0; }
+.wl [hidden] { display: none !important; }
+.wl-empty { color: var(--muted); }
+/* ── Три розділи на головній ── */
+.hometabs.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hometabs.three .tab { padding-inline: 6px; line-height: 1.2; font-size: 15px; }
+@media (max-width: 420px) { .hometabs.three .tab { font-size: 14px; } }
+
+/* ── Симуляція НМТ: список ── */
+.nmt-intro { gap: 10px; }
+.nmt-h { font-size: clamp(19px, 4.6vw, 24px); }
+.nmt-src { margin: 0; font-size: 15px; color: var(--muted); }
+.nmt-src a, .nmt-link, .dict-src a { color: var(--violet-ink); font-weight: 700; }
+.nmt-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.nmt-facts li { background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; font-size: 15px; }
+.nmt-facts b { font-family: var(--f-display); }
+.nmt-live { color: var(--violet-ink); font-weight: 700; }
+.nmt-link { font-size: 14px; justify-self: start; }
+
+/* ── Симуляція НМТ: правила й старт ── */
+.nmt-paper { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; font-size: 17px; }
+.nmt-paper h2 { font-size: clamp(19px, 4.6vw, 24px); }
+.nmt-paper h3 { font-size: 18px; }
+.nmt-paper p { margin: 0; }
+.nmt-rule { display: grid; gap: 2px; border-left: 5px solid var(--lime); background: var(--bg); border-radius: var(--r-sm); padding: 10px 14px; }
+.nmt-rule b { font-family: var(--f-display); font-size: 17px; }
+.nmt-warn { display: grid; gap: 4px; background: var(--wrong-bg); border: 1px solid var(--wrong); border-radius: var(--r-sm); padding: 12px 14px; }
+.nmt-warn b { color: var(--wrong); font-family: var(--f-display); }
+.nmt-paper .algo li span { font-size: 16px; }
+.nmt-start { border-left: 6px solid var(--lime); }
+.nmt-modal { position: fixed; inset: 0; z-index: 40; background: rgb(18 16 26 / .55); display: grid; place-items: center; padding: 16px; }
+.nmt-dlg { background: var(--bg); border-radius: var(--r); padding: 20px; max-width: 560px; width: 100%; display: grid; gap: 14px; max-height: 90vh; overflow: auto; box-shadow: 0 20px 60px rgb(0 0 0 / .3); font-size: 16px; }
+.nmt-dlg h3 { font-size: 19px; }
+.nmt-dlg p { margin: 0; }
+.nmt-dlg-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.nmt-dlg-acts .btn { flex: 1 1 200px; justify-content: center; text-align: center; }
+.nmt-alert { display: grid; gap: 4px; background: var(--wrong-bg); border: 1px solid var(--wrong); border-radius: var(--r-sm); padding: 10px 12px; }
+
+/* ── Симуляція НМТ: тест ── */
+body.exam .hero, body.exam .fab, body.exam .selchip, body.exam #dict-btn { display: none !important; }
+.nx-bar { position: sticky; top: 0; z-index: 6; background: #1e1b26; color: #f4f1f9; box-shadow: 0 4px 16px rgb(0 0 0 / .18); }
+.nx-in { max-width: 860px; margin: 0 auto; padding: 10px 16px 6px; display: flex; align-items: center; gap: 10px; }
+.nx-title { display: grid; min-width: 0; flex: 1 1 auto; line-height: 1.25; overflow: hidden; }
+.nx-title b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 560px) { .nx-title { display: none; } .nx-in { justify-content: space-between; } }
+.nx-title b { font-family: var(--f-display); font-size: 15px; }
+.nx-title span { font-size: 13px; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nx-time { flex: none; display: inline-flex; align-items: center; gap: 6px; border: 2px solid #4a4360; background: #2a2538; color: #fff; border-radius: 999px; padding: 6px 12px; font-size: 18px; font-weight: 700; min-height: 42px; }
+.nx-time.low { border-color: #ff7a5e; color: #ffb3a3; }
+.nx-time.hid .mono { letter-spacing: .1em; }
+.nx-eye { font-size: 16px; opacity: .8; }
+.nx-fin { flex: none; background: var(--lime); border-color: var(--lime); color: #1e1b26; white-space: normal; line-height: 1.15; text-align: center; max-width: 170px; }
+.nx-grid { max-width: 860px; margin: 0 auto; padding: 4px 16px 8px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin; }
+.nx-c { flex: none; width: 38px; height: 38px; border-radius: 8px; border: 2px solid #4a4360; background: transparent; color: #f4f1f9; font: 700 15px var(--f-mono); display: grid; place-items: center; padding: 0; text-decoration: none; }
+.nx-c.sv { background: var(--violet); border-color: var(--violet); color: #fff; }
+.nx-c.dr { border-color: var(--yellow); border-style: dashed; }
+.nx-count { max-width: 860px; margin: 0 auto; padding: 0 16px 8px; font-size: 14px; opacity: .85; }
+@media (min-width: 760px) { .nx-grid { flex-wrap: wrap; overflow: visible; } }
+.nx-main { display: grid; gap: 16px; padding-top: 16px; }
+.nx-instr { background: color-mix(in srgb, var(--yellow) 18%, var(--surface)); border-left: 5px solid var(--yellow); border-radius: var(--r-sm); padding: 12px 14px; font-size: 16px; }
+.nx-end { display: grid; padding-block: 10px 30px; }
+.nq { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 14px; min-width: 0; scroll-margin-top: 150px; }
+.nq.is-saved { border-color: var(--violet); box-shadow: inset 4px 0 0 var(--violet); }
+.nq-h { font-size: 18px; }
+.nq-hrow { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.nq-q { font-size: 17px; line-height: 1.6; overflow-wrap: anywhere; min-width: 0; display: grid; gap: 8px; }
+.nq-q p, .nq-t p, .zex-body p { margin: 0; }
+.nq-q table, .zex-body table { border-collapse: collapse; width: 100%; font-size: 16px; }
+.nq-q td, .nq-q th, .zex-body td, .zex-body th { border: 1px solid var(--line); padding: 8px 10px; vertical-align: top; }
+.nq-q td:first-child .zshape { font-size: 1.4em; }
+.nq-q img, .nq-t img, .zex-body img, .nm-t img { max-width: 100%; height: auto; border-radius: 6px; background: #fff; }
+.nq-opts { display: grid; gap: 8px; }
+.nq-opt { text-align: left; width: 100%; border: 2px solid var(--line); background: var(--bg); border-radius: var(--r-sm); padding: 12px 14px; font-size: 17px; line-height: 1.45; display: flex; gap: 10px; align-items: flex-start; min-height: 52px; overflow-wrap: anywhere; min-width: 0; color: inherit; }
+button.nq-opt:hover { border-color: var(--violet); }
+.nq-radio { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--muted); margin-top: 1px; display: grid; place-items: center; }
+.nq-opt.on { border-color: var(--violet); background: color-mix(in srgb, var(--violet) 10%, var(--bg)); }
+.nq-opt.on .nq-radio { border-color: var(--violet); }
+.nq-opt.on .nq-radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--violet); }
+.nq-k { flex: none; font: 700 15px var(--f-mono); color: var(--muted); min-width: 1.2em; margin-top: 2px; }
+.nq-t { min-width: 0; flex: 1 1 auto; }
+.nq-opt.ok { border-color: var(--right); background: var(--right-bg); }
+.nq-opt.no { border-color: var(--wrong); background: var(--wrong-bg); }
+.nq-opt .tag { flex: none; margin-left: auto; font-size: 14px; font-weight: 700; }
+.nq-opt.ok .tag { color: var(--right); } .nq-opt.no .tag { color: var(--wrong); }
+.nq-save { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.nq-st { font-size: 15px; font-weight: 700; color: var(--violet-ink); }
+.nq-st.warn { color: var(--wrong); }
+
+/* Відповідність («логічні пари») */
+.nm { display: grid; gap: 14px; }
+@media (min-width: 720px) { .nm { grid-template-columns: 1.15fr 1fr; align-items: start; } }
+.nm-col { display: grid; gap: 8px; min-width: 0; }
+.nm-row { display: grid; gap: 6px; background: color-mix(in srgb, #4aa3c8 12%, var(--bg)); border: 1px solid color-mix(in srgb, #4aa3c8 45%, var(--line)); border-radius: var(--r-sm); padding: 10px; }
+.nm-left { display: flex; gap: 10px; align-items: flex-start; font-size: 16px; min-width: 0; overflow-wrap: anywhere; }
+.nm-key { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #4aa3c8; color: #fff; font: 700 14px var(--f-mono); }
+.nm-key.b { background: var(--lime); color: #1e1b26; }
+.nm-t { min-width: 0; flex: 1 1 auto; }
+.nm-t.sm { font-size: 15px; }
+.nm-slot { min-height: 50px; border: 2px dashed var(--muted); border-radius: var(--r-sm); background: var(--bg); padding: 8px 10px; display: flex; gap: 8px; align-items: flex-start; text-align: left; width: 100%; color: inherit; font-size: 15px; overflow-wrap: anywhere; min-width: 0; }
+.nm-slot.filled { border-style: solid; border-color: var(--violet); }
+.nm-slot.picked, .nm-card.picked { outline: 3px solid var(--violet); outline-offset: 2px; }
+.nm-slot.ok { border-color: var(--right); background: var(--right-bg); }
+.nm-slot.no { border-color: var(--wrong); background: var(--wrong-bg); }
+.nm-slot.miss { border-color: var(--wrong); }
+.nm-ph { color: var(--muted); font-size: 14px; align-self: center; }
+.nm-x { margin-left: auto; color: var(--muted); font-size: 20px; line-height: 1; }
+.nm-right-ans { align-self: center; font-size: 15px; }
+.nm-card { display: flex; gap: 10px; align-items: flex-start; text-align: left; width: 100%; border: 2px solid color-mix(in srgb, var(--lime) 60%, var(--line)); background: color-mix(in srgb, var(--lime) 16%, var(--bg)); border-radius: var(--r-sm); padding: 10px; font-size: 16px; color: inherit; overflow-wrap: anywhere; min-width: 0; cursor: grab; }
+.nm-card.used { opacity: .45; }
+div.nm-card { cursor: default; }
+
+/* ── Симуляція НМТ: результат ── */
+.nmt-res { display: grid; gap: 16px; }
+.nmt-score { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); border-radius: var(--r); padding: 18px; border: 2px solid var(--lime); background: color-mix(in srgb, var(--lime) 14%, var(--surface)); }
+.nmt-score.fail { border-color: var(--wrong); background: var(--wrong-bg); }
+.nmt-big { display: grid; gap: 2px; }
+.nmt-big .lbl { font-size: 15px; font-weight: 700; color: var(--muted); }
+.nmt-big b { font-family: var(--f-display); font-size: 48px; line-height: 1.05; }
+.nmt-big small { font-size: 22px; color: var(--muted); }
+.nmt-fail { font-weight: 700; color: var(--wrong); font-size: 15px; }
+.nmt-break { grid-column: 1 / -1; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px 14px; font-size: 16px; }
+.nmt-scalebar { grid-column: 1 / -1; height: 12px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
+.nmt-scalebar i { display: block; height: 100%; background: var(--lime); }
+.nmt-score.fail .nmt-scalebar i { background: var(--wrong); }
+.nx-grid.res { flex-wrap: wrap; padding: 0; }
+.nx-grid.res .nx-c { color: var(--text); border-color: var(--line); }
+.nx-c.ok { background: var(--right-bg); border-color: var(--right) !important; color: var(--right) !important; }
+.nx-c.part { background: color-mix(in srgb, var(--yellow) 25%, transparent); border-color: var(--yellow) !important; }
+.nx-c.no { background: var(--wrong-bg); border-color: var(--wrong) !important; color: var(--wrong) !important; }
+.legend .lp::before { background: color-mix(in srgb, var(--yellow) 25%, transparent); border-color: var(--yellow); }
+.nq.rv-ok { border-left: 6px solid var(--right); }
+.nq.rv-part { border-left: 6px solid var(--yellow); }
+.nq.rv-no { border-left: 6px solid var(--wrong); }
+.rv-pts { font-weight: 700; font-size: 16px; }
+.rv-none { margin: 0; color: var(--wrong); font-weight: 700; }
+.rv-th { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ── Бічна панель: теорія й словник ── */
+html.sheet-open, html.sheet-open body { overflow: hidden; }
+.sheet-bg { position: fixed; inset: 0; z-index: 50; background: rgb(18 16 26 / .5); display: flex; align-items: flex-end; justify-content: center; }
+.sheet-bg[hidden] { display: none; }
+.sheet { background: var(--bg); width: 100%; max-width: 820px; height: min(92vh, 92dvh); border-radius: 20px 20px 0 0; display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgb(0 0 0 / .25); overflow: hidden; }
+@media (min-width: 900px) { .sheet-bg { justify-content: flex-end; align-items: stretch; } .sheet { height: 100%; max-width: 560px; border-radius: 0; } }
+.sheet-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px 10px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.sheet-head b { flex: 1 1 auto; min-width: 0; font-family: var(--f-display); font-size: 16px; line-height: 1.25; overflow-wrap: anywhere; }
+.sheet-head .btn { flex: none; text-decoration: none; }
+.sheet-search { display: flex; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.sheet-search[hidden] { display: none; }
+.sheet-search input { flex: 1 1 auto; min-width: 0; border: 2px solid var(--line); border-radius: 999px; padding: 8px 14px; font-size: 17px; background: var(--surface); }
+.sheet-search input:focus { outline: none; border-color: var(--lime); }
+.sheet-body { flex: 1 1 auto; overflow: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+.sheet-body > .theory, .sheet-body > .empty, .sheet-body > .dict-hint { padding: 16px; }
+.theory.in-sheet { padding-block: 16px 40px; }
+.dict-wrap { position: relative; flex: 1 1 auto; display: flex; min-height: 60vh; }
+.dict-wait { position: absolute; inset: 40px 0 auto; text-align: center; color: var(--muted); font-size: 16px; }
+.dict-frame { position: relative; flex: 1 1 auto; width: 100%; border: 0; background: #fff; opacity: 0; transition: opacity .2s; }
+.dict-frame.ready { opacity: 1; }
+.dict-src { margin: 0; padding: 8px 14px; font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); }
+.dict-hint { display: grid; gap: 10px; font-size: 17px; }
+.dict-hint p { margin: 0; }
+.dict-btn { cursor: pointer; height: 30px; white-space: nowrap; flex: none; }
+@media (max-width: 480px) { .dict-btn .lbl { display: none; } }
+.fab { position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 30; border: 0; border-radius: 999px; background: var(--violet-ink); color: #fff; font-weight: 800; font-size: 16px; padding: 12px 18px; min-height: 48px; box-shadow: 0 8px 24px rgb(0 0 0 / .25); }
+.fab[hidden], .selchip[hidden] { display: none; }
+body.has-fab main { padding-bottom: 110px; }
+.selchip { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(76px + env(safe-area-inset-bottom, 0px)); z-index: 31; border: 0; border-radius: 999px; background: var(--lime); color: #1e1b26; font-size: 16px; font-weight: 600; padding: 12px 18px; min-height: 48px; max-width: calc(100vw - 32px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 8px 24px rgb(0 0 0 / .25); }
 @media (prefers-reduced-motion: no-preference) { .bar i, .bar b { transition: width .3s ease; } }
 </style>
 
@@ -299,11 +559,12 @@ main { padding-block: 22px 60px; }
     <div class="brand">
       <img class="logo" src="img/logo-wordmark.png" alt="Midgard">
       <div class="brand-tools">
+        <button class="chip dict-btn" id="dict-btn" type="button" aria-label="Відкрити тлумачний словник">📖<span class="lbl"> Словник</span></button>
         <span class="chip" id="sync-chip"><span class="dot"></span><span id="sync-text">Прогрес у профілі</span></span>
       </div>
     </div>
-    <h1>Українська мова: <em>фонетика, орфографія, лексика</em></h1>
-    <p class="sub">28 тем. У кожній є теорія з ілюстраціями і 100 завдань з автоматичною перевіркою. Кожне правильне завдання — це 1 %.</p>
+    <h1>Українська мова: <em>тренажер, ЗНО і НМТ</em></h1>
+    <p class="sub">Тренажер: 28 тем з теорією і 100 завданнями в кожній. Банк завдань ЗНО з поясненнями. Симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
     <div class="namebox" id="profilebox"></div>
     <div class="overall" id="overall"></div>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
@@ -312,11 +573,29 @@ main { padding-block: 22px 60px; }
 
 <div id="app"></div>
 <div class="toast" id="toast" hidden></div>
+<button class="fab" id="fab-theory" type="button" hidden>📖 Теорія</button>
+<button class="selchip" id="selchip" type="button" hidden></button>
+<div class="sheet-bg" id="sheet" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h">
+    <header class="sheet-head">
+      <b id="sheet-h"></b>
+      <a id="sheet-link" class="btn small" target="_blank" rel="noopener" hidden>Відкрити ↗</a>
+      <button class="btn small ghost" id="sheet-close" type="button" aria-label="Закрити">✕</button>
+    </header>
+    <form class="sheet-search" id="sheet-search" hidden>
+      <input type="search" id="sheet-q" placeholder="Слово або вислів" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Слово для пошуку в словнику">
+      <button class="btn small primary" type="submit">Знайти</button>
+    </form>
+    <div class="sheet-body" id="sheet-body"></div>
+  </section>
+</div>
 
 <script src="config.js"></script>
-<script src="data.js"></script>
-<script src="data-extra.js"></script>
-<script src="engine.js"></script>
+<script src="data.js?v=6"></script>
+<script src="data-extra.js?v=6"></script>
+<script src="engine.js?v=6"></script>
+<script src="zno-app.js?v=6"></script>
+<script src="nmt-app.js?v=7"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -349,9 +628,40 @@ main { padding-block: 22px 60px; }
   function statsOf(r) { let a = 0, c = 0; for (const ch of r || "") { if (ch !== ".") a++; if (ch === "1") c++; } return { a, c }; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
+  /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
+  const VER = "6", THEORY = {}, theoryLoading = {};
+  function loadTheoryFile(id) {
+    if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
+    if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
+      .catch(() => { const t = T.find(x => x.id === id); return t && t.theory ? t.theory : '<p class="empty">Не вдалося завантажити теорію. Перевірте інтернет.</p>'; })
+      .then(x => { THEORY[id] = x; return x; });
+    return theoryLoading[id];
+  }
+  function theoryOf(id) {
+    if (THEORY[id] != null) return THEORY[id];
+    loadTheoryFile(id).then(() => render());
+    return null;
+  }
+
   /* ───── UI-стан ───── */
   let ui = { view: "home", topic: null, tab: "theory", cur: 0, map: false };
   let pend = null, confirmReset = false;
+  if (!store.home) store.home = "trainer";
+  const Z = window.MGZno({
+    esc, $, get ui() { return ui; },
+    me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
+    saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), toast: m => toast(m),
+    render: () => render(), scrollTask: () => scrollTask(), gateHtml: () => gateHtml(),
+    trainerTopic: id => { const t = T.find(x => x.id === id); if (!t) return null; const th = theoryOf(id); return { title: t.title, theory: th == null ? '<p class="empty">Завантажую теорію…</p>' : th }; },
+    loadTrainerTheory: id => loadTheoryFile(id),
+    setZnoUnique: n => { store.znoUnique = n; }, getZnoUnique: () => store.znoUnique || 0
+  });
+  const NM = window.MGNmt({
+    esc, get ui() { return ui; },
+    me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current, fullName: () => (me() ? fullName(me()) : ""),
+    saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), toast: m => toast(m),
+    render: () => render(), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref)
+  });
 
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600); }
 
@@ -461,7 +771,10 @@ main { padding-block: 22px 60px; }
     pbusy = false;
     const rec = store.students[d.key] || (store.students[d.key] = { topics: {} });
     Object.assign(rec, { name: d.name, cls: d.cls, token: d.token });
+    serverV = Number(d.v) || serverV;
     mergeTopics(rec, d.topics);
+    Z.merge(rec, d.zno);
+    NM.merge(rec, d.nmt);
     adoptLegacy(rec, d.name);
     pulledFor = d.key;
     finishLogin(d.key);
@@ -493,7 +806,11 @@ main { padding-block: 22px 60px; }
   $("#who-change").addEventListener("click", () => { ui.view = "home"; render(); window.scrollTo(0, 0); });
 
   /* ───── Збереження прогресу в таблиці вчителя ───── */
-  let syncTimer = null, syncing = false, syncAgain = false, pulledFor = null;
+  let syncTimer = null, syncing = false, syncAgain = false, pulledFor = null, serverV = 0;
+  /* Записи журналу з тем ЗНО приймає лише скрипт версії 5+, до того вони чекають у черзі. */
+  const isZnoEvent = e => /^z[0-9a-f]{6}$/.test(String(e.topic || ""));
+  /* Події ЗНО приймає скрипт таблиці від версії 5, події НМТ — від версії 6. */
+  const canSend = e => /^nmt:/.test(String(e.topic || "")) ? serverV >= 6 : serverV >= 5 || !isZnoEvent(e);
   const resetIds = new Set();
   function setSync(mode) {
     const chip = $("#sync-chip"), txt = $("#sync-text");
@@ -527,12 +844,18 @@ main { padding-block: 22px 60px; }
       if (r !== EMPTY || resetIds.has(id)) body.topics[id] = { r, att: s.topics[id].att || 1 };
     }
     const sentResets = [...resetIds];
-    const events = (s.queue || []).slice(0, 200);
+    const events = (s.queue || []).filter(canSend).slice(0, 200);
     if (events.length) body.events = events;
+    const zp = Z.payload();
+    if (zp) { body.zno = zp.zno; body.znoTotal = zp.znoTotal; }
+    const np = NM.payload();
+    if (np) body.nmt = np;
     const d = await api(body);
     if (d && d.ok) {
+      serverV = Number(d.v) || serverV;
       sentResets.forEach(id => resetIds.delete(id));
-      if (events.length) { s.queue = (s.queue || []).slice(events.length); saveLocal(); if (s.queue.length) syncAgain = true; }
+      if (zp) Z.sent(zp);
+      if (events.length) { const gone = new Set(events); s.queue = (s.queue || []).filter(e => !gone.has(e)); saveLocal(); if (s.queue.some(canSend)) syncAgain = true; }
       setSync("saved");
     } else if (d && d.error === "auth") {
       delete s.token; saveLocal(); setSync("error");
@@ -549,7 +872,7 @@ main { padding-block: 22px 60px; }
     if (!s || !s.token) return;
     const key = store.current;
     const d = await api({ action: "load", key, token: s.token });
-    if (d && d.ok) { mergeTopics(s, d.topics); saveLocal(); pulledFor = key; render(); scheduleSync(true); }
+    if (d && d.ok) { serverV = Number(d.v) || serverV; mergeTopics(s, d.topics); Z.merge(s, d.zno); NM.merge(s, d.nmt); saveLocal(); pulledFor = key; render(); scheduleSync(true); }
     else if (d && d.error === "auth") { delete s.token; saveLocal(); renderProfile(); render(); }
     else { setSync("error"); pulledFor = key; }
   }
@@ -566,14 +889,25 @@ main { padding-block: 22px 60px; }
   function render() {
     renderOverall();
     document.body.classList.toggle("compact", ui.view !== "home");
+    document.body.classList.toggle("exam", NM.inExam());
+    if (ui.view !== "nmt") NM.stopTick();
     $("#who-name").textContent = loggedIn() ? fullName(me()) : "не ввійшов";
     if (ui.view === "topic" && ui.topic) renderTopic();
+    else if (ui.view === "ztopic") { const h = Z.topicHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
+    else if (ui.view === "nmt") { const h = NM.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; document.body.classList.toggle("exam", NM.inExam()); }
     else renderHome();
+    updateFab();
   }
 
   function renderHome() {
     ui.view = "home";
-    let h = '<main class="wrap">';
+    const home = store.home || "trainer";
+    let h = `<main class="wrap"><div class="tabs hometabs three" role="tablist" aria-label="Розділи сайту">
+      <button class="tab" role="tab" aria-selected="${home === "trainer"}" data-home="trainer">Тренажер</button>
+      <button class="tab" role="tab" aria-selected="${home === "zno"}" data-home="zno">Завдання ЗНО</button>
+      <button class="tab" role="tab" aria-selected="${home === "nmt"}" data-home="nmt">Симуляція НМТ</button></div>`;
+    if (home === "zno") { app.innerHTML = h + Z.homeHtml() + reportSection() + "</main>"; return; }
+    if (home === "nmt") { app.innerHTML = h + NM.homeHtml() + reportSection() + "</main>"; return; }
     S.forEach(sec => {
       h += `<section class="section"><div class="section-h"><span class="mono">${sec.id}</span><h2>${esc(sec.title)}</h2></div><div class="cards">`;
       T.filter(t => t.sec === sec.id).forEach(t => {
@@ -585,13 +919,14 @@ main { padding-block: 22px 60px; }
       });
       h += "</div></section>";
     });
-    const s = me();
-    h += `<section class="report"><h2 style="font-size:16px">Звіт для вчителя</h2>
-      <p class="hint" style="margin:0">Результати надходять у таблицю вчителя автоматично. Якщо немає інтернету або таблицю ще не підключено, скопіюйте звіт і надішліть учителю.</p>
-      <div><button class="btn small" id="copy-report" ${s ? "" : "disabled"}>Скопіювати звіт</button></div>
-      <textarea id="report-text" readonly hidden></textarea></section>`;
-    h += "</main>";
+    h += reportSection() + "</main>";
     app.innerHTML = h;
+  }
+  function reportSection() {
+    return `<section class="report"><h2 style="font-size:16px">Звіт для вчителя</h2>
+      <p class="hint" style="margin:0">Результати надходять у таблицю вчителя автоматично. Якщо немає інтернету або таблицю ще не підключено, скопіюйте звіт і надішліть учителю.</p>
+      <div><button class="btn small" id="copy-report" ${me() ? "" : "disabled"}>Скопіювати звіт</button></div>
+      <textarea id="report-text" readonly hidden></textarea></section>`;
   }
   function reportText() {
     const s = me(); if (!s) return "";
@@ -599,7 +934,7 @@ main { padding-block: 22px 60px; }
     let tc = 0;
     T.forEach(t => { const st = topicStats(t.id); tc += st.c; lines.push(t.sec + " " + t.title + ": " + st.c + "% (виконано " + st.a + "/100)"); });
     lines.push("", "Разом: " + tc + " з " + T.length * N + " (" + (tc / (T.length * N) * 100).toFixed(1) + "%)");
-    return lines.join("\n");
+    return lines.concat(Z.reportLines(), NM.reportLines()).join("\n");
   }
 
   function renderTopic() {
@@ -617,14 +952,15 @@ main { padding-block: 22px 60px; }
     return `<article class="theory">
       <h2>${esc(t.title)}</h2>
       <figure class="photo"><img src="${IMG[t.img]}" alt="${esc(ALT[t.img])}" loading="lazy"><figcaption>Ілюстрацію згенеровано ШІ (Hugging Face, Z-Image Turbo)</figcaption></figure>
-      <div class="tbody">${t.theory}</div>
+      <div class="tbody">${theoryOf(t.id) ?? '<p class="empty">Завантажую теорію…</p>'}</div>
       <button class="btn primary to-tasks" data-tabto="tasks">До завдань →</button>
     </article>`;
   }
 
+  const gateHtml = () => `<section class="tasks"><div class="gate"><h3 style="font-size:17px">Увійдіть у профіль</h3><p style="margin:0">Прогрес зберігається у вашому профілі, тож продовжити можна на будь-якому пристрої. Теорію можна читати й без входу.</p><div><button class="btn primary" data-act="focus-name">Увійти або створити профіль</button></div></div></section>`;
   function tasksHtml(t) {
     const s = me();
-    if (!loggedIn()) return `<section class="tasks"><div class="gate"><h3 style="font-size:17px">Увійдіть у профіль</h3><p style="margin:0">Прогрес зберігається у вашому профілі, тож продовжити можна на будь-якому пристрої. Теорію можна читати й без входу.</p><div><button class="btn primary" data-act="focus-name">Увійти або створити профіль</button></div></div></section>`;
+    if (!loggedIn()) return gateHtml();
     const st = tstate(t.id), tasks = tasksOf(t.id), stat = statsOf(st.r);
     if (ui.cur < 0 || ui.cur >= N) ui.cur = 0;
     let h = `<section class="tasks"><div class="tprog">
@@ -789,6 +1125,10 @@ main { padding-block: 22px 60px; }
   app.addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     const d = b.dataset;
+    if (d.home) { store.home = d.home; saveLocal(); render(); return; }
+    if (d.theory) { openTheory(d.theory); return; }
+    if (NM.onClick(b)) return;
+    if (Z.onClick(b)) return;
     if (d.open) { ui = Object.assign(ui, { view: "topic", topic: d.open, tab: d.tab, reviewing: false }); confirmReset = false; pend = null; jumpFirst(); render(); window.scrollTo(0, 0); return; }
     if (d.tabto) { ui.tab = d.tabto; if (d.tabto === "tasks") jumpFirst(); render(); window.scrollTo(0, 0); return; }
     if (b.id === "copy-report") { copyText(reportText(), $("#report-text")); return; }
@@ -839,6 +1179,112 @@ main { padding-block: 22px 60px; }
     }
   }
 
+
+  /* ───── Бічна панель: теорія під час завдань і тлумачний словник ───── */
+  const sheet = $("#sheet"), sheetBody = $("#sheet-body");
+  let sheetReturn = null;
+  function openSheet(title, link) {
+    $("#sheet-h").textContent = title;
+    const a = $("#sheet-link"); a.hidden = !link; if (link) a.href = link;
+    sheetReturn = document.activeElement;
+    sheet.hidden = false; document.documentElement.classList.add("sheet-open");
+    setTimeout(() => $("#sheet-close").focus(), 30);
+  }
+  function closeSheet() {
+    if (sheet.hidden) return;
+    sheet.hidden = true; document.documentElement.classList.remove("sheet-open");
+    sheetBody.innerHTML = ""; $("#sheet-search").hidden = true;
+    if (sheetReturn && sheetReturn.focus) sheetReturn.focus();
+  }
+  function theoryRef(ref) {
+    const [kind, id] = String(ref).split(":");
+    if (kind === "t") { const t = T.find(x => x.id === id); return t ? { ref, title: t.title } : null; }
+    if (kind === "z") { const title = Z.titleOf(id); if (!title) Z.loadIndex(); return { ref, title: title || "теорія до теми" }; }
+    return null;
+  }
+  function openTheory(ref) {
+    const [kind, id] = String(ref).split(":");
+    $("#sheet-search").hidden = true;
+    if (kind === "t") {
+      const t = T.find(x => x.id === id); if (!t) return;
+      openSheet("Теорія: " + t.title);
+      sheetBody.innerHTML = '<p class="empty">Завантажую теорію…</p>';
+      loadTheoryFile(id).then(x => { sheetBody.innerHTML = `<article class="theory in-sheet"><div class="tbody">${x}</div></article>`; sheetBody.scrollTop = 0; });
+    } else {
+      openSheet("Теорія");
+      sheetBody.innerHTML = '<p class="empty">Завантажую теорію…</p>';
+      Z.theoryFor(id).then(r => { $("#sheet-h").textContent = "Теорія: " + r.title; sheetBody.innerHTML = `<article class="theory in-sheet">${r.html}</article>`; sheetBody.scrollTop = 0; })
+        .catch(() => { sheetBody.innerHTML = '<p class="empty">Не вдалося завантажити теорію. Перевірте інтернет.</p>'; });
+    }
+    sheetBody.scrollTop = 0;
+  }
+  const DICT = w => "https://slovnyk.ua/index.php?swrd=" + encodeURIComponent(w);
+  function openDict(word) {
+    if (NM.inExam()) return;
+    word = (word || "").trim();
+    openSheet(word ? "Словник: «" + word + "»" : "Тлумачний словник", word ? DICT(word) : "https://slovnyk.ua/");
+    const f = $("#sheet-search"); f.hidden = false; $("#sheet-q").value = word;
+    sheetBody.innerHTML = word
+      ? `<div class="dict-wrap"><span class="dict-wait">Завантажую словник…</span><iframe class="dict-frame" src="${esc(DICT(word))}" title="Значення слова «${esc(word)}» на slovnyk.ua" onload="this.classList.add('ready')"></iframe></div><p class="dict-src">Джерело: <a href="https://slovnyk.ua/" target="_blank" rel="noopener">slovnyk.ua</a> — «Словник української мови» в 11 томах та інші словники.</p>`
+      : '<div class="dict-hint"><p><b>Як шукати значення слова</b></p><p>Впишіть слово вгорі й натисніть «Знайти».</p><p>Або просто <b>виділіть слово</b> в теорії чи завданні (на телефоні — затисніть слово пальцем) і натисніть кнопку «Значення» внизу екрана.</p></div>';
+    if (!word) setTimeout(() => $("#sheet-q").focus(), 60);
+  }
+  $("#sheet-close").addEventListener("click", closeSheet);
+  sheet.addEventListener("click", e => {
+    if (e.target === sheet) { closeSheet(); return; }
+    const b = e.target.closest("[data-theory]"); if (b) openTheory(b.dataset.theory);
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+  $("#sheet-search").addEventListener("submit", e => { e.preventDefault(); const w = $("#sheet-q").value.trim(); if (w) openDict(w); });
+  $("#dict-btn").addEventListener("click", () => openDict(""));
+
+  /* Кнопка «Теорія» під час виконання завдань теми. */
+  const fab = $("#fab-theory");
+  function updateFab() {
+    let ref = null;
+    if (ui.view === "topic" && ui.tab === "tasks" && ui.topic) ref = "t:" + ui.topic;
+    if (ui.view === "ztopic" && ui.tab === "tasks" && ui.ztopic) ref = "z:" + ui.ztopic;
+    fab.hidden = !ref; if (ref) fab.dataset.ref = ref;
+    document.body.classList.toggle("has-fab", !!ref);
+  }
+  fab.addEventListener("click", () => openTheory(fab.dataset.ref));
+
+  /* Виділене слово → кнопка «Значення» → словник. */
+  const selchip = $("#selchip");
+  let selWord = "", selTimer = null;
+  function readSelection() {
+    const sel = window.getSelection ? window.getSelection() : null;
+    if (!sel || sel.isCollapsed || NM.inExam()) return "";
+    const node = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+    if (!node || !node.closest("#app") || node.closest("input, textarea")) return "";
+    let w = sel.toString().normalize("NFC").replace(/\u0301/g, "").replace(/[«»"“”„()\[\].,;:!?…—–]+/g, " ").replace(/\s+/g, " ").trim();
+    w = w.replace(/^[-’'ʼ]+|[-’'ʼ]+$/g, "");
+    if (!w || w.length > 40 || w.split(" ").length > 3 || !/^[\p{L}’'ʼ -]+$/u.test(w)) return "";
+    if (/[а-яґєії][А-ЯҐЄІЇ]/.test(w)) w = w.toLowerCase();
+    return w;
+  }
+  document.addEventListener("selectionchange", () => {
+    clearTimeout(selTimer);
+    selTimer = setTimeout(() => {
+      selWord = readSelection();
+      selchip.hidden = !selWord;
+      if (selWord) selchip.innerHTML = `📖 Значення: <b>${esc(selWord)}</b>`;
+    }, 220);
+  });
+  selchip.addEventListener("pointerdown", e => e.preventDefault());
+  selchip.addEventListener("click", () => { const w = selWord; selchip.hidden = true; if (window.getSelection) window.getSelection().removeAllRanges(); if (w) openDict(w); });
+
+  /* Пошук у словничках теорії (наголоси, фразеологізми). */
+  document.addEventListener("input", e => {
+    const f = e.target.closest && e.target.closest(".wl-filter"); if (!f) return;
+    const box = f.closest(".wl-box"), q = f.value.trim().toLowerCase().replace(/\u0301/g, "");
+    let shown = 0;
+    box.querySelectorAll(".wl [data-w]").forEach(el => { const hit = !q || el.dataset.w.includes(q); el.hidden = !hit; if (hit) shown++; });
+    box.querySelectorAll(".wl section").forEach(sec => { sec.hidden = !sec.querySelector("[data-w]:not([hidden])"); });
+    const em = box.querySelector(".wl-empty"); if (em) em.hidden = shown > 0;
+  });
+  NM.bindDrag(app);
+  { const run = loggedIn() && NM.activeRun(); if (run) Object.assign(ui, { view: "nmt", ntest: run, nstage: "exam" }); }
   renderProfile();
   render();
   initSync();
