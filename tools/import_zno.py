@@ -82,11 +82,11 @@ def images_in(task):
     return set(re.findall(r"!\[[^\]]*\]\((img/[^)]+)\)", s))
 
 
-def update_code_gs(topics):
+def update_code_gs(topics, unique):
     path = ROOT / "google-apps-script" / "Code.gs"
     src = path.read_text(encoding="utf-8")
     lines = ",\n".join("  ['%s', '%s %s']" % (t["id"], t["sec"], t["title"].replace("'", "’")) for t in topics)
-    block = "// ZNO-TOPICS-START (оновлює tools/import_zno.py)\nconst ZNO_TOPICS = [\n" + lines + "\n];\n// ZNO-TOPICS-END"
+    block = "// ZNO-TOPICS-START (оновлює tools/import_zno.py)\nconst ZNO_TOPICS = [\n" + lines + "\n];\nconst ZNO_UNIQUE = %d;\n// ZNO-TOPICS-END" % unique
     new, n = re.subn(r"// ZNO-TOPICS-START.*?// ZNO-TOPICS-END", block, src, flags=re.S)
     if n != 1:
         raise SystemExit("У Code.gs немає маркерів ZNO-TOPICS-START / ZNO-TOPICS-END")
@@ -137,7 +137,7 @@ def main():
     index = {"source": "ukrmova.json", "sections": sections, "topics": topics,
              "total": sum(t["n"] for t in topics), "unique": len(unique)}
     (OUT / "index.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    update_code_gs(topics)
+    update_code_gs(topics, len(unique))
 
     print("розділів: %d, тем: %d, завдань: %d (унікальних %d), картинок: %d"
           % (len(sections), len(topics), index["total"], len(unique), len(used_imgs) - len(missing)))

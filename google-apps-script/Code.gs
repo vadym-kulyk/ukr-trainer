@@ -3,6 +3,10 @@
  * Вставте цей код у Google Таблицю: Розширення → Apps Script, потім
  * Розгорнути → Нове розгортання → Веб-застосунок (доступ: «Усі»).
  * Аркуш «Результати»: кожен учень — один рядок, оновлюється після кожної відповіді.
+ *   Стовпець «Прогрес» — шкала з 20 поділок: довжина показує, скільки виконано, колір — частку правильних
+ *   (червоний < 30 %, помаранчевий < 50 %, жовтий < 70 %, салатовий < 85 %, зелений ≥ 85 %),
+ *   блідо-червона частина — помилки; поруч підпис «виконано % · правильно %».
+ *   Відсотки в стовпцях тем мають кольорову заливку. Аркуш «НМТ» має шкалу найкращого балу 100–200.
  * Аркуш «Спроби»: кожна відповідь учня — окремий рядок.
  * Аркуш «ЗНО»: прогрес у темах банку завдань ЗНО (відсоток правильних у кожній темі).
  * Аркуш «НМТ»: результати симуляцій НМТ (бал за шкалою 100–200, тестовий бал, кількість спроб).
@@ -108,8 +112,9 @@ const ZNO_TOPICS = [
   ['zd7efda', '1.6 Чуже мовлення'],
   ['z73320f', '1.6 Засоби міжфразової єдності']
 ];
+const ZNO_UNIQUE = 2077;
 // ZNO-TOPICS-END
-const ZNO_HEADER = ['Ключ', 'Учень', 'Оновлено', 'ЗНО разом, %', 'Виконано завдань']
+const ZNO_HEADER = ['Ключ', 'Учень', 'Оновлено', 'Прогрес', 'ЗНО разом, %', 'Виконано завдань']
   .concat(ZNO_TOPICS.map(t => t[1]))
   .concat(['Дані (не змінювати)']);
 const ZNO_DATA_COL = ZNO_HEADER.length;
@@ -151,119 +156,214 @@ const NMT_TESTS = [
   ["v1", "Варіант 1"]
 ];
 // NMT-TESTS-END
-const NMT_HEADER = ['Ключ', 'Учень', 'Оновлено', 'Пройдено тестів', 'Найкращий бал (100–200)']
+const NMT_HEADER = ['Ключ', 'Учень', 'Оновлено', 'Шкала', 'Найкращий бал (100–200)', 'Пройдено тестів']
   .concat(NMT_TESTS.map(t => t[1]))
   .concat(['Дані (не змінювати)']);
 const NMT_DATA_COL = NMT_HEADER.length;
 
-// Стовпці: Ключ | Учень | Оновлено | Разом % | Виконано | теми тренажера (% правильних) | Дані
-const HEADER = ['Ключ', 'Учень', 'Оновлено', 'Разом, %', 'Виконано завдань']
+// Стовпці: Ключ | Учень | Оновлено | Прогрес (шкала) | Разом % | Виконано | теми тренажера (% правильних) | Дані
+const HEADER = ['Ключ', 'Учень', 'Оновлено', 'Прогрес', 'Разом, %', 'Виконано завдань']
   .concat(TOPICS.map(t => t[1]))
   .concat(['Дані (не змінювати)']);
 const DATA_COL = HEADER.length;
 const DATA_TITLE = HEADER[HEADER.length - 1];
+const BAR_COL = 4; // стовпець зі шкалою на аркушах «Результати», «ЗНО», «НМТ»
+
+/* ───────── Шкали й кольори ───────── */
+
+/** Колір за відсотком правильних: червоний → помаранчевий → жовтий → зелений. */
+function levelColor_(pct) {
+  if (pct >= 85) return '#1e8e3e';
+  if (pct >= 70) return '#7cb342';
+  if (pct >= 50) return '#f9ab00';
+  if (pct >= 30) return '#f57c00';
+  return '#d93025';
+}
+
+const BAR_LEN = 20; // кількість поділок шкали
+
+/**
+ * Горизонтальна шкала з символів «█», без формул (працює за будь-яких мовних налаштувань таблиці).
+ * parts — [[кількість, колір], …]; решту до BAR_LEN заповнюємо світло-сірим «░».
+ */
+function richBar_(parts, label) {
+  let text = '', styles = [];
+  parts.forEach(([n, color]) => {
+    if (n <= 0) return;
+    styles.push([text.length, text.length + n, color]);
+    text += '█'.repeat(n);
+  });
+  const rest = BAR_LEN - text.length;
+  if (rest > 0) { styles.push([text.length, BAR_LEN, '#dadce0']); text += '░'.repeat(rest); }
+  if (label) { styles.push([text.length, text.length + label.length + 1, '#5f6368']); text += ' ' + label; }
+  const b = SpreadsheetApp.newRichTextValue().setText(text);
+  styles.forEach(([from, to, color]) => b.setTextStyle(from, to, SpreadsheetApp.newTextStyle().setForegroundColor(color).build()));
+  return b.build();
+}
+
+/**
+ * Шкала прогресу: довжина — скільки виконано з усіх завдань,
+ * колір першої частини — частка правильних серед виконаних, блідо-червона частина — помилки.
+ */
+function progressBar_(ok, done, total) {
+  if (!total || !done) return null;
+  let okN = Math.round(ok / total * BAR_LEN), doneN = Math.max(1, Math.round(done / total * BAR_LEN));
+  if (ok > 0 && okN === 0) okN = 1;
+  okN = Math.min(okN, doneN);
+  const label = Math.round(done / total * 100) + ' % · ' + Math.round(ok / done * 100) + ' % правильно';
+  return richBar_([[okN, levelColor_(ok / done * 100)], [doneN - okN, '#f28b82']], label);
+}
+
+/** Шкала балу НМТ: 100 — порожньо, 200 — повна; колір за балом. */
+function scoreBar_(score) {
+  if (!score) return null;
+  const color = score >= 180 ? '#1e8e3e' : score >= 160 ? '#7cb342' : score >= 140 ? '#f9ab00' : score >= 120 ? '#f57c00' : '#d93025';
+  return richBar_([[Math.max(1, Math.round((score - 100) / 100 * BAR_LEN)), color]], String(score));
+}
+
+/** Кольорова заливка відсотків: 0 — червоний, 50 — жовтий, 100 — зелений. */
+function gradientRule_(range, min, mid, max) {
+  return SpreadsheetApp.newConditionalFormatRule()
+    .setGradientMinpointWithValue('#f4c7c3', SpreadsheetApp.InterpolationType.NUMBER, String(min))
+    .setGradientMidpointWithValue('#fce8b2', SpreadsheetApp.InterpolationType.NUMBER, String(mid))
+    .setGradientMaxpointWithValue('#b7e1cd', SpreadsheetApp.InterpolationType.NUMBER, String(max))
+    .setRanges([range]).build();
+}
+
+/** Оформлення аркуша: закріплення, приховані службові стовпці, ширина шкали, заливка відсотків. */
+function styleSheet_(sh, header, gradients) {
+  const dataCol = header.length;
+  sh.setFrozenRows(1);
+  sh.setFrozenColumns(2);
+  sh.getRange(1, 1, 1, dataCol).setValues([header]).setFontWeight('bold').setWrap(true).setVerticalAlignment('middle');
+  sh.hideColumns(1);
+  sh.hideColumns(dataCol);
+  sh.setColumnWidth(BAR_COL, 290);
+  sh.getRange(1, BAR_COL, sh.getMaxRows(), 1).setFontFamily('Arial').setFontSize(10);
+  if (sh.getMaxRows() < 1000) sh.insertRowsAfter(sh.getMaxRows(), 1000 - sh.getMaxRows());
+  const rows = sh.getMaxRows() - 1;
+  sh.setConditionalFormatRules(gradients.map(g => gradientRule_(sh.getRange(2, g[0], rows, g[1] - g[0] + 1), g[2], g[3], g[4])));
+}
+
+/**
+ * Повертає аркуш із потрібним заголовком. Якщо заголовок змінився (нові теми чи стовпці),
+ * перебудовує всі рядки з прихованого стовпця «Дані», тож прогрес учнів не зсувається.
+ */
+function ensureSheet_(name, header, gradients, build) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  const dataCol = header.length;
+  if (sh.getLastRow() === 0) {
+    if (sh.getMaxColumns() < dataCol) sh.insertColumnsAfter(sh.getMaxColumns(), dataCol - sh.getMaxColumns());
+    styleSheet_(sh, header, gradients);
+    return sh;
+  }
+  const lastCol = sh.getLastColumn();
+  const cur = sh.getRange(1, 1, 1, lastCol).getValues()[0];
+  if (cur.length === dataCol && cur.join('|') === header.join('|')) return sh;
+  const oldData = cur.indexOf(DATA_TITLE), oldUpd = cur.indexOf('Оновлено');
+  const n = sh.getLastRow() - 1;
+  const old = n > 0 ? sh.getRange(2, 1, n, lastCol).getValues() : [];
+  sh.clear();
+  sh.setConditionalFormatRules([]);
+  sh.showColumns(1, sh.getMaxColumns());
+  if (sh.getMaxColumns() < dataCol) sh.insertColumnsAfter(sh.getMaxColumns(), dataCol - sh.getMaxColumns());
+  styleSheet_(sh, header, gradients);
+  old.forEach((r, i) => {
+    let stored = {};
+    try { stored = JSON.parse((oldData >= 0 && r[oldData]) || '{}'); } catch (err) { stored = {}; }
+    const built = build(String(r[0]), String(r[1]), oldUpd >= 0 && r[oldUpd] ? r[oldUpd] : new Date(), stored);
+    writeRow_(sh, i + 2, built);
+  });
+  return sh;
+}
+
+/** Записує рядок і шкалу. built = { values: [...], bar: RichTextValue або null }. */
+function writeRow_(sh, rowNum, built) {
+  if (rowNum < 0) rowNum = sh.getLastRow() + 1;
+  if (rowNum > sh.getMaxRows()) sh.insertRowsAfter(sh.getMaxRows(), 100);
+  const vals = built.values.slice();
+  vals[BAR_COL - 1] = '';
+  sh.getRange(rowNum, 1, 1, vals.length).setValues([vals]);
+  const cell = sh.getRange(rowNum, BAR_COL);
+  if (built.bar) cell.setRichTextValue(built.bar); else cell.clearContent();
+}
+
+/* ───────── Рядки аркушів ───────── */
+
+function buildResults_(key, display, updated, stored) {
+  let answered = 0, correct = 0;
+  const perTopic = TOPICS.map(([id]) => {
+    const r = cleanR_(stored[id]) || '.'.repeat(TASKS_PER_TOPIC);
+    const done = r.replace(/\./g, '').length;
+    const ok = r.replace(/[^1]/g, '').length;
+    answered += done; correct += ok;
+    return done ? ok : '';
+  });
+  const all = TOPICS.length * TASKS_PER_TOPIC;
+  const total = Math.round(correct / all * 1000) / 10;
+  return {
+    values: [key, display, updated, '', total, answered].concat(perTopic).concat([JSON.stringify(stored)]),
+    bar: progressBar_(correct, answered, all)
+  };
+}
+
+function buildZno_(key, display, updated, stored) {
+  const done = {};
+  const perTopic = ZNO_TOPICS.map(([id]) => {
+    const t = stored[id];
+    if (!t || !t.s) return '';
+    let ok = 0;
+    t.s.split(';').forEach(pair => {
+      const m = pair.match(/^(\d+):([01])$/);
+      if (!m) return;
+      if (m[2] === '1') ok++;
+      if (m[2] === '1' || !(m[1] in done)) done[m[1]] = m[2];
+    });
+    return t.n ? Math.round(ok / t.n * 1000) / 10 : '';
+  });
+  const ids = Object.keys(done);
+  const ok = ids.filter(id => done[id] === '1').length;
+  const total = ZNO_UNIQUE ? Math.round(ok / ZNO_UNIQUE * 1000) / 10 : '';
+  return {
+    values: [key, display, updated, '', ids.length ? total : '', ids.length || ''].concat(perTopic).concat([JSON.stringify(stored)]),
+    bar: progressBar_(ok, ids.length, ZNO_UNIQUE)
+  };
+}
+
+function buildNmt_(key, display, updated, stored) {
+  let done = 0, bestAll = '';
+  const perTest = NMT_TESTS.map(([id]) => {
+    const t = stored[id];
+    if (!t) return '';
+    done++;
+    if (t.bs && (bestAll === '' || t.bs > bestAll)) bestAll = t.bs;
+    return 'найкраще ' + (t.bs || 'поріг не подолано') + ' (' + t.bp + '/45); останнє ' + (t.s || 'поріг не подолано') + ' (' + t.p + '/45); спроб ' + t.n + (t.blur ? '; виходів зі сторінки ' + t.blur : '');
+  });
+  return {
+    values: [key, display, updated, '', bestAll, done || ''].concat(perTest).concat([JSON.stringify(stored)]),
+    bar: scoreBar_(bestAll)
+  };
+}
 
 function sheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sh = ss.getSheetByName(SHEET_NAME);
-  if (!sh) sh = ss.insertSheet(SHEET_NAME);
-  if (sh.getLastRow() === 0) {
-    sh.appendRow(HEADER);
-    sh.setFrozenRows(1);
-    sh.setFrozenColumns(2);
-    sh.getRange(1, 1, 1, HEADER.length).setFontWeight('bold').setWrap(true);
-    sh.hideColumns(1);
-    sh.hideColumns(DATA_COL);
-  }
-  migrate_(sh);
-  return sh;
+  return ensureSheet_(SHEET_NAME, HEADER, [[7, 6 + TOPICS.length, 0, 50, 100]], buildResults_);
 }
 
-/** Якщо додано нові теми, переносимо стовпець «Дані» в кінець і оновлюємо заголовок. */
-function migrate_(sh) {
-  const lastCol = sh.getLastColumn();
-  const header = sh.getRange(1, 1, 1, lastCol).getValues()[0];
-  const oldCol = header.indexOf(DATA_TITLE) + 1;
-  if (oldCol === DATA_COL && lastCol === DATA_COL) return;
-  if (oldCol > 0 && oldCol !== DATA_COL) {
-    const rows = sh.getLastRow() - 1;
-    if (rows > 0) {
-      const data = sh.getRange(2, oldCol, rows, 1).getValues();
-      if (sh.getMaxColumns() < DATA_COL) sh.insertColumnsAfter(sh.getMaxColumns(), DATA_COL - sh.getMaxColumns());
-      sh.getRange(2, DATA_COL, rows, 1).setValues(data);
-      sh.getRange(2, oldCol, rows, 1).clearContent();
-    }
-    sh.showColumns(oldCol);
-  }
-  if (sh.getMaxColumns() < DATA_COL) sh.insertColumnsAfter(sh.getMaxColumns(), DATA_COL - sh.getMaxColumns());
-  sh.getRange(1, 1, 1, HEADER.length).setValues([HEADER]).setFontWeight('bold').setWrap(true);
-  sh.hideColumns(DATA_COL);
-}
-
-/** Аркуш «ЗНО»; якщо список тем змінився, переносить стовпець «Дані» в кінець. */
 function znoSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sh = ss.getSheetByName(ZNO_SHEET);
-  if (!sh) sh = ss.insertSheet(ZNO_SHEET);
-  if (sh.getLastRow() === 0) {
-    sh.appendRow(ZNO_HEADER);
-    sh.setFrozenRows(1);
-    sh.setFrozenColumns(2);
-    sh.getRange(1, 1, 1, ZNO_HEADER.length).setFontWeight('bold').setWrap(true);
-    sh.hideColumns(1);
-    sh.hideColumns(ZNO_DATA_COL);
-    return sh;
-  }
-  const lastCol = sh.getLastColumn();
-  const header = sh.getRange(1, 1, 1, lastCol).getValues()[0];
-  const oldCol = header.indexOf(DATA_TITLE) + 1;
-  if (oldCol === ZNO_DATA_COL && header.join('|') === ZNO_HEADER.join('|')) return sh;
-  if (sh.getMaxColumns() < ZNO_DATA_COL) sh.insertColumnsAfter(sh.getMaxColumns(), ZNO_DATA_COL - sh.getMaxColumns());
-  if (oldCol > 0 && oldCol !== ZNO_DATA_COL) {
-    const rows = sh.getLastRow() - 1;
-    if (rows > 0) {
-      const data = sh.getRange(2, oldCol, rows, 1).getValues();
-      sh.getRange(2, ZNO_DATA_COL, rows, 1).setValues(data);
-      sh.getRange(2, oldCol, rows, 1).clearContent();
-    }
-    sh.showColumns(oldCol);
-  }
-  sh.getRange(1, 1, 1, ZNO_HEADER.length).setValues([ZNO_HEADER]).setFontWeight('bold').setWrap(true);
-  sh.hideColumns(ZNO_DATA_COL);
-  return sh;
+  return ensureSheet_(ZNO_SHEET, ZNO_HEADER, [[7, 6 + ZNO_TOPICS.length, 0, 50, 100]], buildZno_);
 }
 
-/** Аркуш «НМТ»; якщо список тестів змінився, переносить стовпець «Дані» в кінець. */
 function nmtSheet_() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sh = ss.getSheetByName(NMT_SHEET);
-  if (!sh) sh = ss.insertSheet(NMT_SHEET);
-  if (sh.getLastRow() === 0) {
-    sh.appendRow(NMT_HEADER);
-    sh.setFrozenRows(1);
-    sh.setFrozenColumns(2);
-    sh.getRange(1, 1, 1, NMT_HEADER.length).setFontWeight('bold').setWrap(true);
-    sh.hideColumns(1);
-    sh.hideColumns(NMT_DATA_COL);
-    return sh;
-  }
-  const lastCol = sh.getLastColumn();
-  const header = sh.getRange(1, 1, 1, lastCol).getValues()[0];
-  const oldCol = header.indexOf(DATA_TITLE) + 1;
-  if (oldCol === NMT_DATA_COL && header.join('|') === NMT_HEADER.join('|')) return sh;
-  if (sh.getMaxColumns() < NMT_DATA_COL) sh.insertColumnsAfter(sh.getMaxColumns(), NMT_DATA_COL - sh.getMaxColumns());
-  if (oldCol > 0 && oldCol !== NMT_DATA_COL) {
-    const rows = sh.getLastRow() - 1;
-    if (rows > 0) {
-      const data = sh.getRange(2, oldCol, rows, 1).getValues();
-      sh.getRange(2, NMT_DATA_COL, rows, 1).setValues(data);
-      sh.getRange(2, oldCol, rows, 1).clearContent();
-    }
-    sh.showColumns(oldCol);
-  }
-  sh.getRange(1, 1, 1, NMT_HEADER.length).setValues([NMT_HEADER]).setFontWeight('bold').setWrap(true);
-  sh.hideColumns(NMT_DATA_COL);
-  return sh;
+  return ensureSheet_(NMT_SHEET, NMT_HEADER, [[5, 5, 100, 150, 200]], buildNmt_);
+}
+
+/** Запустіть вручну в редакторі Apps Script, щоб одразу перебудувати всі аркуші (не обов’язково). */
+function rebuildAll() {
+  sheet_();
+  znoSheet_();
+  nmtSheet_();
 }
 
 function readNmt_(key) {
@@ -294,17 +394,7 @@ function saveNmt_(d, p, display) {
     if (old && old.n > v.n) return;
     stored[id] = v;
   });
-  let done = 0, bestAll = '';
-  const perTest = NMT_TESTS.map(([id]) => {
-    const t = stored[id];
-    if (!t) return '';
-    done++;
-    if (t.bs && (bestAll === '' || t.bs > bestAll)) bestAll = t.bs;
-    return 'найкраще ' + (t.bs || 'поріг не подолано') + ' (' + t.bp + '/45); останнє ' + (t.s || 'поріг не подолано') + ' (' + t.p + '/45); спроб ' + t.n + (t.blur ? '; виходів зі сторінки ' + t.blur : '');
-  });
-  const out = [p.key, display, new Date(), done, bestAll].concat(perTest).concat([JSON.stringify(stored)]);
-  if (row > 0) sh.getRange(row, 1, 1, out.length).setValues([out]);
-  else sh.appendRow(out);
+  writeRow_(sh, row, buildNmt_(p.key, display, new Date(), stored));
 }
 
 function readZno_(key) {
@@ -331,17 +421,7 @@ function saveZno_(d, p, display) {
     if (s === null) return;
     stored[id] = { s: s, n: Number(d.zno[id].n) || 0 };
   });
-  const perTopic = ZNO_TOPICS.map(([id]) => {
-    const t = stored[id];
-    if (!t || !t.s || !t.n) return '';
-    const ok = (t.s.match(/:1/g) || []).length;
-    return Math.round(ok / t.n * 1000) / 10;
-  });
-  const tot = d.znoTotal || {};
-  const total = tot.total ? Math.round((Number(tot.ok) || 0) / Number(tot.total) * 1000) / 10 : '';
-  const out = [p.key, display, new Date(), total, Number(tot.done) || ''].concat(perTopic).concat([JSON.stringify(stored)]);
-  if (row > 0) sh.getRange(row, 1, 1, out.length).setValues([out]);
-  else sh.appendRow(out);
+  writeRow_(sh, row, buildZno_(p.key, display, new Date(), stored));
 }
 
 function znoOut_(key) {
@@ -554,25 +634,16 @@ function save_(d, p) {
   const stored = readStored_(sh, rowNum);
   const incoming = d.topics || {};
   const att = stored._att || {};
-  let answered = 0, correct = 0;
-  const perTopic = TOPICS.map(([id]) => {
+  TOPICS.forEach(([id]) => {
     const a = cleanR_(stored[id]) || '.'.repeat(TASKS_PER_TOPIC);
     const b = incoming[id] ? cleanR_(incoming[id].r) : null;
     // Сайт перед надсиланням уже об’єднав прогрес із таблицею, тож новий стан теми
     // (зокрема після «Почати тему заново») приймаємо як є; теми, яких немає в запиті, лишаються.
-    const merged = b || a;
-    stored[id] = merged;
+    stored[id] = b || a;
     if (incoming[id]) att[id] = Math.max(Number(att[id]) || 1, Number(incoming[id].att) || 1);
-    const done = merged.replace(/\./g, '').length;
-    const ok = merged.replace(/[^1]/g, '').length;
-    answered += done; correct += ok;
-    return done ? ok : '';
   });
   stored._att = att;
-  const total = Math.round(correct / (TOPICS.length * TASKS_PER_TOPIC) * 1000) / 10;
-  const row = [p.key, display, new Date(), total, answered].concat(perTopic).concat([JSON.stringify(stored)]);
-  if (rowNum > 0) sh.getRange(rowNum, 1, 1, row.length).setValues([row]);
-  else sh.appendRow(row);
+  writeRow_(sh, rowNum, buildResults_(p.key, display, new Date(), stored));
   saveZno_(d, p, display);
   saveNmt_(d, p, display);
   return { ok: true, logged, v: SERVICE_VERSION };
