@@ -18,10 +18,16 @@
     function loadTest(id) {
       if (cache[id]) return;
       cache[id] = "loading";
-      fetch("nmt/t/" + id + ".json").then(r => r.json()).then(d => { cache[id] = d; host.render(); })
+      fetch("nmt/t/" + id + ".json").then(r => r.json()).then(d => { d.tasks.forEach(markStress); cache[id] = d; host.render(); })
         .catch(() => { cache[id] = "error"; host.render(); });
     }
     const meta = id => index && index.tests.find(t => t.id === id);
+    /* Підкреслені одиничні літери (наголос, звук) — у яскравий спільний стиль .st. */
+    const stressify = h => String(h || "").replace(/<u>((?:<[bi]>)*)([^<]{1,2})((?:<\/[bi]>)*)<\/u>/g, '<span class="st">$2</span>');
+    function markStress(t) {
+      t.q = stressify(t.q); t.ex = stressify(t.ex);
+      ["opts", "left", "right"].forEach(k => { if (t[k]) t[k] = t[k].map(([a, b]) => [a, stressify(b)]); });
+    }
 
     /* ── Стан ── */
     function tstate(id, create) {

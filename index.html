@@ -13,6 +13,7 @@
 /* Layout: одна центральна колонка (макс. 860px) — шапка з ім’ям, картки тем, екран теми з вкладками «Теорія / Завдання». */
 :root {
   --lime: #99cc00; --violet: #9d6bdb; --yellow: #f7c915;
+  --stress: #d0105c; --stress-bg: #ffe0ec;
   --wrong: #c13f2c; --right: #3f7a16;
   --bg: #ffffff; --surface: #faf8fc; --surface-2: #f2eef8; --line: #e5e0ee; --text: #1e1b26;
   --muted: color-mix(in srgb, var(--text) 62%, transparent);
@@ -28,10 +29,12 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #12101a; --surface: #1b1826; --surface-2: #231f31; --line: #332d44; --text: #f4f1f9;
   --wrong: #ff7a5e; --right: #a5d914; --lime-ink: #b8e63a; --violet-ink: #c4a3f0; color-scheme: dark;
+  --stress: #ff7aa8; --stress-bg: #4a1730;
 } }
 :root[data-theme="dark"] {
   --bg: #12101a; --surface: #1b1826; --surface-2: #231f31; --line: #332d44; --text: #f4f1f9;
   --wrong: #ff7a5e; --right: #a5d914; --lime-ink: #b8e63a; --violet-ink: #c4a3f0; color-scheme: dark;
+  --stress: #ff7aa8; --stress-bg: #4a1730;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -133,7 +136,9 @@ main { padding-block: 22px 60px; }
 .tbody .lead { font-size: 17px; }
 .tbody .note { font-size: 14px; color: var(--muted); }
 .tbody i { font-style: italic; color: var(--violet-ink); }
-.st { color: var(--violet-ink); font-weight: 800; text-decoration: underline 3px var(--lime); text-underline-offset: 3px; }
+/* Наголошена (виділена) літера: яскравий колір, тло й товсте підкреслення — однаково в тренажері, ЗНО й НМТ. */
+.st { color: var(--stress); background: var(--stress-bg); font-weight: 900; font-style: normal; border-radius: 3px; padding: 0 1px; text-decoration: underline 3px var(--stress); text-underline-offset: 4px; text-decoration-skip-ink: none; }
+.st b, .st i { font-style: normal; }
 .hl { background: color-mix(in srgb, var(--lime) 45%, transparent); border-radius: 4px; padding: 0 2px; }
 .scheme { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
 .scheme.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
@@ -593,11 +598,11 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=9"></script>
-<script src="data-extra.js?v=9"></script>
-<script src="engine.js?v=9"></script>
-<script src="zno-app.js?v=9"></script>
-<script src="nmt-app.js?v=9"></script>
+<script src="data.js?v=10"></script>
+<script src="data-extra.js?v=10"></script>
+<script src="engine.js?v=10"></script>
+<script src="zno-app.js?v=10"></script>
+<script src="nmt-app.js?v=10"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -631,7 +636,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "9", THEORY = {}, theoryLoading = {};
+  const VER = "10", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
