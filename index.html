@@ -228,6 +228,8 @@ main { padding-block: 22px 60px; }
 .opt .box-ic { flex: none; width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--line); display: grid; place-items: center; font-size: 14px; }
 .opt.sel { border-color: var(--violet); background: color-mix(in srgb, var(--violet) 10%, var(--bg)); }
 .opt.sel .box-ic { background: var(--violet); border-color: var(--violet); color: #fff; }
+.opt.sel .key { background: var(--violet); color: #fff; }
+.opt.sel { box-shadow: 0 0 0 3px color-mix(in srgb, var(--violet) 25%, transparent); }
 .opt.ok { border-color: var(--right); background: var(--right-bg); }
 .opt.no { border-color: var(--wrong); background: var(--wrong-bg); }
 .opt.miss { border-style: dashed; border-color: var(--right); }
@@ -591,11 +593,11 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=6"></script>
-<script src="data-extra.js?v=6"></script>
-<script src="engine.js?v=6"></script>
-<script src="zno-app.js?v=6"></script>
-<script src="nmt-app.js?v=7"></script>
+<script src="data.js?v=9"></script>
+<script src="data-extra.js?v=9"></script>
+<script src="engine.js?v=9"></script>
+<script src="zno-app.js?v=9"></script>
+<script src="nmt-app.js?v=9"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -629,7 +631,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "6", THEORY = {}, theoryLoading = {};
+  const VER = "9", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -992,11 +994,10 @@ body.has-fab main { padding-bottom: 110px; }
       const ok = st.r[i] === "1";
       h += `<div class="fb ${ok ? "good" : "bad"}"><span class="verdict">${ok ? "Правильно! +1%" : "Помилка"}</span>${!ok ? correctHtml(task) : ""}${task.note ? `<span>${task.note}</span>` : ""}</div>`;
     }
-    const canCheck = !done && task.t !== "one" && ready(task);
+    const canCheck = !done && ready(task);
     h += `<div class="task-nav"><button class="btn" data-act="prev" ${i === 0 ? "disabled" : ""} aria-label="Попереднє завдання">←</button>`;
-    if (!done && task.t !== "one") h += `<button class="btn primary grow" data-act="check" ${canCheck ? "" : "disabled"}>Перевірити</button>`;
-    else if (done) h += `<button class="btn primary grow" data-act="next-open">${nextOpen(st, i) >= 0 ? "Далі →" : "Готово"}</button>`;
-    else h += `<span class="hint" style="align-self:center">Торкніться відповіді</span>`;
+    if (!done) h += `<button class="btn primary grow" data-act="check" ${canCheck ? "" : "disabled"}>Зберегти відповідь</button>`;
+    else h += `<button class="btn primary grow" data-act="next-open">${nextOpen(st, i) >= 0 ? "Далі →" : "Готово"}</button>`;
     h += `<button class="btn" data-act="next" ${i === N - 1 ? "disabled" : ""} aria-label="Наступне завдання (пропустити)">→</button></div></article>`;
     return h;
   }
@@ -1007,6 +1008,7 @@ body.has-fab main { padding-bottom: 110px; }
   }
   function newPend(task, topic) {
     const p = { i: task.n, topic };
+    if (task.t === "one") p.v = null;
     if (task.t === "multi") p.v = [];
     if (task.t === "sort") p.v = task.items.map(() => null);
     if (task.t === "match") { p.v = task.left.map(() => null); p.sel = null; }
@@ -1014,6 +1016,7 @@ body.has-fab main { padding-bottom: 110px; }
     return p;
   }
   function ready(task) {
+    if (task.t === "one") return pend.v !== null;
     if (task.t === "multi") return pend.v.length > 0;
     if (task.t === "sort" || task.t === "match") return pend.v.every(v => v !== null);
     if (task.t === "order") return pend.v.length === task.items.length;
@@ -1026,7 +1029,8 @@ body.has-fab main { padding-bottom: 110px; }
       return `<div class="opts ${two ? "two" : ""}">` + task.opts.map((o, k) => {
         let cls = "", tag = "";
         if (done) { if (k === task.a) { cls = "ok"; tag = "✓"; } else if (k === resp) { cls = "no"; tag = "✗"; } }
-        return `<button class="opt ${cls}" data-one="${k}" ${dis}>${two ? "" : `<span class="key">${"АБВГДЕ"[k]}</span>`}<span>${o}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
+        else if (pend && pend.v === k) cls = "sel";
+        return `<button class="opt ${cls}" data-one="${k}" aria-pressed="${!done && pend && pend.v === k}" ${dis}>${two ? "" : `<span class="key">${"АБВГДЕ"[k]}</span>`}<span>${o}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
       }).join("") + "</div>";
     }
     if (task.t === "multi") {
@@ -1147,7 +1151,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (act === "next-open") { const st = tstate(ui.topic), j = nextOpen(st, ui.cur); if (j < 0) { ui.reviewing = false; } else ui.cur = j; pend = null; render(); scrollTask(); return; }
     const t = T.find(x => x.id === ui.topic); if (!t || !loggedIn()) return;
     const task = tasksOf(t.id)[ui.cur];
-    if (d.one !== undefined) { answer(t, task, +d.one); return; }
+    if (d.one !== undefined) { pend.v = +d.one; render(); return; }
     if (d.multi !== undefined) { const k = +d.multi, ix = pend.v.indexOf(k); if (ix >= 0) pend.v.splice(ix, 1); else pend.v.push(k); render(); return; }
     if (d.sort) { const [k, c] = d.sort.split(":").map(Number); pend.v[k] = c; render(); return; }
     if (d.ml !== undefined) { const k = +d.ml; if (pend.v[k] !== null) { pend.v[k] = null; pend.sel = k; } else pend.sel = k; render(); return; }
@@ -1160,7 +1164,7 @@ body.has-fab main { padding-bottom: 110px; }
     }
     if (d.ord !== undefined) { pend.v.push(+d.ord); render(); return; }
     if (d.unord !== undefined) { pend.v.splice(+d.unord, 1); render(); return; }
-    if (act === "check") { if (!ready(task)) return; answer(t, task, task.t === "multi" ? pend.v.slice().sort((a, b) => a - b) : pend.v.slice()); return; }
+    if (act === "check") { if (!ready(task)) return; answer(t, task, task.t === "one" ? pend.v : task.t === "multi" ? pend.v.slice().sort((a, b) => a - b) : pend.v.slice()); return; }
   });
   function jumpFirst() {
     if (!me() || !ui.topic) return;

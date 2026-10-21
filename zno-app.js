@@ -185,11 +185,10 @@
         h += `<div class="fb ${ok ? "good" : "bad"}"><span class="verdict">${ok ? "Правильно!" : "Помилка"}</span>${ok ? "" : `<span>Правильна відповідь: <b>${esc(answerText(task))}</b></span>`}</div>`;
         h += `<details class="zex" open><summary>Пояснення</summary><div class="zex-body">${task.ex ? M(task.ex) : "Пояснення до цього завдання немає."}</div></details>`;
       }
-      const ready = !done && (task.type === "multiple" ? pend.v.length > 0 : task.type === "matching" ? task.left.every(l => pend.v[l[0]]) : false);
+      const ready = !done && (task.type === "multiple" ? pend.v.length > 0 : task.type === "matching" ? task.left.every(l => pend.v[l[0]]) : pend.v != null);
       h += `<div class="task-nav"><button class="btn" data-act="zprev" ${i === 0 ? "disabled" : ""} aria-label="Попереднє завдання">←</button>`;
-      if (!done && task.type !== "single") h += `<button class="btn primary grow" data-act="zcheck" ${ready ? "" : "disabled"}>Перевірити</button>`;
-      else if (done) h += `<button class="btn primary grow" data-act="znext-open">${nextOpen(topicCache[t.id], st, i) >= 0 ? "Далі →" : "Готово"}</button>`;
-      else h += `<span class="hint" style="align-self:center">Торкніться відповіді</span>`;
+      if (!done) h += `<button class="btn primary grow" data-act="zcheck" ${ready ? "" : "disabled"}>Зберегти відповідь</button>`;
+      else h += `<button class="btn primary grow" data-act="znext-open">${nextOpen(topicCache[t.id], st, i) >= 0 ? "Далі →" : "Готово"}</button>`;
       h += `<button class="btn" data-act="znext" ${i === n - 1 ? "disabled" : ""} aria-label="Наступне завдання (пропустити)">→</button></div></article>`;
       return h;
     }
@@ -204,7 +203,8 @@
         return '<div class="opts">' + task.opts.map(([k, txt]) => {
           let cls = "", tag = "";
           if (done) { if (k === task.a) { cls = "ok"; tag = "✓"; } else if (k === resp) { cls = "no"; tag = "✗"; } }
-          return `<button class="opt zopt ${/!\[/.test(txt) ? "has-img" : ""} ${cls}" data-zone="${esc(k)}" ${dis}><span class="key">${esc(k)}</span><span class="otext">${M(txt)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
+          else if (pend.v === k) cls = "sel";
+          return `<button class="opt zopt ${/!\[/.test(txt) ? "has-img" : ""} ${cls}" data-zone="${esc(k)}" aria-pressed="${!done && pend.v === k}" ${dis}><span class="key">${esc(k)}</span><span class="otext">${M(txt)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
         }).join("") + "</div>";
       }
       if (task.type === "multiple") {
@@ -283,11 +283,12 @@
       if (d.act === "znext-open") { const j = nextOpen(data, zstate(t.id, true), ui.zcur); if (j < 0) ui.zreview = false; else ui.zcur = j; pend = null; host.render(); host.scrollTask(); return true; }
       if (!host.loggedIn()) return false;
       const task = data.tasks[ui.zcur];
-      if (d.zone !== undefined) { answer(t, task, d.zone); return true; }
+      if (d.zone !== undefined) { pend.v = d.zone; host.render(); return true; }
       if (d.zmulti !== undefined) { const ix = pend.v.indexOf(d.zmulti); if (ix >= 0) pend.v.splice(ix, 1); else pend.v.push(d.zmulti); host.render(); return true; }
       if (d.zmatch) { const [lk, rk] = d.zmatch.split("|"); pend.v[lk] = rk; host.render(); return true; }
       if (d.act === "zcheck") {
-        if (task.type === "multiple" && pend.v.length) answer(t, task, pend.v.slice().sort());
+        if (task.type === "single" && pend.v != null) answer(t, task, pend.v);
+        else if (task.type === "multiple" && pend.v.length) answer(t, task, pend.v.slice().sort());
         else if (task.type === "matching" && task.left.every(l => pend.v[l[0]])) answer(t, task, Object.assign({}, pend.v));
         return true;
       }
