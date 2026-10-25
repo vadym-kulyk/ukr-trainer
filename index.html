@@ -47,7 +47,7 @@ button { cursor: pointer; }
 .wrap { max-width: 860px; margin: 0 auto; padding-inline: 16px; }
 
 /* ── Шапка ── */
-.hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); background: var(--surface); }
+.hero { position: relative; overflow: hidden; overflow: clip; border-bottom: 1px solid var(--line); background: var(--surface); }
 .mark { position: absolute; pointer-events: none; user-select: none; opacity: .11; z-index: 0; width: 300px; max-width: none; }
 .mark--r { right: -150px; top: -60px; }
 .mark--l { left: -170px; bottom: -150px; opacity: .09; }
@@ -140,6 +140,10 @@ main { padding-block: 22px 60px; }
 .st { color: var(--stress); background: var(--stress-bg); font-weight: 900; font-style: normal; border-radius: 3px; padding: 0 1px; text-decoration: underline 3px var(--stress); text-underline-offset: 4px; text-decoration-skip-ink: none; }
 .st b, .st i { font-style: normal; }
 .hl { background: color-mix(in srgb, var(--lime) 45%, transparent); border-radius: 4px; padding: 0 2px; }
+/* Граматична основа: підмет — одна лінія, присудок — дві; тире між ними виділене. */
+.u1 { text-decoration: underline 2px var(--violet); text-underline-offset: 4px; text-decoration-skip-ink: none; }
+.u2 { text-decoration: underline double 2px var(--violet); text-underline-offset: 4px; text-decoration-skip-ink: none; }
+.dash { color: var(--right); font-weight: 900; }
 .scheme { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
 .scheme.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 .box { background: var(--bg); border: 1px solid var(--line); border-top: 4px solid var(--violet); border-radius: var(--r-sm); padding: 10px 12px; display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
@@ -239,6 +243,8 @@ main { padding-block: 22px 60px; }
 .opt.no { border-color: var(--wrong); background: var(--wrong-bg); }
 .opt.miss { border-style: dashed; border-color: var(--right); }
 .opt:disabled { cursor: default; color: inherit; }
+.opt .ln { display: block; }
+.opt .ln + .ln { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line); }
 .opt .tag { margin-left: auto; font-size: 12px; font-weight: 700; flex: none; }
 .opt.ok .tag { color: var(--right); } .opt.no .tag { color: var(--wrong); }
 
@@ -571,7 +577,7 @@ body.has-fab main { padding-bottom: 110px; }
       </div>
     </div>
     <h1>Українська мова: <em>тренажер, ЗНО і НМТ</em></h1>
-    <p class="sub">Тренажер: 28 тем з теорією і 100 завданнями в кожній. Банк завдань ЗНО з поясненнями. Симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
+    <p class="sub">Тренажер: 29 тем з теорією і 100 завданнями в кожній. Банк завдань ЗНО з поясненнями. Симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
     <div class="namebox" id="profilebox"></div>
     <div class="overall" id="overall"></div>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
@@ -598,11 +604,11 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=10"></script>
-<script src="data-extra.js?v=10"></script>
-<script src="engine.js?v=10"></script>
-<script src="zno-app.js?v=10"></script>
-<script src="nmt-app.js?v=10"></script>
+<script src="data.js?v=11"></script>
+<script src="data-extra.js?v=11"></script>
+<script src="engine.js?v=11"></script>
+<script src="zno-app.js?v=11"></script>
+<script src="nmt-app.js?v=11"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -611,8 +617,8 @@ body.has-fab main { padding-bottom: 110px; }
   const LS = "mg-ukr-trainer-v1";
   const EMPTY = ".".repeat(N);
   const TYPE = { one: "Оберіть одну відповідь", multi: "Кілька правильних відповідей", sort: "Розподіл за групами", match: "Встановіть відповідність", order: "Розташуйте в правильному порядку" };
-  const IMG = { phonetics: "img/phonetics.jpg", ortho: "img/ortho.jpg", lexic: "img/lexic.jpg", foreign: "img/foreign.jpg", phraseo: "img/phraseo.jpg", compound: "img/compound.jpg", antonym: "img/antonym.jpg", error: "img/error.jpg", assim: "img/assim.jpg", alter: "img/alter.jpg", nn: "img/nn.jpg" };
-  const ALT = { phonetics: "Мікрофон на тлі звукових хвиль", ortho: "Зошит, ручка й маркер на столі", lexic: "Відкритий словник і лупа", foreign: "Книжки, глобус і паспорт", phraseo: "Керамічний кіт біля мішка на вишитому рушнику", compound: "Кубики, з яких складено місток", antonym: "Чорні й білі шахові фігури одна навпроти одної", error: "Червоний і зелений олівці на аркуші з текстом", assim: "Дві скляні кульки, що торкаються, кольори яких змішуються", alter: "Зелені, фіолетова й жовта шестерні", nn: "Дві зелені нитки й одна фіолетова на п’яльцях" };
+  const IMG = { phonetics: "img/phonetics.jpg", ortho: "img/ortho.jpg", lexic: "img/lexic.jpg", foreign: "img/foreign.jpg", phraseo: "img/phraseo.jpg", compound: "img/compound.jpg", antonym: "img/antonym.jpg", error: "img/error.jpg", assim: "img/assim.jpg", alter: "img/alter.jpg", nn: "img/nn.jpg", dash: "img/dash.jpg" };
+  const ALT = { phonetics: "Мікрофон на тлі звукових хвиль", ortho: "Зошит, ручка й маркер на столі", lexic: "Відкритий словник і лупа", foreign: "Книжки, глобус і паспорт", phraseo: "Керамічний кіт біля мішка на вишитому рушнику", compound: "Кубики, з яких складено місток", antonym: "Чорні й білі шахові фігури одна навпроти одної", error: "Червоний і зелений олівці на аркуші з текстом", assim: "Дві скляні кульки, що торкаються, кольори яких змішуються", alter: "Зелені, фіолетова й жовта шестерні", nn: "Дві зелені нитки й одна фіолетова на п’яльцях", dash: "Зелена планка, перекинута між фіолетовим і білим камінцями" };
   const TASKS = {};
   const tasksOf = id => TASKS[id] || (TASKS[id] = E.buildTasks(T.find(t => t.id === id)));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -636,7 +642,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "10", THEORY = {}, theoryLoading = {};
+  const VER = "11", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))

@@ -44,12 +44,18 @@
   }
   const markStress = s => esc(s).replace(/([а-яґєії])([АЕЄИІЇОУЮЯ])/g, (m, a, v) => a + '<span class="st">' + v.toLowerCase() + "</span>");
   const gapHtml = it => it.grp.cls ? (it.grp.stress ? markStress(it.w) : esc(it.w)) : esc(it.w).replace("_", '<span class="gap">…</span>');
-  const full = (it, k) => it.w.replace("_", it.f[k]);
+  /* Прибираємо подвійні пробіли, що лишаються, коли на місці пропуску нічого не вставляємо (тема «Тире»). */
+  const full = (it, k) => it.w.replace("_", it.f[k]).replace(/ {2,}/g, " ");
   const fullHtml = (it, k) => esc(full(it, k));
   const labelOf = (it, k) => it.grp.cats[k];
   function explain(it) {
     const right = it.grp.cls ? it.w + " — " + it.grp.cats[it.c] : full(it, it.c);
     return "<b>" + esc(right) + "</b>" + (it.n ? " — " + esc(dot(it.n)) : "") + " " + esc(it.grp.rule);
+  }
+  /* Перелік правильних прикладів у поясненні. Речення (grp.lines) вже мають власні крапки. */
+  function listNote(list, grp) {
+    const b = list.map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b>");
+    return grp.lines ? b.join(" ") + " " : b.join(", ") + ". ";
   }
   function wrongK(r, it) {
     const ks = it.f.map((_, k) => k).filter(k => k !== it.c && full(it, k) !== full(it, it.c));
@@ -75,7 +81,7 @@
       const g = pick(r, multiG), pool = byG[g];
       const chosen = sample(r, pool, Math.min(5, pool.length));
       if (new Set(chosen.map(i => i.c)).size < 2) return null;
-      return { t: "sort", key: "S" + chosen.map(i => i.w).sort().join("|"), q: pool[0].grp.cls ? "Розподіліть приклади за групами." : "Розподіліть слова за групами: що треба вставити?",
+      return { t: "sort", key: "S" + chosen.map(i => i.w).sort().join("|"), q: pool[0].grp.sortQ || (pool[0].grp.cls ? "Розподіліть приклади за групами." : "Розподіліть слова за групами: що треба вставити?"),
         cats: pool[0].grp.cats.map(esc), items: chosen.map(i => ({ html: gapHtml(i), c: i.c })),
         note: chosen.map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b> — " + esc(i.grp.cats[i.c])).join("; ") + ". " + esc(pool[0].grp.rule) };
     });
@@ -84,14 +90,14 @@
       const forms = [], seen = new Set();
       it.f.forEach((_, k) => { const s = full(it, k); if (!seen.has(s)) { seen.add(s); forms.push({ s, k }); } });
       if (forms.length < 2) return null;
-      return oneTask(r, { key: "W" + it.w, q: "Укажіть правильно написаний варіант.", note: explain(it) },
+      return oneTask(r, { key: "W" + it.w, q: it.grp.spellQ || "Укажіть правильно написаний варіант.", note: explain(it) },
         forms.map(x => esc(x.s)), forms.findIndex(x => x.k === it.c));
     });
     if (spellG.length) gens.push(function hunt(r) {
       const g = pick(r, spellG), chosen = sample(r, byG[g], 4), bad = ri(r, 4);
       const k = wrongK(r, chosen[bad]); if (k < 0) return null;
       const opts = chosen.map((it, i) => i === bad ? fullHtml(it, k) : fullHtml(it, it.c));
-      return { t: "one", key: "H" + chosen.map(i => i.w).join("|"), q: "У якому варіанті допущено помилку?", opts, a: bad,
+      return { t: "one", key: "H" + chosen.map(i => i.w).join("|"), q: chosen[0].grp.huntQ || "У якому варіанті допущено помилку?", opts, a: bad,
         note: "Помилка: " + esc(dot(full(chosen[bad], k))) + " Правильно: " + explain(chosen[bad]) };
     });
     if (multiG.length) gens.push(function multi(r) {
@@ -101,12 +107,12 @@
       const grp = chosen[0].grp;
       return { t: "multi", key: "M" + k + chosen.map(i => i.w).sort().join("|"),
         q: grp.multiQ ? grp.multiQ.replace("{c}", esc(grp.cats[k])) : grp.cls ? "Позначте всі приклади, де " + esc(grp.cats[k]) + "." : "Позначте всі варіанти, де треба вставити " + q(esc(grp.cats[k])) + ".",
-        opts: chosen.map(gapHtml), a, note: chosen.filter(i => i.c === k).map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b>").join(", ") + ". " + esc(grp.rule) };
+        opts: chosen.map(gapHtml), a, note: listNote(chosen.filter(i => i.c === k), grp) + esc(grp.rule) };
     });
     if (spellIt.length) gens.push(function tf(r) {
       const it = pick(r, spellIt), ok = r() < 0.5;
       const k = ok ? it.c : wrongK(r, it); if (k < 0) return null;
-      return oneTask(r, { key: "T" + full(it, k), q: "Чи правильно написано?", big: fullHtml(it, k), note: explain(it), keepOrder: true },
+      return oneTask(r, { key: "T" + full(it, k), q: it.grp.tfQ || "Чи правильно написано?", big: fullHtml(it, k), note: explain(it), keepOrder: true },
         ["Правильно", "З помилкою"], ok ? 0 : 1);
     });
     if (multiG.length) gens.push(function odd(r) {
@@ -118,7 +124,7 @@
       const order = shuffle(r, [0, 1, 2, 3]), b = order.indexOf(3);
       const grp = pool[0].grp, oddIt = chosen[3];
       return { t: "one", key: "O" + chosen.map(i => i.w).sort().join("|"),
-        q: grp.oddQ ? grp.oddQ : grp.cls ? "Який приклад зайвий у цьому ряду?" : "Знайдіть зайве: де треба вставити інше?",
+        q: grp.oddQ ? grp.oddQ.replace("{o}", esc(grp.cats[oddIt.c])) : grp.cls ? "Який приклад зайвий у цьому ряду?" : "Знайдіть зайве: де треба вставити інше?",
         opts: order.map(i => gapHtml(chosen[i])), a: b,
         note: "Зайве — <b>" + esc(oddIt.grp.cls ? oddIt.w : full(oddIt, oddIt.c)) + "</b> (" + esc(grp.cats[oddIt.c]) + "), в інших — " + esc(grp.cats[A]) + ". " + esc(grp.rule) };
     });
@@ -129,7 +135,7 @@
         if (i === good) opts.push(fullHtml(chosen[i], chosen[i].c));
         else { const k = wrongK(r, chosen[i]); if (k < 0) return null; opts.push(fullHtml(chosen[i], k)); }
       }
-      return { t: "one", key: "R" + chosen.map(i => i.w).join("|"), q: "Укажіть варіант, написаний правильно.", opts, a: good, note: explain(chosen[good]) };
+      return { t: "one", key: "R" + chosen.map(i => i.w).join("|"), q: chosen[0].grp.rightQ || "Укажіть варіант, написаний правильно.", opts, a: good, note: explain(chosen[good]) };
     });
     if (multiG.length) gens.push(function row(r) {
       const g = pick(r, multiG), pool = byG[g];
@@ -143,8 +149,8 @@
       const grp = pool[0].grp;
       return { t: "one", key: "Rw" + A + rows[0].map(i => i.w).sort().join("|"),
         q: grp.rowQ ? grp.rowQ.replace("{c}", esc(grp.cats[A])) : grp.cls ? "У якому рядку всі приклади — " + esc(grp.cats[A]) + "?" : "У якому рядку в усіх словах треба вставити " + q(esc(grp.cats[A])) + "?",
-        opts: order.map(i => rows[i].map(gapHtml).join(", ")), a: order.indexOf(0), wide: true,
-        note: rows[0].map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b>").join(", ") + ". " + esc(grp.rule) };
+        opts: order.map(i => grp.lines ? rows[i].map(x => '<span class="ln">' + gapHtml(x) + "</span>").join("") : rows[i].map(gapHtml).join(", ")), a: order.indexOf(0), wide: true,
+        note: listNote(rows[0], grp) + esc(grp.rule) };
     });
     return gens;
   }
@@ -332,6 +338,7 @@
     if (f.t === "order") return Object.assign(base, { t: "order", items: f.items, note: f.note ? "<b>" + esc(f.note) + "</b>" : "" });
     if (f.t === "match") {
       const right = shuffle(r, f.pairs.map((p, i) => ({ html: esc(p[1]), li: i })));
+      if (f.mix && right.every((x, i) => x.li === i)) right.push(right.shift()); /* не лишаємо пари одна навпроти одної */
       return Object.assign(base, { t: "match", left: f.pairs.map(p => esc(p[0])), right, note: f.pairs.map(p => "<b>" + esc(p[0]) + "</b> — " + esc(p[1])).join("; ") + "." });
     }
     return null;

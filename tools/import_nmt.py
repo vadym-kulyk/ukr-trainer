@@ -111,7 +111,11 @@ def topics_for(task):
                 found.append(ref)
         if found:
             break
-    return found[:2]
+    found = found[:2]
+    # Завдання про вживання тире, де є випадок «між підметом і присудком», — ще й тема тренажера.
+    if "тире" in plain(task["q"]) and "підмет" in body and "t:dash_sp" not in found:
+        found.append("t:dash_sp")
+    return found
 
 
 def fetch(url, path):
