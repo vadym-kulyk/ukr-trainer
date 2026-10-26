@@ -152,6 +152,26 @@
         opts: order.map(i => grp.lines ? rows[i].map(x => '<span class="ln">' + gapHtml(x) + "</span>").join("") : rows[i].map(gapHtml).join(", ")), a: order.indexOf(0), wide: true,
         note: listNote(rows[0], grp) + esc(grp.rule) };
     });
+    /* Пояснення правила (групи з позначкою why): чому слово написано саме так. */
+    const whyIt = items.filter(it => it.grp.why);
+    if (whyIt.length) {
+      const whyLabel = (g, k) => g.why + " — " + g.cats[k];
+      const allWhy = [];
+      whyIt.forEach(it => { const l = whyLabel(it.grp, it.c); if (!allWhy.includes(l)) allWhy.push(l); });
+      const whyNote = it => "<b>" + esc(it.w) + "</b>: " + esc(it.n || whyLabel(it.grp, it.c)) + ".";
+      gens.push(function whyMix(r) {
+        const it = pick(r, whyIt), right = whyLabel(it.grp, it.c);
+        const wrong = sample(r, allWhy.filter(l => l !== right), 3);
+        if (wrong.length < 2) return null;
+        return oneTask(r, { key: "Y" + it.w, q: "Чому так пишемо?", big: esc(it.w), note: whyNote(it) }, [right].concat(wrong).map(esc), 0);
+      });
+      gens.push(function whyTf(r) {
+        const it = pick(r, whyIt), ok = r() < 0.5, right = whyLabel(it.grp, it.c);
+        const shown = ok ? right : pick(r, allWhy.filter(l => l !== right));
+        return oneTask(r, { key: "YT" + it.w + shown, q: "Чи правильно пояснено написання?", big: "<b>" + esc(it.w) + "</b><br>" + esc(shown), note: whyNote(it), keepOrder: true },
+          ["Правильно", "Неправильно"], ok ? 0 : 1);
+      });
+    }
     return gens;
   }
 
