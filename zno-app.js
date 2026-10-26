@@ -46,6 +46,7 @@
     const resetSet = new Set();
     let pend = null, confirmReset = false;
     const M = s => md(s, esc);
+    let F = M; /* форматування текстів у body(): Markdown ЗНО або готовий HTML НМТ */
     const plain = s => { const d = document.createElement("div"); d.innerHTML = M(s); d.querySelectorAll("img").forEach(i => i.replaceWith("[зображення]")); return d.textContent.replace(/\s+/g, " ").trim(); };
 
     function loadIndex() {
@@ -163,9 +164,10 @@
       h += "</div>";
       if (stat.a === t.n && !ui.zreview) {
         h += `<div class="done-card"><h3 style="font-size:18px">Тему завершено: ${stat.pct}%</h3><p style="margin:0">${stat.pct === 100 ? "Бездоганно! Усі завдання правильно." : "Помилки можна переглянути в карті завдань. Щоб покращити результат, почніть тему заново."}</p>
-          <div class="task-nav"><button class="btn" data-act="zreview">Переглянути відповіді</button><button class="btn" data-act="home">До тем</button></div></div>`;
+          <div class="task-nav">${host.fixCount("z:" + t.id) ? `<button class="btn primary" data-fixstart="z:${t.id}">Робота над помилками (${host.fixCount("z:" + t.id)})</button>` : ""}<button class="btn" data-act="zreview">Переглянути відповіді</button><button class="btn" data-act="home">До тем</button></div></div>`;
       } else h += card(t, data.tasks[ui.zcur], ui.zcur, data.tasks.length, st);
-      h += `<div class="foot-acts"><button class="btn small" data-act="finish">Завершити й вийти</button><button class="btn small ghost" data-act="zreset">Почати тему заново</button></div>`;
+      const nfix = stat.a < t.n ? host.fixCount("z:" + t.id) : 0;
+      h += `<div class="foot-acts">${nfix ? `<button class="btn small" data-fixstart="z:${t.id}">Робота над помилками (${nfix})</button>` : ""}<button class="btn small" data-act="finish">Завершити й вийти</button><button class="btn small ghost" data-act="zreset">Почати тему заново</button></div>`;
       if (confirmReset) h += `<div class="confirm"><b>Почати тему заново?</b><span>Усі відповіді цієї теми буде стерто.</span><div class="task-nav"><button class="btn danger" data-act="zreset-yes">Так, стерти</button><button class="btn" data-act="zreset-no">Скасувати</button></div></div>`;
       return h + "</section>";
     }
@@ -206,7 +208,7 @@
           let cls = "", tag = "";
           if (done) { if (k === task.a) { cls = "ok"; tag = "✓"; } else if (k === resp) { cls = "no"; tag = "✗"; } }
           else if (pend.v === k) cls = "sel";
-          return `<button class="opt zopt ${/!\[/.test(txt) ? "has-img" : ""} ${cls}" data-zone="${esc(k)}" aria-pressed="${!done && pend.v === k}" ${dis}><span class="key">${esc(k)}</span><span class="otext">${M(txt)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
+          return `<button class="opt zopt ${/!\[/.test(txt) ? "has-img" : ""} ${cls}" data-zone="${esc(k)}" aria-pressed="${!done && pend.v === k}" ${dis}><span class="key">${esc(k)}</span><span class="otext">${F(txt)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
         }).join("") + "</div>";
       }
       if (task.type === "multiple") {
@@ -215,21 +217,21 @@
           const on = chosen.includes(k), right = task.a.includes(k);
           let cls = on ? "sel" : "", tag = "";
           if (done) { cls = right && on ? "ok" : on ? "no" : right ? "miss" : ""; tag = right && on ? "✓" : on ? "✗" : right ? "пропущено" : ""; }
-          return `<button class="opt zopt ${cls}" data-zmulti="${esc(k)}" aria-pressed="${on}" ${dis}><span class="key">${esc(k)}</span><span class="otext">${M(txt)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
+          return `<button class="opt zopt ${cls}" data-zmulti="${esc(k)}" aria-pressed="${on}" ${dis}><span class="key">${esc(k)}</span><span class="otext">${F(txt)}</span>${tag ? `<span class="tag">${tag}</span>` : ""}</button>`;
         }).join("") + "</div>";
       }
       /* matching */
       const v = done ? (resp || {}) : pend.v;
       const [tl, tr] = task.titles || ["", ""];
       let h = "";
-      h += `<div class="zright">${tr ? `<div class="zcol-title">${M(tr)}</div>` : ""}<ul>` + task.right.map(([k, txt]) => `<li><span class="key">${esc(k)}</span><span class="otext">${M(txt)}</span></li>`).join("") + "</ul></div>";
-      h += `<div class="sort-list zmatch">${tl ? `<div class="zcol-title">${M(tl)}</div>` : ""}` + task.left.map(([lk, ltxt]) => {
+      h += `<div class="zright">${tr ? `<div class="zcol-title">${F(tr)}</div>` : ""}<ul>` + task.right.map(([k, txt]) => `<li><span class="key">${esc(k)}</span><span class="otext">${F(txt)}</span></li>`).join("") + "</ul></div>";
+      h += `<div class="sort-list zmatch">${tl ? `<div class="zcol-title">${F(tl)}</div>` : ""}` + task.left.map(([lk, ltxt]) => {
         const chips = task.right.map(([rk]) => {
           let cls = v[lk] === rk ? "on" : "";
           if (done) cls = rk === task.a[lk] ? "ok" : v[lk] === rk ? "no" : "";
           return `<button class="${cls}" data-zmatch="${esc(lk)}|${esc(rk)}" aria-pressed="${v[lk] === rk}" ${dis}>${esc(rk)}</button>`;
         }).join("");
-        return `<div class="sort-item${ltxt ? "" : " znum"}"><div class="w"><span class="key">${esc(lk)}</span>${ltxt ? `<span class="otext">${M(ltxt)}</span>` : ""}</div><div class="seg" role="group" aria-label="Відповідь для ${esc(lk)}">${chips}</div></div>`;
+        return `<div class="sort-item${ltxt ? "" : " znum"}"><div class="w"><span class="key">${esc(lk)}</span>${ltxt ? `<span class="otext">${F(ltxt)}</span>` : ""}</div><div class="seg" role="group" aria-label="Відповідь для ${esc(lk)}">${chips}</div></div>`;
       }).join("") + "</div>";
       if (!done) h += '<span class="hint">Для кожного номера оберіть букву.</span>';
       return h;
@@ -347,6 +349,37 @@
     }
     const titleOf = id => { const t = topicMeta(id); return t ? t.title : null; };
 
-    return { homeHtml, topicHtml, onClick, payload, sent, merge, reportLines, loadIndex, theoryFor, titleOf, md: M };
+    /* ── Для розділу «Мої помилки» ── */
+    function getTopic(id) { loadIndex(); loadTopic(id); return topicCache[id]; }
+    /* Тіло завдання з власним станом відповіді p; raw — тексти вже в HTML (завдання НМТ). */
+    function taskView(task, done, resp, p, raw) {
+      const keep = pend; pend = p; F = raw ? (x => x == null ? "" : String(x)) : M;
+      const q = F(task.q), h = body(task, done, resp);
+      pend = keep; F = M;
+      return { q, body: h };
+    }
+    function input(b, p) {
+      const d = b.dataset;
+      if (d.zone !== undefined) { p.v = d.zone; return true; }
+      if (d.zmulti !== undefined) { const ix = p.v.indexOf(d.zmulti); if (ix >= 0) p.v.splice(ix, 1); else p.v.push(d.zmulti); return true; }
+      if (d.zmatch) { const [lk, rk] = d.zmatch.split("|"); p.v[lk] = rk; return true; }
+      return false;
+    }
+    const newPend = task => ({ id: task.id, v: task.type === "multiple" ? [] : task.type === "matching" ? {} : null });
+    const readyOf = (task, p) => task.type === "multiple" ? p.v.length > 0 : task.type === "matching" ? task.left.every(l => p.v[l[0]]) : p.v != null;
+    const respOf = (task, p) => task.type === "multiple" ? p.v.slice().sort() : task.type === "matching" ? Object.assign({}, p.v) : p.v;
+    /* Помилки учня в ЗНО: [{ key, topic, id }]. */
+    function mistakes() {
+      const s = host.me(), out = [];
+      if (!s || !s.zno) return out;
+      for (const tid in s.zno) {
+        const st = s.zno[tid];
+        for (const id in st.res) if (st.res[id] === "0") out.push({ key: "z:" + tid + ":" + (st.att || 1) + ":" + id, topic: tid, id, resp: st.ch ? st.ch[id] : undefined });
+      }
+      return out;
+    }
+
+    return { homeHtml, topicHtml, onClick, payload, sent, merge, reportLines, loadIndex, theoryFor, titleOf, md: M,
+      getTopic, taskView, input, newPend, readyOf, respOf, check, answerText, mistakes, sectionOf: id => { const t = topicMeta(id); return t ? t.sec : ""; } };
   };
 })();

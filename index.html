@@ -399,6 +399,25 @@ main { padding-block: 22px 60px; }
 .wl-empty { color: var(--muted); }
 /* ── Три розділи на головній ── */
 .hometabs.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.hometabs.four { grid-template-columns: repeat(4, minmax(0, 1fr)); border-radius: 22px; }
+.hometabs.four .tab { padding-inline: 6px; line-height: 1.2; font-size: 15px; }
+@media (max-width: 640px) { .hometabs.four { grid-template-columns: 1fr 1fr; } .hometabs.four .tab { font-size: 14px; } }
+.tab-badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--wrong); color: #fff; font-size: 12px; font-weight: 800; vertical-align: 1px; margin-left: 2px; }
+.fx-sum { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; margin-bottom: 14px; }
+.fx-sum .bar b { background: var(--wrong-bg); }
+.fx-card .bar b { background: var(--wrong-bg); }
+.fx-how { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; margin-bottom: 18px; }
+.fx-how summary { font-weight: 800; cursor: pointer; }
+.fx-how[open] summary { margin-bottom: 10px; }
+.fx-how .hint { margin-top: 10px !important; }
+.fx-empty { border: 2px dashed var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 6px; }
+.fx-head { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.fx-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.fx-steps li { font-size: 13px; font-weight: 700; padding: 6px 10px; border-radius: 999px; border: 2px solid var(--line); background: var(--surface); }
+.fx-steps li.ok { background: var(--right-bg); border-color: var(--right); color: var(--right); }
+.fx-steps li.ok::before { content: "✓ "; }
+.fx-steps li.cur { border-color: var(--violet); background: color-mix(in srgb, var(--violet) 14%, var(--surface)); }
+.fx-review .task-head .kind { color: var(--wrong); }
 .hometabs.three .tab { padding-inline: 6px; line-height: 1.2; font-size: 15px; }
 @media (max-width: 420px) { .hometabs.three .tab { font-size: 14px; } }
 
@@ -604,11 +623,12 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=12"></script>
-<script src="data-extra.js?v=12"></script>
-<script src="engine.js?v=12"></script>
-<script src="zno-app.js?v=12"></script>
-<script src="nmt-app.js?v=12"></script>
+<script src="data.js?v=13"></script>
+<script src="data-extra.js?v=13"></script>
+<script src="engine.js?v=13"></script>
+<script src="zno-app.js?v=13"></script>
+<script src="nmt-app.js?v=13"></script>
+<script src="fix-app.js?v=13"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -642,7 +662,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "12", THEORY = {}, theoryLoading = {};
+  const VER = "13", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -667,13 +687,28 @@ body.has-fab main { padding-bottom: 110px; }
     render: () => render(), scrollTask: () => scrollTask(), gateHtml: () => gateHtml(),
     trainerTopic: id => { const t = T.find(x => x.id === id); if (!t) return null; const th = theoryOf(id); return { title: t.title, theory: th == null ? '<p class="empty">Завантажую теорію…</p>' : th }; },
     loadTrainerTheory: id => loadTheoryFile(id),
-    setZnoUnique: n => { store.znoUnique = n; }, getZnoUnique: () => store.znoUnique || 0
+    setZnoUnique: n => { store.znoUnique = n; }, getZnoUnique: () => store.znoUnique || 0,
+    fixCount: g => FX.openCount(g)
   });
   const NM = window.MGNmt({
     esc, get ui() { return ui; },
     me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current, fullName: () => (me() ? fullName(me()) : ""),
     saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), toast: m => toast(m),
-    render: () => render(), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref)
+    render: () => render(), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref), fixCount: g => FX.openCount(g)
+  });
+  /* Розділ «Мої помилки» (fix-app.js). Тренажерні завдання показуємо тими самими функціями, що й у темах. */
+  const FX = window.MGFix({
+    esc, T, E, Z, NM, tasksOf, get ui() { return ui; },
+    me: () => me(), loggedIn: () => loggedIn(), saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now),
+    render: () => render(), toast: m => toast(m), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref), scrollTask: () => scrollTask(),
+    setHome: h => { store.home = h; saveLocal(); },
+    typeName: t => TYPE[t], correctHtml: task => correctHtml(task), plain: h => plain(h),
+    answerText: (task, resp) => answerText(task, resp), rightText: task => rightText(task),
+    trainerNewPend: (task, topic) => newPend(task, topic),
+    trainerBody: (task, done, resp, p) => { const keep = pend; pend = p; const h = bodyHtml(task, done, resp); pend = keep; return h; },
+    trainerReady: (task, p) => { const keep = pend; pend = p; const ok = ready(task); pend = keep; return ok; },
+    trainerInput: (b, p) => inputClick(b.dataset, p),
+    trainerResp: (task, p) => task.t === "one" ? p.v : task.t === "multi" ? p.v.slice().sort((a, b) => a - b) : p.v.slice()
   });
 
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600); }
@@ -788,6 +823,7 @@ body.has-fab main { padding-bottom: 110px; }
     mergeTopics(rec, d.topics);
     Z.merge(rec, d.zno);
     NM.merge(rec, d.nmt);
+    FX.merge(rec, d.fix);
     adoptLegacy(rec, d.name);
     pulledFor = d.key;
     finishLogin(d.key);
@@ -805,7 +841,7 @@ body.has-fab main { padding-bottom: 110px; }
       // На спільному пристрої не лишаємо чужий прогрес, якщо все вже надіслано.
       if (RESULTS_URL && !(s.queue && s.queue.length)) delete store.students[store.current];
     }
-    store.current = ""; pulledFor = null; saveLocal();
+    FX.quit(); store.current = ""; pulledFor = null; saveLocal();
     ui.view = "home"; pend = null; renderProfile(); render(); window.scrollTo(0, 0);
     toast("Ви вийшли з профілю");
   }
@@ -863,6 +899,8 @@ body.has-fab main { padding-bottom: 110px; }
     if (zp) { body.zno = zp.zno; body.znoTotal = zp.znoTotal; }
     const np = NM.payload();
     if (np) body.nmt = np;
+    const fp = FX.payload();
+    if (fp) body.fix = fp;
     const d = await api(body);
     if (d && d.ok) {
       serverV = Number(d.v) || serverV;
@@ -885,7 +923,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (!s || !s.token) return;
     const key = store.current;
     const d = await api({ action: "load", key, token: s.token });
-    if (d && d.ok) { serverV = Number(d.v) || serverV; mergeTopics(s, d.topics); Z.merge(s, d.zno); NM.merge(s, d.nmt); saveLocal(); pulledFor = key; render(); scheduleSync(true); }
+    if (d && d.ok) { serverV = Number(d.v) || serverV; mergeTopics(s, d.topics); Z.merge(s, d.zno); NM.merge(s, d.nmt); FX.merge(s, d.fix); saveLocal(); pulledFor = key; render(); scheduleSync(true); }
     else if (d && d.error === "auth") { delete s.token; saveLocal(); renderProfile(); render(); }
     else { setSync("error"); pulledFor = key; }
   }
@@ -907,6 +945,7 @@ body.has-fab main { padding-bottom: 110px; }
     $("#who-name").textContent = loggedIn() ? fullName(me()) : "не ввійшов";
     if (ui.view === "topic" && ui.topic) renderTopic();
     else if (ui.view === "ztopic") { const h = Z.topicHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
+    else if (ui.view === "fix") { const h = FX.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
     else if (ui.view === "nmt") { const h = NM.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; document.body.classList.toggle("exam", NM.inExam()); }
     else renderHome();
     updateFab();
@@ -915,10 +954,13 @@ body.has-fab main { padding-bottom: 110px; }
   function renderHome() {
     ui.view = "home";
     const home = store.home || "trainer";
-    let h = `<main class="wrap"><div class="tabs hometabs three" role="tablist" aria-label="Розділи сайту">
+    const nfix = loggedIn() ? FX.openCount() : 0;
+    let h = `<main class="wrap"><div class="tabs hometabs four" role="tablist" aria-label="Розділи сайту">
       <button class="tab" role="tab" aria-selected="${home === "trainer"}" data-home="trainer">Тренажер</button>
       <button class="tab" role="tab" aria-selected="${home === "zno"}" data-home="zno">Завдання ЗНО</button>
-      <button class="tab" role="tab" aria-selected="${home === "nmt"}" data-home="nmt">Симуляція НМТ</button></div>`;
+      <button class="tab" role="tab" aria-selected="${home === "nmt"}" data-home="nmt">Симуляція НМТ</button>
+      <button class="tab" role="tab" aria-selected="${home === "fix"}" data-home="fix">Мої помилки${nfix ? ` <span class="tab-badge" aria-label="відкритих помилок: ${nfix}">${nfix}</span>` : ""}</button></div>`;
+    if (home === "fix") { app.innerHTML = h + FX.homeHtml() + "</main>"; return; }
     if (home === "zno") { app.innerHTML = h + Z.homeHtml() + reportSection() + "</main>"; return; }
     if (home === "nmt") { app.innerHTML = h + NM.homeHtml() + reportSection() + "</main>"; return; }
     S.forEach(sec => {
@@ -947,7 +989,7 @@ body.has-fab main { padding-bottom: 110px; }
     let tc = 0;
     T.forEach(t => { const st = topicStats(t.id); tc += st.c; lines.push(t.sec + " " + t.title + ": " + st.c + "% (виконано " + st.a + "/100)"); });
     lines.push("", "Разом: " + tc + " з " + T.length * N + " (" + (tc / (T.length * N) * 100).toFixed(1) + "%)");
-    return lines.concat(Z.reportLines(), NM.reportLines()).join("\n");
+    return lines.concat(Z.reportLines(), NM.reportLines(), FX.reportLines()).join("\n");
   }
 
   function renderTopic() {
@@ -974,7 +1016,7 @@ body.has-fab main { padding-bottom: 110px; }
   function tasksHtml(t) {
     const s = me();
     if (!loggedIn()) return gateHtml();
-    const st = tstate(t.id), tasks = tasksOf(t.id), stat = statsOf(st.r);
+    const st = tstate(t.id), tasks = tasksOf(t.id), stat = statsOf(st.r), nfix = FX.openCount("t:" + t.id);
     if (ui.cur < 0 || ui.cur >= N) ui.cur = 0;
     let h = `<section class="tasks"><div class="tprog">
       <div class="tprog-top"><span>Виконано <b class="mono">${stat.a}</b> з 100</span><span class="score mono">${stat.c}%</span></div>
@@ -987,10 +1029,10 @@ body.has-fab main { padding-bottom: 110px; }
     }
     h += "</div>";
     if (stat.a === N && !ui.reviewing) {
-      h += `<div class="done-card"><h3 style="font-size:18px">Тему завершено: ${stat.c}%</h3><p style="margin:0">${stat.c === 100 ? "Бездоганно! Усі 100 завдань правильно." : "Помилки можна розібрати в карті завдань. Щоб покращити результат, почніть тему заново."}</p>
-        <div class="task-nav"><button class="btn" data-act="review">Переглянути відповіді</button><button class="btn" data-act="home">До тем</button></div></div>`;
+      h += `<div class="done-card"><h3 style="font-size:18px">Тему завершено: ${stat.c}%</h3><p style="margin:0">${stat.c === 100 ? "Бездоганно! Усі 100 завдань правильно." : nfix ? "Попрацюй над помилками: розбір, те саме завдання й схожі на те саме правило." : "Усі помилки цієї теми виправлено. Щоб покращити результат, можна почати тему заново."}</p>
+        <div class="task-nav">${nfix ? `<button class="btn primary" data-fixstart="t:${t.id}">Робота над помилками (${nfix})</button>` : ""}<button class="btn" data-act="review">Переглянути відповіді</button><button class="btn" data-act="home">До тем</button></div></div>`;
     } else h += taskCard(t, tasks[ui.cur], st);
-    h += `<div class="foot-acts"><button class="btn small" data-act="finish">Завершити й вийти</button><button class="btn small ghost" data-act="reset">Почати тему заново</button></div>`;
+    h += `<div class="foot-acts">${nfix && stat.a < N ? `<button class="btn small" data-fixstart="t:${t.id}">Робота над помилками (${nfix})</button>` : ""}<button class="btn small" data-act="finish">Завершити й вийти</button><button class="btn small ghost" data-act="reset">Почати тему заново</button></div>`;
     if (confirmReset) h += `<div class="confirm"><b>Почати тему заново?</b><span>Усі відповіді цієї теми буде стерто, результат стане 0%.</span><div class="task-nav"><button class="btn danger" data-act="reset-yes">Так, стерти</button><button class="btn" data-act="reset-no">Скасувати</button></div></div>`;
     return h + "</section>";
   }
@@ -1142,6 +1184,7 @@ body.has-fab main { padding-bottom: 110px; }
     const d = b.dataset;
     if (d.home) { store.home = d.home; saveLocal(); render(); return; }
     if (d.theory) { openTheory(d.theory); return; }
+    if (FX.onClick(b)) return;
     if (NM.onClick(b)) return;
     if (Z.onClick(b)) return;
     if (d.open) { ui = Object.assign(ui, { view: "topic", topic: d.open, tab: d.tab, reviewing: false }); confirmReset = false; pend = null; jumpFirst(); render(); window.scrollTo(0, 0); return; }
@@ -1162,21 +1205,26 @@ body.has-fab main { padding-bottom: 110px; }
     if (act === "next-open") { const st = tstate(ui.topic), j = nextOpen(st, ui.cur); if (j < 0) { ui.reviewing = false; } else ui.cur = j; pend = null; render(); scrollTask(); return; }
     const t = T.find(x => x.id === ui.topic); if (!t || !loggedIn()) return;
     const task = tasksOf(t.id)[ui.cur];
-    if (d.one !== undefined) { pend.v = +d.one; render(); return; }
-    if (d.multi !== undefined) { const k = +d.multi, ix = pend.v.indexOf(k); if (ix >= 0) pend.v.splice(ix, 1); else pend.v.push(k); render(); return; }
-    if (d.sort) { const [k, c] = d.sort.split(":").map(Number); pend.v[k] = c; render(); return; }
-    if (d.ml !== undefined) { const k = +d.ml; if (pend.v[k] !== null) { pend.v[k] = null; pend.sel = k; } else pend.sel = k; render(); return; }
-    if (d.mr !== undefined) {
-      const r = +d.mr, owner = pend.v.indexOf(r);
-      if (owner >= 0) { pend.v[owner] = null; render(); return; }
-      let sel = pend.sel; if (sel === null) sel = pend.v.indexOf(null);
-      if (sel >= 0) { pend.v[sel] = r; pend.sel = null; const nx = pend.v.indexOf(null); if (nx >= 0 && pend.sel === null) pend.sel = nx; }
-      render(); return;
-    }
-    if (d.ord !== undefined) { pend.v.push(+d.ord); render(); return; }
-    if (d.unord !== undefined) { pend.v.splice(+d.unord, 1); render(); return; }
+    if (pend && inputClick(d, pend)) { render(); return; }
     if (act === "check") { if (!ready(task)) return; answer(t, task, task.t === "one" ? pend.v : task.t === "multi" ? pend.v.slice().sort((a, b) => a - b) : pend.v.slice()); return; }
   });
+  /* Вибір відповіді (без перевірки): змінює стан p. Спільне для тем і розділу «Мої помилки». */
+  function inputClick(d, p) {
+    if (d.one !== undefined) { p.v = +d.one; return true; }
+    if (d.multi !== undefined) { const k = +d.multi, ix = p.v.indexOf(k); if (ix >= 0) p.v.splice(ix, 1); else p.v.push(k); return true; }
+    if (d.sort) { const [k, c] = d.sort.split(":").map(Number); p.v[k] = c; return true; }
+    if (d.ml !== undefined) { const k = +d.ml; if (p.v[k] !== null) { p.v[k] = null; p.sel = k; } else p.sel = k; return true; }
+    if (d.mr !== undefined) {
+      const r = +d.mr, owner = p.v.indexOf(r);
+      if (owner >= 0) { p.v[owner] = null; return true; }
+      let sel = p.sel; if (sel === null) sel = p.v.indexOf(null);
+      if (sel >= 0) { p.v[sel] = r; p.sel = null; const nx = p.v.indexOf(null); if (nx >= 0 && p.sel === null) p.sel = nx; }
+      return true;
+    }
+    if (d.ord !== undefined) { p.v.push(+d.ord); return true; }
+    if (d.unord !== undefined) { p.v.splice(+d.unord, 1); return true; }
+    return false;
+  }
   function jumpFirst() {
     if (!me() || !ui.topic) return;
     const st = tstate(ui.topic), j = st.r.indexOf(".");

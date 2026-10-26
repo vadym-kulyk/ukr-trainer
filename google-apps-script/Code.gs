@@ -7,7 +7,8 @@
  *   (червоний < 30 %, помаранчевий < 50 %, жовтий < 70 %, салатовий < 85 %, зелений ≥ 85 %),
  *   блідо-червона частина — помилки; поруч підпис «виконано % · правильно %».
  *   Відсотки в стовпцях тем мають кольорову заливку. Аркуш «НМТ» має шкалу найкращого балу 100–200.
- * Аркуш «Спроби»: кожна відповідь учня — окремий рядок.
+ * Стовпець «Робота над помилками» — скільки помилок учень виправив у розділі «Мої помилки» (перший результат теми не змінюється).
+ * Аркуш «Спроби»: кожна відповідь учня — окремий рядок (і кроки роботи над помилками).
  * Аркуш «ЗНО»: прогрес у темах банку завдань ЗНО (відсоток правильних у кожній темі).
  * Аркуш «НМТ»: результати симуляцій НМТ (бал за шкалою 100–200, тестовий бал, кількість спроб).
  * Аркуш «Профілі»: облікові записи учнів (ім’я, клас, захищений PIN-код).
@@ -17,7 +18,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 6;
+const SERVICE_VERSION = 7;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -25,7 +26,7 @@ const PROFILE_HEADER = ['Ключ', 'Учень', 'Клас', 'PIN (хеш)', '�
 const MAX_FAILS = 8;
 const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми №', 'Завдання №', 'Тип завдання', 'Результат', 'Запитання', 'Відповідь учня', 'Правильна відповідь'];
 const TYPE_NAMES = { one: 'одна відповідь', multi: 'кілька відповідей', sort: 'розподіл за групами', match: 'відповідність', order: 'порядок',
-  single: 'ЗНО: одна відповідь', multiple: 'ЗНО: кілька відповідей', matching: 'ЗНО: відповідність', nmt: 'НМТ: симуляція' };
+  single: 'ЗНО: одна відповідь', multiple: 'ЗНО: кілька відповідей', matching: 'ЗНО: відповідність', nmt: 'НМТ: симуляція', fix: 'робота над помилками' };
 const TASKS_PER_TOPIC = 100;
 const TOPICS = [
   ['stress', '1.1 Склад. Наголос'],
@@ -166,10 +167,10 @@ const NMT_HEADER = ['Ключ', 'Учень', 'Оновлено', 'Шкала', 
   .concat(['Дані (не змінювати)']);
 const NMT_DATA_COL = NMT_HEADER.length;
 
-// Стовпці: Ключ | Учень | Оновлено | Прогрес (шкала) | Разом % | Виконано | теми тренажера (% правильних) | Дані
+// Стовпці: Ключ | Учень | Оновлено | Прогрес (шкала) | Разом % | Виконано | теми тренажера (% правильних) | Робота над помилками | Дані
 const HEADER = ['Ключ', 'Учень', 'Оновлено', 'Прогрес', 'Разом, %', 'Виконано завдань']
   .concat(TOPICS.map(t => t[1]))
-  .concat(['Дані (не змінювати)']);
+  .concat(['Робота над помилками', 'Дані (не змінювати)']);
 const DATA_COL = HEADER.length;
 const DATA_TITLE = HEADER[HEADER.length - 1];
 const BAR_COL = 4; // стовпець зі шкалою на аркушах «Результати», «ЗНО», «НМТ»
@@ -309,9 +310,28 @@ function buildResults_(key, display, updated, stored) {
   const all = TOPICS.length * TASKS_PER_TOPIC;
   const total = Math.round(correct / all * 1000) / 10;
   return {
-    values: [key, display, updated, '', total, answered].concat(perTopic).concat([JSON.stringify(stored)]),
+    values: [key, display, updated, '', total, answered].concat(perTopic).concat([fixText_(stored._fixSum), JSON.stringify(stored)]),
     bar: progressBar_(correct, answered, all)
   };
+}
+
+/** Підсумок роботи над помилками: «виправлено 12 з 30 (тренажер 10/20, ЗНО 2/6, НМТ 0/4)». */
+function fixText_(sum) {
+  if (!sum || !(sum.open + sum.done)) return '';
+  const part = (name, x) => x && (x.open + x.done) ? name + ' ' + x.done + '/' + (x.open + x.done) : '';
+  const parts = [part('тренажер', sum.t), part('ЗНО', sum.z), part('НМТ', sum.n)].filter(Boolean);
+  return 'виправлено ' + sum.done + ' з ' + (sum.open + sum.done) + (parts.length ? ' (' + parts.join(', ') + ')' : '');
+}
+
+/** Поєднує позначки виправлених помилок: виправлене лишається виправленим, кількість спроб — більша. */
+function mergeFix_(a, b) {
+  const out = Object.assign({}, a || {});
+  Object.keys(b || {}).slice(0, 5000).forEach(k => {
+    const x = out[k] || {}, y = b[k] || {};
+    const d = Number(x.d) || Number(y.d) || 0, t = Math.max(Number(x.t) || 0, Number(y.t) || 0);
+    out[String(k).slice(0, 80)] = d ? { d } : { t };
+  });
+  return out;
 }
 
 function buildZno_(key, display, updated, stored) {
@@ -604,7 +624,8 @@ function login_(d) {
   CacheService.getScriptCache().remove('fail_' + key);
   ps.getRange(row, 7).setValue(new Date());
   const rs = sheet_();
-  return { ok: true, key, token: token_(key), name: String(vals[1]), cls: String(vals[2]), topics: topicsOut_(readStored_(rs, findRow_(rs, key))), zno: znoOut_(key), nmt: readNmt_(key), v: SERVICE_VERSION };
+  const stored = readStored_(rs, findRow_(rs, key));
+  return { ok: true, key, token: token_(key), name: String(vals[1]), cls: String(vals[2]), topics: topicsOut_(stored), zno: znoOut_(key), nmt: readNmt_(key), fix: stored._fix || {}, v: SERVICE_VERSION };
 }
 
 /** Перевіряє токен і повертає профіль учня або null. */
@@ -648,6 +669,10 @@ function save_(d, p) {
     if (incoming[id]) att[id] = Math.max(Number(att[id]) || 1, Number(incoming[id].att) || 1);
   });
   stored._att = att;
+  if (d.fix && typeof d.fix === 'object') {
+    stored._fix = mergeFix_(stored._fix, d.fix.map);
+    if (d.fix.sum) stored._fixSum = d.fix.sum;
+  }
   writeRow_(sh, rowNum, buildResults_(p.key, display, new Date(), stored));
   saveZno_(d, p, display);
   saveNmt_(d, p, display);
@@ -666,7 +691,8 @@ function doPost(e) {
       if (!p) return out_({ ok: false, error: 'auth' });
       if (d.action === 'load') {
         const sh = sheet_();
-        return out_({ ok: true, topics: topicsOut_(readStored_(sh, findRow_(sh, p.key))), zno: znoOut_(p.key), nmt: readNmt_(p.key), v: SERVICE_VERSION });
+        const stored = readStored_(sh, findRow_(sh, p.key));
+        return out_({ ok: true, topics: topicsOut_(stored), zno: znoOut_(p.key), nmt: readNmt_(p.key), fix: stored._fix || {}, v: SERVICE_VERSION });
       }
       return out_(save_(d, p));
     }

@@ -261,6 +261,7 @@
       if ((st.hist || []).length > 1) h += `<p class="hint" style="margin:0">Спроб: ${st.hist.length}. Найкращий результат: ${best(st).s || "—"} (${best(st).p}/${rec.max}).</p>`;
       h += `<div class="nx-grid res">${data.tasks.map((task, i) => { const p = points(task, rec.ans[i]), m = maxOf(task); return `<a class="nx-c ${p === m ? "ok" : p ? "part" : "no"}" href="#nr-${i}" aria-label="Завдання ${i + 1}: ${p} з ${m}">${i + 1}</a>`; }).join("")}</div>
         <div class="legend"><span class="l1">правильно</span><span class="lp">частково</span><span class="l0">помилка або без відповіді</span></div>
+        ${host.fixCount("n:" + t.id) ? `<div class="task-nav"><button class="btn primary" data-fixstart="n:${t.id}">Робота над помилками (${host.fixCount("n:" + t.id)})</button></div><p class="hint" style="margin:0">Помилки цієї спроби зібрано в розділі «Мої помилки»: розбір і повторне розв’язання з поясненням.</p>` : ""}
         <h2 class="nmt-h">Розбір завдань</h2>`;
       data.tasks.forEach((task, i) => { h += reviewTask(task, i, rec.ans[i]); });
       h += `<div class="task-nav"><button class="btn primary grow" data-nopen="${t.id}" data-nstage="rules">Пройти ще раз</button><button class="btn" data-act="home">До тестів</button></div></main>`;
@@ -390,6 +391,25 @@
       return lines.length > 2 ? lines : [];
     }
 
-    return { homeHtml, pageHtml, onClick, payload, merge, reportLines, loadIndex, bindDrag, inExam, stopTick, activeRun };
+    /* ── Для розділу «Мої помилки»: завдання останньої спроби, за які отримано не всі бали ── */
+    function getTest(id) { loadIndex(); loadTest(id); return cache[id]; }
+    function mistakes() {
+      const s = host.me(), out = [];
+      if (!s || !s.nmt) return out;
+      for (const id in s.nmt) {
+        const hist = s.nmt[id].hist || [], last = hist[hist.length - 1];
+        if (!last || last.remote || !last.ans) continue;
+        const data = getTest(id);
+        if (!data || typeof data !== "object") { out.push({ pending: true, test: id }); continue; }
+        data.tasks.forEach((task, i) => {
+          if (points(task, last.ans[i]) < maxOf(task)) out.push({ key: "n:" + id + ":" + (last.at || 0) + ":" + i, test: id, i, resp: last.ans[i] });
+        });
+      }
+      return out;
+    }
+    const testTitle = id => { const t = meta(id); return t ? t.title : "Тест НМТ"; };
+
+    return { homeHtml, pageHtml, onClick, payload, merge, reportLines, loadIndex, bindDrag, inExam, stopTick, activeRun,
+      getTest, mistakes, testTitle, points, maxOf };
   };
 })();

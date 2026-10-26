@@ -62,6 +62,8 @@
     return ks.length ? pick(r, ks) : -1;
   }
 
+  /* Звідки взято завдання: група, правильна категорія й приклад. Потрібно для схожих завдань у роботі над помилками. */
+  const S = list => list.map(i => ({ g: i.g, c: i.c, w: i.w, n: i.n }));
   function gapGens(items) {
     const byG = {};
     items.forEach(it => { (byG[it.g] = byG[it.g] || []).push(it); });
@@ -74,14 +76,14 @@
     gens.push(function letter(r) {
       const it = pick(r, items);
       const head = it.grp.cls ? it.grp.ask : it.grp.ask;
-      return oneTask(r, { key: "L" + it.w, q: head, big: gapHtml(it), note: explain(it) },
+      return oneTask(r, { key: "L" + it.w, src: S([it]), q: head, big: gapHtml(it), note: explain(it) },
         it.grp.cats.map(esc), it.c);
     });
     if (multiG.length) gens.push(function sort(r) {
       const g = pick(r, multiG), pool = byG[g];
       const chosen = sample(r, pool, Math.min(5, pool.length));
       if (new Set(chosen.map(i => i.c)).size < 2) return null;
-      return { t: "sort", key: "S" + chosen.map(i => i.w).sort().join("|"), q: pool[0].grp.sortQ || (pool[0].grp.cls ? "Розподіліть приклади за групами." : "Розподіліть слова за групами: що треба вставити?"),
+      return { t: "sort", key: "S" + chosen.map(i => i.w).sort().join("|"), src: S(chosen), q: pool[0].grp.sortQ || (pool[0].grp.cls ? "Розподіліть приклади за групами." : "Розподіліть слова за групами: що треба вставити?"),
         cats: pool[0].grp.cats.map(esc), items: chosen.map(i => ({ html: gapHtml(i), c: i.c })),
         note: chosen.map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b> — " + esc(i.grp.cats[i.c])).join("; ") + ". " + esc(pool[0].grp.rule) };
     });
@@ -90,14 +92,14 @@
       const forms = [], seen = new Set();
       it.f.forEach((_, k) => { const s = full(it, k); if (!seen.has(s)) { seen.add(s); forms.push({ s, k }); } });
       if (forms.length < 2) return null;
-      return oneTask(r, { key: "W" + it.w, q: it.grp.spellQ || "Укажіть правильно написаний варіант.", note: explain(it) },
+      return oneTask(r, { key: "W" + it.w, src: S([it]), q: it.grp.spellQ || "Укажіть правильно написаний варіант.", note: explain(it) },
         forms.map(x => esc(x.s)), forms.findIndex(x => x.k === it.c));
     });
     if (spellG.length) gens.push(function hunt(r) {
       const g = pick(r, spellG), chosen = sample(r, byG[g], 4), bad = ri(r, 4);
       const k = wrongK(r, chosen[bad]); if (k < 0) return null;
       const opts = chosen.map((it, i) => i === bad ? fullHtml(it, k) : fullHtml(it, it.c));
-      return { t: "one", key: "H" + chosen.map(i => i.w).join("|"), q: chosen[0].grp.huntQ || "У якому варіанті допущено помилку?", opts, a: bad,
+      return { t: "one", key: "H" + chosen.map(i => i.w).join("|"), src: S([chosen[bad]]), q: chosen[0].grp.huntQ || "У якому варіанті допущено помилку?", opts, a: bad,
         note: "Помилка: " + esc(dot(full(chosen[bad], k))) + " Правильно: " + explain(chosen[bad]) };
     });
     if (multiG.length) gens.push(function multi(r) {
@@ -105,14 +107,14 @@
       const k = pick(r, chosen).c, a = chosen.map((it, i) => it.c === k ? i : -1).filter(i => i >= 0);
       if (a.length < 1 || a.length > 5) return null;
       const grp = chosen[0].grp;
-      return { t: "multi", key: "M" + k + chosen.map(i => i.w).sort().join("|"),
+      return { t: "multi", key: "M" + k + chosen.map(i => i.w).sort().join("|"), src: S(chosen),
         q: grp.multiQ ? grp.multiQ.replace("{c}", esc(grp.cats[k])) : grp.cls ? "Позначте всі приклади, де " + esc(grp.cats[k]) + "." : "Позначте всі варіанти, де треба вставити " + q(esc(grp.cats[k])) + ".",
         opts: chosen.map(gapHtml), a, note: listNote(chosen.filter(i => i.c === k), grp) + esc(grp.rule) };
     });
     if (spellIt.length) gens.push(function tf(r) {
       const it = pick(r, spellIt), ok = r() < 0.5;
       const k = ok ? it.c : wrongK(r, it); if (k < 0) return null;
-      return oneTask(r, { key: "T" + full(it, k), q: it.grp.tfQ || "Чи правильно написано?", big: fullHtml(it, k), note: explain(it), keepOrder: true },
+      return oneTask(r, { key: "T" + full(it, k), src: S([it]), q: it.grp.tfQ || "Чи правильно написано?", big: fullHtml(it, k), note: explain(it), keepOrder: true },
         ["Правильно", "З помилкою"], ok ? 0 : 1);
     });
     if (multiG.length) gens.push(function odd(r) {
@@ -123,7 +125,7 @@
       const chosen = sample(r, As, 3).concat([pick(r, Bs)]);
       const order = shuffle(r, [0, 1, 2, 3]), b = order.indexOf(3);
       const grp = pool[0].grp, oddIt = chosen[3];
-      return { t: "one", key: "O" + chosen.map(i => i.w).sort().join("|"),
+      return { t: "one", key: "O" + chosen.map(i => i.w).sort().join("|"), src: S(chosen),
         q: grp.oddQ ? grp.oddQ.replace("{o}", esc(grp.cats[oddIt.c])) : grp.cls ? "Який приклад зайвий у цьому ряду?" : "Знайдіть зайве: де треба вставити інше?",
         opts: order.map(i => gapHtml(chosen[i])), a: b,
         note: "Зайве — <b>" + esc(oddIt.grp.cls ? oddIt.w : full(oddIt, oddIt.c)) + "</b> (" + esc(grp.cats[oddIt.c]) + "), в інших — " + esc(grp.cats[A]) + ". " + esc(grp.rule) };
@@ -135,7 +137,7 @@
         if (i === good) opts.push(fullHtml(chosen[i], chosen[i].c));
         else { const k = wrongK(r, chosen[i]); if (k < 0) return null; opts.push(fullHtml(chosen[i], k)); }
       }
-      return { t: "one", key: "R" + chosen.map(i => i.w).join("|"), q: chosen[0].grp.rightQ || "Укажіть варіант, написаний правильно.", opts, a: good, note: explain(chosen[good]) };
+      return { t: "one", key: "R" + chosen.map(i => i.w).join("|"), src: S(chosen), q: chosen[0].grp.rightQ || "Укажіть варіант, написаний правильно.", opts, a: good, note: explain(chosen[good]) };
     });
     if (multiG.length) gens.push(function row(r) {
       const g = pick(r, multiG), pool = byG[g];
@@ -147,7 +149,7 @@
       for (let k = 0; k < 3; k++) { const bs = take(Bs, 1 + ri(r, 2)); const as = take(As, 3 - bs.length); if (bs.length < 1 || as.length + bs.length < 3) return null; rows.push(shuffle(r, as.concat(bs))); }
       const order = shuffle(r, [0, 1, 2, 3]);
       const grp = pool[0].grp;
-      return { t: "one", key: "Rw" + A + rows[0].map(i => i.w).sort().join("|"),
+      return { t: "one", key: "Rw" + A + rows[0].map(i => i.w).sort().join("|"), src: S([].concat(...rows)),
         q: grp.rowQ ? grp.rowQ.replace("{c}", esc(grp.cats[A])) : grp.cls ? "У якому рядку всі приклади — " + esc(grp.cats[A]) + "?" : "У якому рядку в усіх словах треба вставити " + q(esc(grp.cats[A])) + "?",
         opts: order.map(i => grp.lines ? rows[i].map(x => '<span class="ln">' + gapHtml(x) + "</span>").join("") : rows[i].map(gapHtml).join(", ")), a: order.indexOf(0), wide: true,
         note: listNote(rows[0], grp) + esc(grp.rule) };
@@ -163,12 +165,12 @@
         const it = pick(r, whyIt), right = whyLabel(it.grp, it.c);
         const wrong = sample(r, allWhy.filter(l => l !== right), 3);
         if (wrong.length < 2) return null;
-        return oneTask(r, { key: "Y" + it.w, q: "Чому так пишемо?", big: esc(it.w), note: whyNote(it) }, [right].concat(wrong).map(esc), 0);
+        return oneTask(r, { key: "Y" + it.w, src: S([it]), q: "Чому так пишемо?", big: esc(it.w), note: whyNote(it) }, [right].concat(wrong).map(esc), 0);
       });
       gens.push(function whyTf(r) {
         const it = pick(r, whyIt), ok = r() < 0.5, right = whyLabel(it.grp, it.c);
         const shown = ok ? right : pick(r, allWhy.filter(l => l !== right));
-        return oneTask(r, { key: "YT" + it.w + shown, q: "Чи правильно пояснено написання?", big: "<b>" + esc(it.w) + "</b><br>" + esc(shown), note: whyNote(it), keepOrder: true },
+        return oneTask(r, { key: "YT" + it.w + shown, src: S([it]), q: "Чи правильно пояснено написання?", big: "<b>" + esc(it.w) + "</b><br>" + esc(shown), note: whyNote(it), keepOrder: true },
           ["Правильно", "Неправильно"], ok ? 0 : 1);
       });
     }
@@ -364,14 +366,19 @@
     return null;
   }
 
-  function buildTasks(topic) {
-    const r = rngFrom("mg-ukr-" + topic.id + "-v1");
+  function gensFor(topic) {
     let gens = [];
     if (topic.kind === "gap") gens = gapGens(normItems(topic));
     else if (topic.kind === "variants") gens = variantGens(topic);
     else if (topic.kind === "pairs") { gens = pairGens(topic); if (topic.items) gens = gens.concat(gapGens(normItems(topic))); }
     else if (topic.kind === "stress") gens = stressGens(topic);
     else if (topic.kind === "sounds") gens = soundGens(topic);
+    return gens;
+  }
+
+  function buildTasks(topic) {
+    const r = rngFrom("mg-ukr-" + topic.id + "-v1");
+    const gens = gensFor(topic);
     const fixed = (topic.fixed || []).map((f, i) => fixedTask(r, f, i)).filter(Boolean);
     const need = TOTAL - fixed.length, out = [], seen = new Set();
     let tries = 0;
@@ -395,5 +402,56 @@
     return false;
   }
 
-  root.MGEngine = { buildTasks, check, rngFrom, shuffle, TOTAL };
+  /* ───────── Робота над помилками ───────── */
+
+  /* Те саме завдання з іншим порядком варіантів (щоб не відповідати «за місцем»). */
+  function reshuffle(task, seed) {
+    const r = rngFrom("re-" + seed), t = JSON.parse(JSON.stringify(task));
+    if ((t.t === "one" && !t.keepOrder) || t.t === "multi") {
+      const order = shuffle(r, t.opts.map((_, i) => i));
+      t.opts = order.map(i => task.opts[i]);
+      t.a = t.t === "one" ? order.indexOf(task.a) : task.a.map(a => order.indexOf(a)).sort((x, y) => x - y);
+    } else if (t.t === "sort") t.items = shuffle(r, task.items);
+    else if (t.t === "match") t.right = shuffle(r, task.right);
+    return t;
+  }
+
+  /* Приклади, на яких учень помилився: для розподілу й «кількох відповідей» — лише хибно розв’язані. */
+  function focusSrc(task, resp) {
+    const src = task.src || [];
+    if (!resp || !src.length) return src;
+    let f = src;
+    if (task.t === "sort" && src.length === task.items.length) f = src.filter((s, k) => resp[k] !== task.items[k].c);
+    if (task.t === "multi" && src.length === task.opts.length) f = src.filter((s, k) => resp.includes(k) !== task.a.includes(k));
+    return f.length ? f : src;
+  }
+
+  /* n схожих завдань на те саме правило з іншими прикладами. */
+  function similar(topic, task, resp, seed, n) {
+    const r = rngFrom("sim-" + topic.id + "-" + seed), out = [], seen = new Set([task.key]);
+    const take = (gens, tries) => {
+      for (let k = 0; k < tries && out.length < n && gens.length; k++) {
+        let t = null; try { t = gens[k % gens.length](r); } catch (e) { t = null; }
+        if (t && !seen.has(t.key)) { seen.add(t.key); out.push(t); }
+      }
+    };
+    const want = focusSrc(task, resp);
+    if (want.length && (topic.kind === "gap" || topic.items)) {
+      const words = new Set((task.src || []).map(s => s.w));
+      let pool = normItems(topic).filter(it => want.some(s => s.g === it.g && s.c === it.c) && !words.has(it.w));
+      /* Якщо в прикладів є пояснення (причина), беремо приклади саме з такою причиною. */
+      const exact = pool.filter(it => it.n && want.some(s => s.n === it.n && s.c === it.c));
+      if (exact.length >= 2) pool = exact;
+      const gens = gapGens(pool).filter(g => ["letter", "spell", "tf"].includes(g.name));
+      take(shuffle(r, gens), 300);
+    }
+    if (out.length < n) {
+      const all = gensFor(topic), same = all.filter(g => g.name === task.gen);
+      take(same.length ? same : all, 300);
+      take(all, 300);
+    }
+    return out.map((t, i) => Object.assign(t, { n: task.n, sim: i + 1 }));
+  }
+
+  root.MGEngine = { buildTasks, check, rngFrom, shuffle, TOTAL, similar, reshuffle };
 })(typeof window !== "undefined" ? window : this);
