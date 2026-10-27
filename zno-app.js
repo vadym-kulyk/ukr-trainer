@@ -380,6 +380,7 @@
     }
 
     return { homeHtml, topicHtml, onClick, payload, sent, merge, reportLines, loadIndex, theoryFor, titleOf, md: M,
+      progress: id => { loadIndex(); const t = topicMeta(id), st = zstate(id); return { a: st ? Object.keys(st.res).length : 0, n: t ? t.n : (st && st.n) || 0, title: t ? t.title : "Тема ЗНО" }; },
       getTopic, taskView, input, newPend, readyOf, respOf, check, answerText, mistakes, sectionOf: id => { const t = topicMeta(id); return t ? t.sec : ""; } };
   };
 })();

@@ -12,13 +12,15 @@
  * Аркуш «ЗНО»: прогрес у темах банку завдань ЗНО (відсоток правильних у кожній темі).
  * Аркуш «НМТ»: результати симуляцій НМТ (бал за шкалою 100–200, тестовий бал, кількість спроб).
  * Аркуш «Профілі»: облікові записи учнів (ім’я, клас, захищений PIN-код).
+ * Аркуші «Повідомлення», «Відповіді учнів», «Призначення» ведуться з адмін-панелі (admin.html).
+ *   Пароль адміністратора: меню таблиці «Тренажер» → «Задати пароль адміністратора».
  *   Забув PIN? Очистіть клітинку «PIN (хеш)» у рядку учня — під час наступного входу
  *   учень задасть новий PIN.
  */
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 7;
+const SERVICE_VERSION = 8;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -684,17 +686,23 @@ function doPost(e) {
   lock.waitLock(20000);
   try {
     const d = JSON.parse(e.postData.contents);
-    if (d.action === 'register') return out_(register_(d));
-    if (d.action === 'login') return out_(login_(d));
-    if (d.action === 'load' || d.action === 'save') {
+    if (String(d.action || '').indexOf('admin_') === 0) return out_(admin_(d));
+    if (d.action === 'register' || d.action === 'login') {
+      const res = d.action === 'register' ? register_(d) : login_(d);
+      if (res.ok) Object.assign(res, studentExtras_(res.key, res.cls));
+      return out_(res);
+    }
+    if (d.action === 'load' || d.action === 'save' || d.action === 'reply') {
       const p = auth_(d);
       if (!p) return out_({ ok: false, error: 'auth' });
+      if (d.action === 'reply') return out_(Object.assign(studentReply_(d, p), studentExtras_(p.key, p.cls)));
+      if (Array.isArray(d.read) && d.read.length) markRead_(p.key, d.read);
       if (d.action === 'load') {
         const sh = sheet_();
         const stored = readStored_(sh, findRow_(sh, p.key));
-        return out_({ ok: true, topics: topicsOut_(stored), zno: znoOut_(p.key), nmt: readNmt_(p.key), fix: stored._fix || {}, v: SERVICE_VERSION });
+        return out_(Object.assign({ ok: true, topics: topicsOut_(stored), zno: znoOut_(p.key), nmt: readNmt_(p.key), fix: stored._fix || {}, v: SERVICE_VERSION }, studentExtras_(p.key, p.cls)));
       }
-      return out_(save_(d, p));
+      return out_(Object.assign(save_(d, p), studentExtras_(p.key, p.cls)));
     }
     return out_({ ok: false, error: 'auth' });
   } catch (err) {
@@ -707,4 +715,275 @@ function doPost(e) {
 /** Перевірка, що скрипт працює. Прогрес без входу в профіль не видаємо. */
 function doGet() {
   return out_({ ok: true, service: 'mg-ukr-trainer', v: SERVICE_VERSION });
+}
+
+
+/* ═════════════════════════ Адміністратор, повідомлення, призначення ═════════════════════════ */
+
+const MSG_SHEET = 'Повідомлення';
+const MSG_HEADER = ['ID', 'Час', 'Кому', 'Отримувачі (код)', 'Заголовок', 'Текст', 'Важливе', 'Прочитали (ключі)'];
+const REPLY_SHEET = 'Відповіді учнів';
+const REPLY_HEADER = ['ID', 'Час', 'Ключ', 'Учень', 'До повідомлення', 'Текст', 'Прочитано вчителем'];
+const ASSIGN_SHEET = 'Призначення';
+const ASSIGN_HEADER = ['ID', 'Час', 'Назва', 'Кому', 'Отримувачі (код)', 'Теми (коди)', 'Термін', 'Примітка'];
+const ADMIN_TTL = 12 * 60 * 60 * 1000; // сесія адміністратора — 12 годин
+
+/** Меню в таблиці: пароль адміністратора й перебудова аркушів. */
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('Тренажер')
+    .addItem('Задати пароль адміністратора', 'adminSetPassword')
+    .addItem('Перебудувати аркуші результатів', 'rebuildAll')
+    .addToUi();
+}
+
+function adminSetPassword() {
+  const ui = SpreadsheetApp.getUi();
+  const a = ui.prompt('Пароль адміністратора', 'Впишіть новий пароль (щонайменше 8 символів). З ним ви входитимете в адмін-панель admin.html.', ui.ButtonSet.OK_CANCEL);
+  if (a.getSelectedButton() !== ui.Button.OK) return;
+  const pw = a.getResponseText();
+  if (pw.length < 8) { ui.alert('Пароль закороткий: потрібно щонайменше 8 символів.'); return; }
+  const b = ui.prompt('Пароль адміністратора', 'Повторіть пароль.', ui.ButtonSet.OK_CANCEL);
+  if (b.getSelectedButton() !== ui.Button.OK) return;
+  if (b.getResponseText() !== pw) { ui.alert('Паролі не збігаються. Спробуйте ще раз.'); return; }
+  const salt = Utilities.getUuid();
+  PropertiesService.getScriptProperties().setProperties({ ADMIN_SALT: salt, ADMIN_HASH: hash_(salt + '|' + pw) });
+  CacheService.getScriptCache().remove('fail_admin');
+  ui.alert('Пароль збережено. Відкрийте admin.html на сайті тренажера й увійдіть.');
+}
+
+function adminToken_(exp) {
+  const h = PropertiesService.getScriptProperties().getProperty('ADMIN_HASH') || '';
+  return hash_(secret_() + '|admin|' + exp + '|' + h).replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
+}
+function adminOk_(d) {
+  const exp = Number(d.aexp) || 0;
+  return exp > Date.now() && exp < Date.now() + ADMIN_TTL + 60000 && String(d.atoken || '') === adminToken_(exp);
+}
+
+function simpleSheet_(name, header) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  if (sh.getLastRow() === 0) {
+    sh.appendRow(header);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, header.length).setFontWeight('bold');
+  }
+  return sh;
+}
+function rows_(sh, width) {
+  const last = sh.getLastRow();
+  return last < 2 ? [] : sh.getRange(2, 1, last - 1, width).getValues();
+}
+const newId_ = p => p + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+const iso_ = v => v instanceof Date ? v.getTime() : (Number(v) || 0);
+
+/** Чи адресовано повідомлення (призначення) цьому учневі. code: all | class:7-А | keys:k1,k2 */
+function addressed_(code, key, cls) {
+  code = String(code || '');
+  if (code === 'all') return true;
+  if (code.indexOf('class:') === 0) return code.slice(6).split(',').some(c => c.trim().toUpperCase() === String(cls || '').toUpperCase());
+  if (code.indexOf('keys:') === 0) return code.slice(5).split(',').indexOf(key) >= 0;
+  return false;
+}
+
+/** Повідомлення, відповіді й призначення для учня (додаємо до відповідей load/save/login). */
+function studentExtras_(key, cls) {
+  if (!key) return {};
+  const msgs = rows_(simpleSheet_(MSG_SHEET, MSG_HEADER), MSG_HEADER.length)
+    .filter(r => r[0] && addressed_(r[3], key, cls))
+    .map(r => ({ id: String(r[0]), at: iso_(r[1]), title: String(r[4] || ''), text: String(r[5] || ''), imp: !!r[6], read: String(r[7] || '').split(',').indexOf(key) >= 0 }))
+    .slice(-50);
+  const replies = rows_(simpleSheet_(REPLY_SHEET, REPLY_HEADER), REPLY_HEADER.length)
+    .filter(r => r[2] === key).map(r => ({ id: String(r[0]), at: iso_(r[1]), msg: String(r[4] || ''), text: String(r[5] || '') })).slice(-100);
+  const assign = rows_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), ASSIGN_HEADER.length)
+    .filter(r => r[0] && addressed_(r[4], key, cls))
+    .map(r => ({ id: String(r[0]), at: iso_(r[1]), title: String(r[2] || ''), items: String(r[5] || '').split(',').filter(Boolean), due: iso_(r[6]), note: String(r[7] || '') }));
+  return { msgs, replies, assign };
+}
+
+function markRead_(key, ids) {
+  const sh = simpleSheet_(MSG_SHEET, MSG_HEADER), rows = rows_(sh, MSG_HEADER.length);
+  const want = {}; ids.slice(0, 100).forEach(id => { want[String(id)] = true; });
+  rows.forEach((r, i) => {
+    if (!want[String(r[0])]) return;
+    const readers = String(r[7] || '').split(',').filter(Boolean);
+    if (readers.indexOf(key) < 0) { readers.push(key); sh.getRange(i + 2, 8).setValue(readers.join(',')); }
+  });
+}
+
+function studentReply_(d, p) {
+  const text = txt_(d.text, 1000).trim();
+  if (!text) return { ok: false, error: 'empty' };
+  const c = CacheService.getScriptCache(), cid = 'rp_' + String(d.cid || '').slice(0, 60);
+  if (d.cid && c.get(cid)) return { ok: true };
+  if (d.cid) c.put(cid, '1', 6 * 60 * 60);
+  simpleSheet_(REPLY_SHEET, REPLY_HEADER).appendRow([newId_('r'), new Date(), p.key, p.name + ' (' + p.cls + ')', txt_(d.msg, 40), text, '']);
+  return { ok: true };
+}
+
+/* ───── Дії адміністратора ───── */
+function admin_(d) {
+  if (d.action === 'admin_login') {
+    const props = PropertiesService.getScriptProperties();
+    const h = props.getProperty('ADMIN_HASH'), salt = props.getProperty('ADMIN_SALT');
+    if (!h) return { ok: false, error: 'no_admin' };
+    const c = CacheService.getScriptCache(), fails = Number(c.get('fail_admin') || 0);
+    if (fails >= 10) return { ok: false, error: 'locked' };
+    if (hash_(salt + '|' + String(d.password || '')) !== h) { c.put('fail_admin', String(fails + 1), 15 * 60); return { ok: false, error: 'bad_password' }; }
+    c.remove('fail_admin');
+    const exp = Date.now() + ADMIN_TTL;
+    return { ok: true, atoken: adminToken_(exp), aexp: exp, v: SERVICE_VERSION };
+  }
+  if (!adminOk_(d)) return { ok: false, error: 'admin_auth' };
+  switch (d.action) {
+    case 'admin_data': return adminData_();
+    case 'admin_msg_send': return adminMsgSend_(d);
+    case 'admin_msg_delete': return deleteById_(simpleSheet_(MSG_SHEET, MSG_HEADER), d.id);
+    case 'admin_reply_read': return adminReplyRead_(d);
+    case 'admin_assign_save': return adminAssignSave_(d);
+    case 'admin_assign_delete': return deleteById_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), d.id);
+    case 'admin_reset_pin': return adminResetPin_(d);
+    case 'admin_delete_student': return adminDeleteStudent_(d);
+  }
+  return { ok: false, error: 'unknown' };
+}
+
+function deleteById_(sh, id) {
+  const rows = rows_(sh, 1);
+  for (let i = rows.length - 1; i >= 0; i--) if (String(rows[i][0]) === String(id)) { sh.deleteRow(i + 2); return { ok: true }; }
+  return { ok: false, error: 'not_found' };
+}
+
+function recipients_(to) {
+  to = to || {};
+  if (to.type === 'all') return 'all';
+  if (to.type === 'class') { const list = (to.classes || []).map(c => txt_(c, 12).toUpperCase()).filter(Boolean); return list.length ? 'class:' + list.join(',') : ''; }
+  if (to.type === 'keys') { const list = (to.keys || []).map(k => txt_(k, 100)).filter(Boolean).slice(0, 500); return list.length ? 'keys:' + list.join(',') : ''; }
+  return '';
+}
+
+function adminMsgSend_(d) {
+  const code = recipients_(d.to), title = txt_(d.title, 120).trim(), text = txt_(d.text, 4000).trim();
+  if (!code) return { ok: false, error: 'no_recipients' };
+  if (!text) return { ok: false, error: 'empty' };
+  const id = newId_('m');
+  simpleSheet_(MSG_SHEET, MSG_HEADER).appendRow([id, new Date(), txt_(d.toLabel, 200), code, title, text, d.important ? 'так' : '', '']);
+  return { ok: true, id };
+}
+
+function adminReplyRead_(d) {
+  const sh = simpleSheet_(REPLY_SHEET, REPLY_HEADER), rows = rows_(sh, REPLY_HEADER.length);
+  const want = {}; (d.ids || []).forEach(id => { want[String(id)] = true; });
+  rows.forEach((r, i) => { if (want[String(r[0])] && !r[6]) sh.getRange(i + 2, 7).setValue('так'); });
+  return { ok: true };
+}
+
+function adminAssignSave_(d) {
+  const code = recipients_(d.to), title = txt_(d.title, 120).trim();
+  const items = (d.items || []).map(x => txt_(x, 40)).filter(x => /^[tzn]:[A-Za-z0-9_]+$/.test(x)).slice(0, 60);
+  if (!code) return { ok: false, error: 'no_recipients' };
+  if (!items.length) return { ok: false, error: 'no_items' };
+  const due = Number(d.due) ? new Date(Number(d.due)) : '';
+  const row = [d.id || newId_('a'), new Date(), title || 'Завдання від учителя', txt_(d.toLabel, 200), code, items.join(','), due, txt_(d.note, 1000)];
+  const sh = simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER);
+  if (d.id) {
+    const rows = rows_(sh, 1);
+    for (let i = 0; i < rows.length; i++) if (String(rows[i][0]) === String(d.id)) { sh.getRange(i + 2, 1, 1, row.length).setValues([row]); return { ok: true, id: d.id }; }
+  }
+  sh.appendRow(row);
+  return { ok: true, id: row[0] };
+}
+
+function adminResetPin_(d) {
+  const ps = profileSheet_(), row = findRow_(ps, String(d.key || ''));
+  if (row < 0) return { ok: false, error: 'not_found' };
+  ps.getRange(row, 4, 1, 2).setValues([['', '']]);
+  CacheService.getScriptCache().remove('fail_' + d.key);
+  return { ok: true };
+}
+
+function adminDeleteStudent_(d) {
+  const key = String(d.key || '');
+  if (!key) return { ok: false, error: 'not_found' };
+  [profileSheet_(), sheet_(), znoSheet_(), nmtSheet_()].forEach(sh => { const r = findRow_(sh, key); if (r > 0) sh.deleteRow(r); });
+  return { ok: true };
+}
+
+/** Повний знімок для адмін-панелі: профілі, прогрес, активність із журналу, повідомлення, призначення. */
+function adminData_() {
+  const tz = Session.getScriptTimeZone() || 'Europe/Kyiv';
+  const dayOf = t => Utilities.formatDate(new Date(t), tz, 'yyyy-MM-dd');
+  const students = {};
+  rows_(profileSheet_(), PROFILE_HEADER.length).forEach(r => {
+    if (!r[0]) return;
+    students[r[0]] = { key: String(r[0]), name: String(r[1]), cls: String(r[2]), created: iso_(r[5]), lastLogin: iso_(r[6]), pin: !!r[3] };
+  });
+  const readData = (sh, col) => { const out = {}; rows_(sh, col).forEach(r => { if (!r[0]) return; let v = {}; try { v = JSON.parse(r[col - 1] || '{}'); } catch (e) {} out[r[0]] = { updated: iso_(r[2]), data: v }; }); return out; };
+  const res = readData(sheet_(), DATA_COL), zno = readData(znoSheet_(), ZNO_DATA_COL), nmt = readData(nmtSheet_(), NMT_DATA_COL);
+  Object.keys(students).forEach(k => {
+    const st = students[k], r = res[k] ? res[k].data : {}, att = r._att || {};
+    st.updated = Math.max(res[k] ? res[k].updated : 0, zno[k] ? zno[k].updated : 0, nmt[k] ? nmt[k].updated : 0);
+    st.topics = {};
+    TOPICS.forEach(([id]) => { if (r[id]) st.topics[id] = { r: r[id], att: Number(att[id]) || 1 }; });
+    st.fix = r._fixSum || null;
+    st.zno = {}; const z = zno[k] ? zno[k].data : {};
+    Object.keys(z).forEach(id => { if (z[id] && z[id].s) st.zno[id] = z[id].s; });
+    st.nmt = nmt[k] ? nmt[k].data : {};
+  });
+
+  // Журнал «Спроби»: активність по днях і учнях, орієнтовний час роботи, найчастіші хибні відповіді.
+  const byName = {}; Object.keys(students).forEach(k => { const s = students[k]; byName[s.name + ' (' + s.cls + ')'] = s; });
+  const titleToId = {};
+  TOPICS.forEach(([id, t]) => { titleToId[t] = id; });
+  ZNO_TOPICS.forEach(([id, t]) => { titleToId['ЗНО ' + t] = id; });
+  const days = {}, wrong = {}, since = Date.now() - 120 * 86400000;
+  const ls = logSheet_(), last = ls.getLastRow();
+  if (last >= 2) {
+    const main = ls.getRange(2, 1, last - 1, 7).getValues(), ans = ls.getRange(2, 9, last - 1, 1).getValues();
+    const prev = {};
+    main.forEach((r, i) => {
+      const t = iso_(r[0]); if (!t) return;
+      const s = byName[r[1]], type = String(r[5]), ok = String(r[6]).indexOf('✓') >= 0, isFix = type === TYPE_NAMES.fix, isNmt = type === TYPE_NAMES.nmt;
+      if (t >= since) {
+        const dk = dayOf(t), dd = days[dk] || (days[dk] = { a: 0, ok: 0, fix: 0, users: {} });
+        if (isFix) dd.fix++; else if (!isNmt) { dd.a++; if (ok) dd.ok++; }
+        if (s) dd.users[s.key] = 1;
+      }
+      if (s) {
+        const a = s.act || (s.act = { last: 0, n: 0, ok: 0, fix: 0, mins: 0, days: {} });
+        if (isFix) a.fix++; else if (!isNmt) { a.n++; if (ok) a.ok++; }
+        a.last = Math.max(a.last, t);
+        if (t >= since) { const dk = dayOf(t); a.days[dk] = (a.days[dk] || 0) + 1; }
+        const p = prev[s.key];
+        a.mins += p && t > p && t - p <= 5 * 60000 ? (t - p) / 60000 : 0.5;
+        prev[s.key] = t;
+      }
+      if (!ok && !isFix && !isNmt) {
+        const id = titleToId[r[2]], n = Number(r[4]);
+        if (id && n) {
+          const k = id + '|' + n, w = wrong[k] || (wrong[k] = {}), a2 = txt_(ans[i][0], 80);
+          if (a2) w[a2] = (w[a2] || 0) + 1;
+        }
+      }
+    });
+  }
+  Object.keys(days).forEach(k => { days[k].users = Object.keys(days[k].users).length; });
+  Object.keys(wrong).forEach(k => {
+    const top = Object.keys(wrong[k]).sort((a, b) => wrong[k][b] - wrong[k][a]).slice(0, 4);
+    const o = {}; top.forEach(a => { o[a] = wrong[k][a]; }); wrong[k] = o;
+  });
+  Object.keys(students).forEach(k => { const a = students[k].act; if (a) a.mins = Math.round(a.mins); });
+
+  const msgs = rows_(simpleSheet_(MSG_SHEET, MSG_HEADER), MSG_HEADER.length).filter(r => r[0]).map(r => ({
+    id: String(r[0]), at: iso_(r[1]), toLabel: String(r[2]), code: String(r[3]), title: String(r[4]), text: String(r[5]), imp: !!r[6],
+    readers: String(r[7] || '').split(',').filter(Boolean) }));
+  const replies = rows_(simpleSheet_(REPLY_SHEET, REPLY_HEADER), REPLY_HEADER.length).filter(r => r[0]).map(r => ({
+    id: String(r[0]), at: iso_(r[1]), key: String(r[2]), name: String(r[3]), msg: String(r[4]), text: String(r[5]), seen: !!r[6] }));
+  const assign = rows_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), ASSIGN_HEADER.length).filter(r => r[0]).map(r => ({
+    id: String(r[0]), at: iso_(r[1]), title: String(r[2]), toLabel: String(r[3]), code: String(r[4]), items: String(r[5]).split(',').filter(Boolean), due: iso_(r[6]), note: String(r[7]) }));
+
+  return { ok: true, v: SERVICE_VERSION, now: Date.now(), tz, students: Object.keys(students).map(k => students[k]), days, wrong, msgs, replies, assign,
+    meta: { topics: TOPICS, zno: ZNO_TOPICS, nmt: NMT_TESTS, znoUnique: ZNO_UNIQUE, perTopic: TASKS_PER_TOPIC },
+    sheetUrl: SpreadsheetApp.getActiveSpreadsheet().getUrl() };
 }
