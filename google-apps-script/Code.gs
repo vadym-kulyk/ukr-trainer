@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 9;
+const SERVICE_VERSION = 10;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -695,11 +695,17 @@ function save_(d, p) {
 }
 
 function doPost(e) {
+  let d;
+  try { d = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false, error: 'server', detail: 'bad json' }); }
+  // Читання статистики й вхід адміністратора нічого не записують у спільні аркуші,
+  // тож не стоять у черзі за збереженнями учнів.
+  if (d.action === 'admin_data' || d.action === 'admin_login') {
+    try { return out_(admin_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
+  }
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    const d = JSON.parse(e.postData.contents);
-    if (String(d.action || '').indexOf('admin_') === 0) return out_(admin_(d));
+    if (String(d.action || '').indexOf('admin_') === 0) { const res = admin_(d); if (res.ok) extrasDrop_(); return out_(res); }
     if (d.action === 'register' || d.action === 'login') {
       const res = d.action === 'register' ? register_(d) : login_(d);
       if (res.ok) Object.assign(res, studentExtras_(res.key, res.cls));
@@ -715,7 +721,7 @@ function doPost(e) {
         const stored = readStored_(sh, findRow_(sh, p.key));
         return out_(Object.assign({ ok: true, topics: topicsOut_(stored), zno: znoOut_(p.key), nmt: readNmt_(p.key), fix: stored._fix || {}, v: SERVICE_VERSION }, studentExtras_(p.key, p.cls)));
       }
-      return out_(Object.assign(save_(d, p), studentExtras_(p.key, p.cls)));
+      return out_(Object.assign(save_(d, p), studentExtras_(p.key, p.cls, d.exv)));
     }
     return out_({ ok: false, error: 'auth' });
   } catch (err) {
@@ -746,6 +752,7 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('Тренажер')
     .addItem('Задати пароль адміністратора', 'adminSetPassword')
     .addItem('Перебудувати аркуші результатів', 'rebuildAll')
+    .addItem('Перерахувати статистику адмін-панелі', 'adminRebuildStats')
     .addToUi();
 }
 
@@ -800,29 +807,76 @@ function addressed_(code, key, cls) {
   return false;
 }
 
-/** Повідомлення, відповіді й призначення для учня (додаємо до відповідей load/save/login). */
-function studentExtras_(key, cls) {
+/* ───── Кеш повідомлень і призначень ─────
+   Учні отримують повідомлення з кожним збереженням прогресу. Щоб не читати три аркуші щоразу,
+   тримаємо їх у кеші скрипта. Кеш скидаємо, коли вчитель щось змінює, учень відповідає чи читає
+   повідомлення, а без змін — що 10 хвилин (на випадок ручного редагування аркушів). */
+const EX_KEY = 'ex1';
+const EX_TTL = 600;
+const CHUNK = 25000; // символів в одному записі кешу (обмеження — 100 КБ)
+
+function cacheGetBig_(k) {
+  const c = CacheService.getScriptCache(), n = Number(c.get(k + '_n') || 0);
+  if (!n) return null;
+  const keys = []; for (let i = 0; i < n; i++) keys.push(k + '_' + i);
+  const all = c.getAll(keys);
+  let s = '';
+  for (let i = 0; i < n; i++) { if (all[keys[i]] == null) return null; s += all[keys[i]]; }
+  return s;
+}
+function cachePutBig_(k, s, ttl) {
+  const c = CacheService.getScriptCache(), o = {};
+  let n = 0;
+  for (let i = 0; i < s.length; i += CHUNK) o[k + '_' + (n++)] = s.slice(i, i + CHUNK);
+  try { c.putAll(o, ttl); c.put(k + '_n', String(n), ttl); } catch (e) { c.remove(k + '_n'); }
+}
+function extrasDrop_() { CacheService.getScriptCache().remove(EX_KEY + '_n'); }
+
+function extrasData_() {
+  const cached = cacheGetBig_(EX_KEY);
+  if (cached) { try { return JSON.parse(cached); } catch (e) {} }
+  const m = rows_(simpleSheet_(MSG_SHEET, MSG_HEADER), MSG_HEADER.length).filter(r => r[0])
+    .map(r => [String(r[0]), iso_(r[1]), String(r[3] || ''), String(r[4] || ''), String(r[5] || ''), r[6] ? 1 : 0, String(r[7] || '').split(',').filter(Boolean)]).slice(-500);
+  const rp = rows_(simpleSheet_(REPLY_SHEET, REPLY_HEADER), REPLY_HEADER.length).filter(r => r[0])
+    .map(r => [String(r[0]), iso_(r[1]), String(r[2]), String(r[4] || ''), String(r[5] || '')]).slice(-5000);
+  const a = rows_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), ASSIGN_HEADER.length).filter(r => r[0])
+    .map(r => [String(r[0]), iso_(r[1]), String(r[2] || ''), String(r[4] || ''), String(r[5] || ''), iso_(r[6]), String(r[7] || '')]);
+  const o = { m, r: rp, a };
+  o.h = hash_(JSON.stringify(o)).replace(/[^A-Za-z0-9]/g, '').slice(0, 12);
+  cachePutBig_(EX_KEY, JSON.stringify(o), EX_TTL);
+  return o;
+}
+
+/** Повідомлення, відповіді й призначення для учня (додаємо до відповідей load/save/login).
+    exv — мітка версії, яку сайт отримав минулого разу: якщо нічого не змінилося, списки не надсилаємо. */
+function studentExtras_(key, cls, exv) {
   if (!key) return {};
-  const msgs = rows_(simpleSheet_(MSG_SHEET, MSG_HEADER), MSG_HEADER.length)
-    .filter(r => r[0] && addressed_(r[3], key, cls))
-    .map(r => ({ id: String(r[0]), at: iso_(r[1]), title: String(r[4] || ''), text: String(r[5] || ''), imp: !!r[6], read: String(r[7] || '').split(',').indexOf(key) >= 0 }))
+  const x = extrasData_();
+  if (exv && String(exv) === x.h) return { exv: x.h };
+  const msgs = x.m.filter(r => addressed_(r[2], key, cls))
+    .map(r => ({ id: r[0], at: r[1], title: r[3], text: r[4], imp: !!r[5], read: r[6].indexOf(key) >= 0 }))
     .slice(-50);
-  const replies = rows_(simpleSheet_(REPLY_SHEET, REPLY_HEADER), REPLY_HEADER.length)
-    .filter(r => r[2] === key).map(r => ({ id: String(r[0]), at: iso_(r[1]), msg: String(r[4] || ''), text: String(r[5] || '') })).slice(-100);
-  const assign = rows_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), ASSIGN_HEADER.length)
-    .filter(r => r[0] && addressed_(r[4], key, cls))
-    .map(r => ({ id: String(r[0]), at: iso_(r[1]), title: String(r[2] || ''), items: String(r[5] || '').split(',').filter(Boolean), due: iso_(r[6]), note: String(r[7] || '') }));
-  return { msgs, replies, assign };
+  const replies = x.r.filter(r => r[2] === key).map(r => ({ id: r[0], at: r[1], msg: r[3], text: r[4] })).slice(-100);
+  const assign = x.a.filter(r => addressed_(r[3], key, cls))
+    .map(r => ({ id: r[0], at: r[1], title: r[2], items: r[4].split(',').filter(Boolean), due: r[5], note: r[6] }));
+  return { msgs, replies, assign, exv: x.h };
 }
 
 function markRead_(key, ids) {
+  // Спершу перевіряємо за кешем: якщо все вже позначено, аркуш не відкриваємо.
+  const known = {};
+  extrasData_().m.forEach(r => { known[r[0]] = r[6].indexOf(key) >= 0; });
+  const want = {};
+  let any = false;
+  ids.slice(0, 100).forEach(id => { id = String(id); if (known[id] === false) { want[id] = true; any = true; } });
+  if (!any) return;
   const sh = simpleSheet_(MSG_SHEET, MSG_HEADER), rows = rows_(sh, MSG_HEADER.length);
-  const want = {}; ids.slice(0, 100).forEach(id => { want[String(id)] = true; });
   rows.forEach((r, i) => {
     if (!want[String(r[0])]) return;
     const readers = String(r[7] || '').split(',').filter(Boolean);
     if (readers.indexOf(key) < 0) { readers.push(key); sh.getRange(i + 2, 8).setValue(readers.join(',')); }
   });
+  extrasDrop_();
 }
 
 function studentReply_(d, p) {
@@ -832,6 +886,7 @@ function studentReply_(d, p) {
   if (d.cid && c.get(cid)) return { ok: true };
   if (d.cid) c.put(cid, '1', 6 * 60 * 60);
   simpleSheet_(REPLY_SHEET, REPLY_HEADER).appendRow([newId_('r'), new Date(), p.key, p.name + ' (' + p.cls + ')', txt_(d.msg, 40), text, '']);
+  extrasDrop_();
   return { ok: true };
 }
 
@@ -946,32 +1001,105 @@ function adminData_() {
   });
 
   // Журнал «Спроби»: активність по днях і учнях, орієнтовний час роботи, найчастіші хибні відповіді.
+  // Підсумки рахуються наростаюче (logAgg_): щоразу обробляються лише нові рядки журналу.
   const byName = {}; Object.keys(students).forEach(k => { const s = students[k]; byName[s.name + ' (' + s.cls + ')'] = s; });
+  const { agg, partial } = logAgg_();
+  const cut = dayOf(Date.now() - AGG_DAYS * 86400000);
+  const days = {}, wrong = {};
+  Object.keys(agg.days).forEach(dk => {
+    if (dk < cut) return;
+    const x = agg.days[dk];
+    days[dk] = { a: x.a, ok: x.ok, fix: x.fix, users: Object.keys(x.u).filter(n => byName[n]).length };
+  });
+  Object.keys(agg.st).forEach(name => {
+    const s = byName[name], x = agg.st[name];
+    if (!s) return;
+    const dd = {}; Object.keys(x.days).forEach(dk => { if (dk >= cut) dd[dk] = x.days[dk]; });
+    s.act = { last: x.last, n: x.n, ok: x.ok, fix: x.fix, mins: Math.round(x.mins), days: dd };
+    if (x.focus) s.act.focus = x.focus;
+  });
+  Object.keys(agg.wrong).forEach(k => {
+    const w = agg.wrong[k], top = Object.keys(w).sort((a, b) => w[b] - w[a]).slice(0, 4);
+    const o = {}; top.forEach(a => { o[a] = w[a]; }); wrong[k] = o;
+  });
+
+  const msgs = rows_(simpleSheet_(MSG_SHEET, MSG_HEADER), MSG_HEADER.length).filter(r => r[0]).map(r => ({
+    id: String(r[0]), at: iso_(r[1]), toLabel: String(r[2]), code: String(r[3]), title: String(r[4]), text: String(r[5]), imp: !!r[6],
+    readers: String(r[7] || '').split(',').filter(Boolean) }));
+  const replies = rows_(simpleSheet_(REPLY_SHEET, REPLY_HEADER), REPLY_HEADER.length).filter(r => r[0]).map(r => ({
+    id: String(r[0]), at: iso_(r[1]), key: String(r[2]), name: String(r[3]), msg: String(r[4]), text: String(r[5]), seen: !!r[6] }));
+  const assign = rows_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), ASSIGN_HEADER.length).filter(r => r[0]).map(r => ({
+    id: String(r[0]), at: iso_(r[1]), title: String(r[2]), toLabel: String(r[3]), code: String(r[4]), items: String(r[5]).split(',').filter(Boolean), due: iso_(r[6]), note: String(r[7]) }));
+
+  return { ok: true, v: SERVICE_VERSION, now: Date.now(), tz, partial, logRows: agg.row - 1, students: Object.keys(students).map(k => students[k]), days, wrong, msgs, replies, assign,
+    meta: { topics: TOPICS, zno: ZNO_TOPICS, nmt: NMT_TESTS, znoUnique: ZNO_UNIQUE, perTopic: TASKS_PER_TOPIC },
+    sheetUrl: SpreadsheetApp.getActiveSpreadsheet().getUrl() };
+}
+
+
+/* ───── Наростаючі підсумки журналу «Спроби» ─────
+   Готові підсумки й номер останнього обробленого рядка лежать на прихованому службовому аркуші.
+   Наступного разу читаємо лише рядки, додані відтоді, тож час не росте разом із журналом.
+   Якщо рядки журналу видалили чи переставили (останній оброблений рядок не збігається), рахуємо все заново. */
+const AGG_SHEET = 'Службове: статистика';
+const AGG_VER = 1;
+const AGG_DAYS = 120;   // скільки днів показувати в графіках активності
+const AGG_BATCH = 5000; // рядків журналу за одне читання
+
+function aggLoad_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(AGG_SHEET);
+  if (!sh || sh.getLastRow() < 1) return null;
+  // Кожен шматок починається з «j», щоб таблиця не сприйняла його як число, дату чи формулу.
+  const json = sh.getRange(1, 1, sh.getLastRow(), 1).getValues().map(r => String(r[0]).slice(1)).join('');
+  try { const o = JSON.parse(json); return o && o.ver === AGG_VER ? o : null; } catch (e) { return null; }
+}
+
+function aggSave_(o) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(AGG_SHEET);
+  if (!sh) { sh = ss.insertSheet(AGG_SHEET); try { sh.hideSheet(); } catch (e) {} }
+  const s = JSON.stringify(o), parts = [];
+  for (let i = 0; i < s.length; i += 40000) parts.push(['j' + s.slice(i, i + 40000)]);
+  sh.clearContents();
+  sh.getRange(1, 1, parts.length, 1).setValues(parts);
+}
+
+const aggFp_ = r => iso_(r[0]) + '|' + String(r[1]);
+
+function logAgg_() {
+  const tz = Session.getScriptTimeZone() || 'Europe/Kyiv';
+  const memo = {}; // дата за годиною: formatDate повільний, а рядків журналу — десятки тисяч
+  const dayOf = t => { const h = Math.floor(t / 3600000); return memo[h] || (memo[h] = Utilities.formatDate(new Date(h * 3600000), tz, 'yyyy-MM-dd')); };
+  const ls = logSheet_(), last = ls.getLastRow();
+  let agg = aggLoad_();
+  if (agg && agg.row > 1 && (agg.row > last || aggFp_(ls.getRange(agg.row, 1, 1, 2).getValues()[0]) !== agg.fp)) agg = null;
+  if (!agg) agg = { ver: AGG_VER, row: 1, fp: '', days: {}, st: {}, wrong: {} };
+
   const titleToId = {};
   TOPICS.forEach(([id, t]) => { titleToId[t] = id; });
   ZNO_TOPICS.forEach(([id, t]) => { titleToId['ЗНО ' + t] = id; });
-  const days = {}, wrong = {}, since = Date.now() - 120 * 86400000;
-  const ls = logSheet_(), last = ls.getLastRow();
-  if (last >= 2) {
-    const main = ls.getRange(2, 1, last - 1, 7).getValues(), ans = ls.getRange(2, 9, last - 1, 1).getValues();
-    const foc = ls.getMaxColumns() >= 13 ? ls.getRange(2, 11, last - 1, 3).getValues() : [];
-    const prev = {};
+  const hasFocus = ls.getMaxColumns() >= 13;
+  const start = Date.now();
+  let changed = false, partial = false;
+
+  while (agg.row < last) {
+    if (Date.now() - start > 200000) { partial = true; break; } // решту доробимо наступного разу
+    const from = agg.row + 1, n = Math.min(AGG_BATCH, last - agg.row);
+    const main = ls.getRange(from, 1, n, 7).getValues(), ans = ls.getRange(from, 9, n, 1).getValues();
+    const foc = hasFocus ? ls.getRange(from, 11, n, 3).getValues() : [];
     main.forEach((r, i) => {
       const t = iso_(r[0]); if (!t) return;
-      const s = byName[r[1]], type = String(r[5]), ok = String(r[6]).indexOf('✓') >= 0, isFix = type === TYPE_NAMES.fix, isNmt = type === TYPE_NAMES.nmt;
-      if (t >= since) {
-        const dk = dayOf(t), dd = days[dk] || (days[dk] = { a: 0, ok: 0, fix: 0, users: {} });
-        if (isFix) dd.fix++; else if (!isNmt) { dd.a++; if (ok) dd.ok++; }
-        if (s) dd.users[s.key] = 1;
-      }
-      if (s) {
-        const a = s.act || (s.act = { last: 0, n: 0, ok: 0, fix: 0, mins: 0, days: {} });
+      const name = String(r[1]), type = String(r[5]), ok = String(r[6]).indexOf('✓') >= 0, isFix = type === TYPE_NAMES.fix, isNmt = type === TYPE_NAMES.nmt;
+      const dk = dayOf(t), dd = agg.days[dk] || (agg.days[dk] = { a: 0, ok: 0, fix: 0, u: {} });
+      if (isFix) dd.fix++; else if (!isNmt) { dd.a++; if (ok) dd.ok++; }
+      if (name) dd.u[name] = 1;
+      if (name) {
+        const a = agg.st[name] || (agg.st[name] = { last: 0, n: 0, ok: 0, fix: 0, mins: 0, days: {}, prev: 0 });
         if (isFix) a.fix++; else if (!isNmt) { a.n++; if (ok) a.ok++; }
         a.last = Math.max(a.last, t);
-        if (t >= since) { const dk = dayOf(t); a.days[dk] = (a.days[dk] || 0) + 1; }
-        const p = prev[s.key];
-        a.mins += p && t > p && t - p <= 5 * 60000 ? (t - p) / 60000 : 0.5;
-        prev[s.key] = t;
+        a.days[dk] = (a.days[dk] || 0) + 1;
+        a.mins += a.prev && t > a.prev && t - a.prev <= 5 * 60000 ? (t - a.prev) / 60000 : 0.5;
+        a.prev = t;
         // Зосередженість: час на завдання й виходи зі сторінки (надсилає сайт від версії 15).
         const fr = foc[i];
         if (!isNmt && fr && fr[0] !== '' && fr[0] !== null) {
@@ -987,30 +1115,38 @@ function adminData_() {
         }
       }
       if (!ok && !isFix && !isNmt) {
-        const id = titleToId[r[2]], n = Number(r[4]);
-        if (id && n) {
-          const k = id + '|' + n, w = wrong[k] || (wrong[k] = {}), a2 = txt_(ans[i][0], 80);
-          if (a2) w[a2] = (w[a2] || 0) + 1;
+        const id = titleToId[r[2]], num = Number(r[4]);
+        if (id && num) {
+          const k = id + '|' + num, w = agg.wrong[k] || (agg.wrong[k] = {}), a2 = txt_(ans[i][0], 80);
+          if (a2) {
+            w[a2] = (w[a2] || 0) + 1;
+            const ks = Object.keys(w);
+            if (ks.length > 30) ks.sort((x, y) => w[y] - w[x]).slice(15).forEach(x => { delete w[x]; });
+          }
         }
       }
     });
+    agg.row = from + n - 1;
+    agg.fp = aggFp_(main[n - 1]);
+    changed = true;
   }
-  Object.keys(days).forEach(k => { days[k].users = Object.keys(days[k].users).length; });
-  Object.keys(wrong).forEach(k => {
-    const top = Object.keys(wrong[k]).sort((a, b) => wrong[k][b] - wrong[k][a]).slice(0, 4);
-    const o = {}; top.forEach(a => { o[a] = wrong[k][a]; }); wrong[k] = o;
-  });
-  Object.keys(students).forEach(k => { const a = students[k].act; if (a) a.mins = Math.round(a.mins); });
 
-  const msgs = rows_(simpleSheet_(MSG_SHEET, MSG_HEADER), MSG_HEADER.length).filter(r => r[0]).map(r => ({
-    id: String(r[0]), at: iso_(r[1]), toLabel: String(r[2]), code: String(r[3]), title: String(r[4]), text: String(r[5]), imp: !!r[6],
-    readers: String(r[7] || '').split(',').filter(Boolean) }));
-  const replies = rows_(simpleSheet_(REPLY_SHEET, REPLY_HEADER), REPLY_HEADER.length).filter(r => r[0]).map(r => ({
-    id: String(r[0]), at: iso_(r[1]), key: String(r[2]), name: String(r[3]), msg: String(r[4]), text: String(r[5]), seen: !!r[6] }));
-  const assign = rows_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), ASSIGN_HEADER.length).filter(r => r[0]).map(r => ({
-    id: String(r[0]), at: iso_(r[1]), title: String(r[2]), toLabel: String(r[3]), code: String(r[4]), items: String(r[5]).split(',').filter(Boolean), due: iso_(r[6]), note: String(r[7]) }));
+  if (changed) {
+    const cut = dayOf(Date.now() - AGG_DAYS * 86400000);
+    Object.keys(agg.days).forEach(dk => { if (dk < cut) delete agg.days[dk]; });
+    Object.keys(agg.st).forEach(nm => { const dd = agg.st[nm].days; Object.keys(dd).forEach(dk => { if (dk < cut) delete dd[dk]; }); });
+    // Два вікна панелі можуть рахувати одночасно: зберігає те, що першим отримало блокування.
+    const lock = LockService.getDocumentLock();
+    if (lock && lock.tryLock(0)) { try { aggSave_(agg); } finally { lock.releaseLock(); } }
+  }
+  return { agg, partial };
+}
 
-  return { ok: true, v: SERVICE_VERSION, now: Date.now(), tz, students: Object.keys(students).map(k => students[k]), days, wrong, msgs, replies, assign,
-    meta: { topics: TOPICS, zno: ZNO_TOPICS, nmt: NMT_TESTS, znoUnique: ZNO_UNIQUE, perTopic: TASKS_PER_TOPIC },
-    sheetUrl: SpreadsheetApp.getActiveSpreadsheet().getUrl() };
+/** Меню «Тренажер»: перерахувати статистику адмін-панелі з нуля (наприклад, після ручного редагування журналу). */
+function adminRebuildStats() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(AGG_SHEET);
+  if (sh) sh.clearContents();
+  extrasDrop_();
+  logAgg_();
+  try { SpreadsheetApp.getUi().alert('Статистику перераховано.'); } catch (e) {}
 }

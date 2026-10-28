@@ -9,11 +9,13 @@
   const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const T = window.TOPICS, SECS = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
   const LS = "mg-admin-session-v1";
+  const SNAP = "mg-admin-snap-v1";  // останній знімок статистики: показуємо одразу, поки вантажаться свіжі дані
   const DAY = 86400000;
 
   let session = null;
   try { session = JSON.parse(localStorage.getItem(LS) || "null"); } catch (e) { session = null; }
   if (session && !(session.aexp > Date.now())) session = null;
+  if (!session) { try { localStorage.removeItem(SNAP); } catch (e) {} } // знімок статистики живе лише разом із сесією
 
   let D = null, ZI = null, NI = null, loading = false, loadErr = "";
   let S = [];                       // учні з обчисленою статистикою (з урахуванням фільтра класу)
@@ -62,23 +64,44 @@
   }
   function logout(msg) {
     session = null; D = null; loginMsg = msg || "";
-    try { localStorage.removeItem(LS); } catch (e) {}
+    try { localStorage.removeItem(LS); localStorage.removeItem(SNAP); } catch (e) {}
     render();
   }
 
   /* ───── Завантаження даних ───── */
+  const loadIndexes = () => Promise.all([
+    ZI ? ZI : fetch("zno/index.json").then(r => r.json()).catch(() => null),
+    NI ? NI : fetch("nmt/index.json").then(r => r.json()).catch(() => null)
+  ]).then(([zi, ni]) => { ZI = zi || ZI; NI = ni || NI; });
+  // Якщо дані вже на екрані (зі знімка), оновлюємо їх у фоні, без екрана «Завантажую».
   async function refresh() {
-    loading = true; loadErr = ""; render();
-    const [d, zi, ni] = await Promise.all([
-      api({ action: "admin_data" }),
-      ZI ? ZI : fetch("zno/index.json").then(r => r.json()).catch(() => null),
-      NI ? NI : fetch("nmt/index.json").then(r => r.json()).catch(() => null)
-    ]);
+    if (loading) return;
+    loading = true; loadErr = ""; render.keepScroll = true; render();
+    const [d] = await Promise.all([api({ action: "admin_data" }), loadIndexes()]);
     loading = false;
     if (!session) return;
-    if (!d || !d.ok) { loadErr = d && d.error === "unknown" ? "Оновіть Code.gs у таблиці до версії 8." : "Не вдалося завантажити дані. Перевірте інтернет і спробуйте ще раз."; render(); return; }
-    D = d; ZI = zi; NI = ni;
-    derive(); render();
+    if (!d || !d.ok) {
+      if (D) { toast("Не вдалося оновити. Показано дані від " + fmtDT(D.now)); render.keepScroll = true; render(); return; }
+      loadErr = d && d.error === "unknown" ? "Оновіть Code.gs у таблиці до версії 8." : "Не вдалося завантажити дані. Перевірте інтернет і спробуйте ще раз."; render(); return;
+    }
+    accept(d); render.keepScroll = true; render();
+  }
+  let partialTries = 0;
+  function accept(d) {
+    D = d; derive();
+    try { localStorage.setItem(SNAP, JSON.stringify(d)); } catch (e) {} // завеликий знімок просто не зберігаємо
+    // Дуже великий журнал сервер рахує частинами: догружаємо решту.
+    if (d.partial && partialTries++ < 30) setTimeout(refreshQuiet, 500); else if (!d.partial) partialTries = 0;
+  }
+  async function boot() {
+    let snap = null;
+    try { snap = JSON.parse(localStorage.getItem(SNAP) || "null"); } catch (e) { snap = null; }
+    if (snap && snap.ok && Array.isArray(snap.students)) {
+      await loadIndexes();
+      if (!session) return;
+      D = snap; derive(); render();
+    }
+    refresh();
   }
 
   /* ───── Обчислення ───── */
@@ -278,10 +301,10 @@
     const r = route()[0], unread = D ? D.replies.filter(x => !x.seen).length : 0;
     const cur = { student: "students", topic: "topics" }[r] || r;
     return `<header class="top"><div class="wrap"><div class="top-row"><img class="logo" src="img/logo-wordmark.png" alt="Midgard"><h1>Адмін-панель</h1><span class="spacer"></span>
-      <button class="btn sm" data-act="refresh" title="Оновити дані">↻<span class="small"> Оновити</span></button></div>
+      <button class="btn sm" data-act="refresh" title="Оновити дані" ${loading ? "disabled" : ""}>↻<span class="small"> ${loading ? "Оновлюю…" : "Оновити"}</span></button></div>
       <nav class="nav" aria-label="Розділи">${NAV.map(([k, l]) => `<a href="#${k}" class="${cur === k ? "on" : ""}">${l}${k === "messages" && unread ? `<span class="badge">${unread}</span>` : ""}</a>`).join("")}</nav>
       ${D ? `<div class="filters"><label class="row small"><span class="muted">Клас:</span><select class="input" id="clsf"><option value="">усі класи</option>${classes().map(c => `<option ${ui.cls === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
-      <span class="hint">Оновлено ${fmtDT(D.now)} · учнів: ${S.length}</span></div>` : ""}</div></header><main class="wrap">${body}</main>`;
+      <span class="hint">${loading ? '<span class="upd">Оновлюю…</span> дані від ' + fmtDT(D.now) : (D.partial ? "Журнал ще рахується · " : "Оновлено ") + fmtDT(D.now)} · учнів: ${S.length}</span></div>` : ""}</div></header><main class="wrap">${body}</main>`;
   }
 
   function render() {
@@ -772,10 +795,10 @@
   });
   async function refreshQuiet() {
     const d = await api({ action: "admin_data" });
-    if (d && d.ok) { D = d; derive(); }
+    if (d && d.ok) accept(d);
     render.keepScroll = true; render();
   }
   window.addEventListener("hashchange", () => { ui.sel = null; render(); window.scrollTo(0, 0); });
 
-  if (session) refresh(); else render();
+  if (session) boot(); else render();
 })();

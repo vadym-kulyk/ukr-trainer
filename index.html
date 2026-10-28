@@ -944,6 +944,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (fp) body.fix = fp;
     const readSent = (s.readQueue || []).slice(0, 100);
     if (readSent.length) body.read = readSent;
+    if (s.exv && s.inbox) body.exv = s.exv; // сервер не повторюватиме незмінні повідомлення
     const d = await api(body);
     if (d && d.ok) {
       serverV = Number(d.v) || serverV;
@@ -977,6 +978,7 @@ body.has-fab main { padding-bottom: 110px; }
   const bellBtn = $("#bell-btn"), bellN = $("#bell-n");
   function applyExtras(s, d) {
     if (!s || !d || !Array.isArray(d.msgs)) return false;
+    if (d.exv) s.exv = d.exv;
     const queued = new Set(s.readQueue || []);
     const next = { msgs: d.msgs.map(m => Object.assign({}, m, { read: m.read || queued.has(m.id) })), replies: d.replies || [], assign: d.assign || [] };
     const changed = JSON.stringify(next) !== JSON.stringify(s.inbox || null);

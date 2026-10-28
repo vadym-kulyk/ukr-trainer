@@ -168,6 +168,9 @@ table.t { border-collapse: collapse; width: 100%; font-size: 14px; }
 .crumbs { font-size: 14px; }
 .crumbs a { text-decoration: none; font-weight: 700; }
 .loading { padding: 40px 0; text-align: center; color: var(--muted); }
+.upd { color: var(--lime-ink); font-weight: 600; animation: updPulse 1.2s ease-in-out infinite; }
+@keyframes updPulse { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .upd { animation: none; } }
 details.more > summary { cursor: pointer; font-weight: 700; }
 @media print {
   .top, .noprint, .btn { display: none !important; }
@@ -180,9 +183,9 @@ details.more > summary { cursor: pointer; font-weight: 700; }
 <div id="root"><div class="loading">Завантаження…</div></div>
 <div class="toast" id="toast" hidden></div>
 <script src="config.js"></script>
-<script src="data.js?v=15"></script>
-<script src="data-extra.js?v=15"></script>
-<script src="engine.js?v=15"></script>
-<script src="admin-app.js?v=15"></script>
+<script src="data.js?v=16"></script>
+<script src="data-extra.js?v=16"></script>
+<script src="engine.js?v=16"></script>
+<script src="admin-app.js?v=16"></script>
 </body>
 </html>
