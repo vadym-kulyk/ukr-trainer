@@ -20,13 +20,14 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 8;
+const SERVICE_VERSION = 9;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
 const PROFILE_HEADER = ['Ключ', 'Учень', 'Клас', 'PIN (хеш)', 'Сіль', 'Створено', 'Останній вхід'];
 const MAX_FAILS = 8;
-const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми №', 'Завдання №', 'Тип завдання', 'Результат', 'Запитання', 'Відповідь учня', 'Правильна відповідь'];
+const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми №', 'Завдання №', 'Тип завдання', 'Результат', 'Запитання', 'Відповідь учня', 'Правильна відповідь',
+  'Час на завдання, с', 'Виходів зі сторінки', 'Поза сторінкою, с'];
 const TYPE_NAMES = { one: 'одна відповідь', multi: 'кілька відповідей', sort: 'розподіл за групами', match: 'відповідність', order: 'порядок',
   single: 'ЗНО: одна відповідь', multiple: 'ЗНО: кілька відповідей', matching: 'ЗНО: відповідність', nmt: 'НМТ: симуляція', fix: 'робота над помилками' };
 const TASKS_PER_TOPIC = 100;
@@ -465,8 +466,17 @@ function logSheet_() {
     sh.appendRow(LOG_HEADER);
     sh.setFrozenRows(1);
     sh.getRange(1, 1, 1, LOG_HEADER.length).setFontWeight('bold');
+  } else if (sh.getLastColumn() < LOG_HEADER.length) {
+    // Старий журнал без стовпців зосередженості: дописуємо заголовки.
+    sh.getRange(1, 1, 1, LOG_HEADER.length).setValues([LOG_HEADER]).setFontWeight('bold');
   }
   return sh;
+}
+
+/** Невід’ємне ціле число або порожньо (для старих версій сайту, що не надсилають час). */
+function num_(v) {
+  if (v === undefined || v === null || v === '' || isNaN(Number(v))) return '';
+  return Math.max(0, Math.round(Number(v)));
 }
 
 /** Текст від учня: обрізаємо й не даємо таблиці сприйняти його як формулу. */
@@ -490,7 +500,10 @@ function appendEvents_(name, events) {
     ev.type === 'nmt' ? (ev.ok ? 'поріг подолано' : 'поріг не подолано') : ev.ok ? '✓ правильно' : '✗ помилка',
     txt_(ev.q),
     txt_(ev.ans),
-    txt_(ev.right)
+    txt_(ev.right),
+    num_(ev.sec),
+    num_(ev.ex),
+    num_(ev.away)
   ]);
   if (!rows.length) return 0;
   const sh = logSheet_();
@@ -941,6 +954,7 @@ function adminData_() {
   const ls = logSheet_(), last = ls.getLastRow();
   if (last >= 2) {
     const main = ls.getRange(2, 1, last - 1, 7).getValues(), ans = ls.getRange(2, 9, last - 1, 1).getValues();
+    const foc = ls.getMaxColumns() >= 13 ? ls.getRange(2, 11, last - 1, 3).getValues() : [];
     const prev = {};
     main.forEach((r, i) => {
       const t = iso_(r[0]); if (!t) return;
@@ -958,6 +972,19 @@ function adminData_() {
         const p = prev[s.key];
         a.mins += p && t > p && t - p <= 5 * 60000 ? (t - p) / 60000 : 0.5;
         prev[s.key] = t;
+        // Зосередженість: час на завдання й виходи зі сторінки (надсилає сайт від версії 15).
+        const fr = foc[i];
+        if (!isNmt && fr && fr[0] !== '' && fr[0] !== null) {
+          const sec = Number(fr[0]) || 0, ex = Number(fr[1]) || 0, away = Number(fr[2]) || 0;
+          const f = a.focus || (a.focus = { timed: 0, sec: 0, away: 0, exits: 0, exAns: 0, exOk: 0, fast: 0, fastOk: 0, recent: [] });
+          f.timed++; f.sec += sec; f.away += away; f.exits += ex;
+          if (ex > 0) {
+            f.exAns++; if (ok) f.exOk++;
+            f.recent.push({ at: t, topic: String(r[2]), n: Number(r[4]) || 0, ok, ex, away, sec, fix: isFix });
+            if (f.recent.length > 20) f.recent.shift();
+          }
+          if (sec < 3) { f.fast++; if (ok) f.fastOk++; }
+        }
       }
       if (!ok && !isFix && !isNmt) {
         const id = titleToId[r[2]], n = Number(r[4]);

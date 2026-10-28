@@ -179,6 +179,7 @@
       if (!answered && (!p || p.key !== m.key + ":" + k + ":" + (f.t || 0))) {
         p = m.src === "t" ? host.trainerNewPend(task, "fix" + m.key) : host.Z.newPend(task);
         p.key = m.key + ":" + k + ":" + (f.t || 0);
+        p.f = host.focusMark();
       }
       const v = viewTask(m, task, !!answered, answered ? sess.last.resp : undefined, answered ? null : p);
       const label = step.kind === "same" ? "Те саме завдання" : "Схоже завдання " + k + " з " + (ch.steps.length - 1);
@@ -214,7 +215,7 @@
       const m = cur(), ch = stepsOf(m); if (!ch || ch.error) return;
       const f = fstate(m.key), k = Math.min(f.s || 0, ch.steps.length - 1), task = ch.steps[k].task;
       const resp = m.src === "t" ? host.trainerResp(task, p) : host.Z.respOf(task, p);
-      const ok = m.src === "t" ? host.E.check(task, resp) : host.Z.check(task, resp);
+      const ok = m.src === "t" ? host.E.check(task, resp) : host.Z.check(task, resp), fo = host.focusSince(p && p.f);
       let fixed = false;
       if (ok) {
         f.s = (f.s || 0) + 1;
@@ -222,12 +223,13 @@
       } else { f.t = (f.t || 0) + 1; f.s = 0; }
       sess.last = { ok, resp, fixed, task, k };
       sess.phase = "fb";
-      logEvent(m, task, resp, ok, k, ch.steps.length, fixed);
+      logEvent(m, task, resp, ok, k, ch.steps.length, fixed, fo);
       host.saveLocal(); host.scheduleSync();
       if (fixed) host.toast("Помилку виправлено!");
       host.render();
     }
-    function logEvent(m, task, resp, ok, k, total, fixed) {
+    function logEvent(m, task, resp, ok, k, total, fixed, fo) {
+      fo = fo || {};
       const s = host.me(); if (!s) return;
       const st = m.src === "t" ? "t" : m.src;
       const topic = m.src === "t" || m.src === "z" ? m.topic : "nmt:" + m.test;
@@ -236,7 +238,7 @@
       if (st === "t") { q = host.plain(task.q) + (task.big ? " — " + host.plain(task.big) : ""); ans = host.answerText(task, resp); right = host.rightText(task); }
       else { q = host.plain(m.src === "z" ? host.Z.md(task.q) : task.q).slice(0, 400); ans = typeof resp === "object" ? Object.keys(resp || {}).map(x => x + "–" + resp[x]).join(", ") : String(resp || ""); right = host.Z.answerText(task); }
       (s.queue = s.queue || []).push({ id: m.key + "|fix|" + (f.t || 0) + "|" + k + "|" + Date.now(), topic, att: 1, n: (m.src === "t" ? m.n : m.src === "n" ? m.i : 0) + 1,
-        type: "fix", ok, at: Date.now(), q: "[Робота над помилками, крок " + (k + 1) + " з " + total + (fixed ? ", виправлено" : "") + "] " + q, ans, right });
+        type: "fix", ok, at: Date.now(), q: "[Робота над помилками, крок " + (k + 1) + " з " + total + (fixed ? ", виправлено" : "") + "] " + q, ans, right, sec: fo.sec, away: fo.away, ex: fo.ex });
     }
     function next(skipped) {
       const m = cur();

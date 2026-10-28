@@ -647,12 +647,12 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=14"></script>
-<script src="data-extra.js?v=14"></script>
-<script src="engine.js?v=14"></script>
-<script src="zno-app.js?v=14"></script>
-<script src="nmt-app.js?v=14"></script>
-<script src="fix-app.js?v=14"></script>
+<script src="data.js?v=15"></script>
+<script src="data-extra.js?v=15"></script>
+<script src="engine.js?v=15"></script>
+<script src="zno-app.js?v=15"></script>
+<script src="nmt-app.js?v=15"></script>
+<script src="fix-app.js?v=15"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -664,6 +664,22 @@ body.has-fab main { padding-bottom: 110px; }
   const IMG = { phonetics: "img/phonetics.jpg", ortho: "img/ortho.jpg", lexic: "img/lexic.jpg", foreign: "img/foreign.jpg", phraseo: "img/phraseo.jpg", compound: "img/compound.jpg", antonym: "img/antonym.jpg", error: "img/error.jpg", assim: "img/assim.jpg", alter: "img/alter.jpg", nn: "img/nn.jpg", dash: "img/dash.jpg", ne: "img/ne.jpg" };
   const ALT = { phonetics: "Мікрофон на тлі звукових хвиль", ortho: "Зошит, ручка й маркер на столі", lexic: "Відкритий словник і лупа", foreign: "Книжки, глобус і паспорт", phraseo: "Керамічний кіт біля мішка на вишитому рушнику", compound: "Кубики, з яких складено місток", antonym: "Чорні й білі шахові фігури одна навпроти одної", error: "Червоний і зелений олівці на аркуші з текстом", assim: "Дві скляні кульки, що торкаються, кольори яких змішуються", alter: "Зелені, фіолетова й жовта шестерні", nn: "Дві зелені нитки й одна фіолетова на п’яльцях", dash: "Зелена планка, перекинута між фіолетовим і білим камінцями", ne: "Зелені й фіолетовий кубики: два впритул, два з проміжком" };
   const TASKS = {};
+
+  /* ───── Зосередженість: виходи зі сторінки й час на завдання ─────
+     Рахуємо лише, коли сторінка зникає з екрана (інша вкладка чи застосунок, згорнутий браузер, вимкнений екран).
+     Що учень робить поза сайтом, браузер не повідомляє. */
+  const FOCUS = { exits: 0, away: 0, hiddenAt: document.hidden ? Date.now() : null };
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { if (FOCUS.hiddenAt == null) { FOCUS.hiddenAt = Date.now(); FOCUS.exits++; } }
+    else if (FOCUS.hiddenAt != null) { FOCUS.away += Date.now() - FOCUS.hiddenAt; FOCUS.hiddenAt = null; }
+  });
+  const focusMark = () => ({ t: Date.now(), exits: FOCUS.exits, away: FOCUS.away + (FOCUS.hiddenAt != null ? Date.now() - FOCUS.hiddenAt : 0) });
+  /* Від моменту показу завдання: sec — час на сторінці (до 30 хв), away — секунди поза сторінкою, ex — скільки разів виходив. */
+  function focusSince(m) {
+    if (!m) return {};
+    const n = focusMark(), away = Math.max(0, n.away - m.away), dur = Math.max(0, n.t - m.t);
+    return { sec: Math.min(1800, Math.round((dur - away) / 1000)), away: Math.round(away / 1000), ex: Math.max(0, n.exits - m.exits) };
+  }
   const tasksOf = id => TASKS[id] || (TASKS[id] = E.buildTasks(T.find(t => t.id === id)));
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
@@ -686,7 +702,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "14", THEORY = {}, theoryLoading = {};
+  const VER = "15", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -712,7 +728,7 @@ body.has-fab main { padding-bottom: 110px; }
     trainerTopic: id => { const t = T.find(x => x.id === id); if (!t) return null; const th = theoryOf(id); return { title: t.title, theory: th == null ? '<p class="empty">Завантажую теорію…</p>' : th }; },
     loadTrainerTheory: id => loadTheoryFile(id),
     setZnoUnique: n => { store.znoUnique = n; }, getZnoUnique: () => store.znoUnique || 0,
-    fixCount: g => FX.openCount(g)
+    fixCount: g => FX.openCount(g), focusMark: () => focusMark(), focusSince: m => focusSince(m)
   });
   const NM = window.MGNmt({
     esc, get ui() { return ui; },
@@ -725,7 +741,7 @@ body.has-fab main { padding-bottom: 110px; }
     esc, T, E, Z, NM, tasksOf, get ui() { return ui; },
     me: () => me(), loggedIn: () => loggedIn(), saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now),
     render: () => render(), toast: m => toast(m), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref), scrollTask: () => scrollTask(),
-    setHome: h => { store.home = h; saveLocal(); },
+    setHome: h => { store.home = h; saveLocal(); }, focusMark: () => focusMark(), focusSince: m => focusSince(m),
     typeName: t => TYPE[t], correctHtml: task => correctHtml(task), plain: h => plain(h),
     answerText: (task, resp) => answerText(task, resp), rightText: task => rightText(task),
     trainerNewPend: (task, topic) => newPend(task, topic),
@@ -764,7 +780,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (loggedIn()) {
       box.classList.remove("need");
       box.innerHTML = `<label>Профіль учня</label><div class="namerow"><span class="pname"></span><button class="btn small" id="p-logout" type="button">Вийти</button></div>
-        <span class="hint">${RESULTS_URL ? "Прогрес зберігається в профілі. На іншому пристрої увійдіть з тими самими ім’ям, класом і PIN-кодом." : "Прогрес зберігається на цьому пристрої."}</span>`;
+        <span class="hint">${RESULTS_URL ? "Прогрес зберігається в профілі. На іншому пристрої увійдіть з тими самими ім’ям, класом і PIN-кодом." : "Прогрес зберігається на цьому пристрої."}${RESULTS_URL ? " Під час завдань учитель бачить час відповіді й виходи зі сторінки." : ""}</span>`;
       box.querySelector(".pname").textContent = fullName(s);
       return;
     }
@@ -1153,7 +1169,7 @@ body.has-fab main { padding-bottom: 110px; }
 
   function taskCard(t, task, st) {
     const i = task.n, done = st.r[i] !== ".", resp = done ? st.ch[i] : undefined;
-    if (!pend || pend.i !== i || pend.topic !== t.id) pend = newPend(task, t.id);
+    if (!pend || pend.i !== i || pend.topic !== t.id) { pend = newPend(task, t.id); if (!done) pend.f = focusMark(); }
     let h = `<article class="task" aria-live="polite"><div class="task-head"><span class="mono">Завдання ${i + 1} / 100</span><span class="kind">${TYPE[task.t]}</span></div>
       <h3 class="task-q">${task.q}</h3>${task.big ? `<div class="big">${task.big}</div>` : ""}`;
     h += bodyHtml(task, done, resp);
@@ -1276,12 +1292,12 @@ body.has-fab main { padding-bottom: 110px; }
   function answer(t, task, resp) {
     const st = tstate(t.id);
     if (st.r[task.n] !== ".") return;
-    const ok = E.check(task, resp);
+    const ok = E.check(task, resp), fo = focusSince(pend && pend.f);
     st.r = st.r.slice(0, task.n) + (ok ? "1" : "0") + st.r.slice(task.n + 1);
     st.ch[task.n] = resp;
     const s = me();
     (s.queue = s.queue || []).push({ id: store.current + "|" + t.id + "|" + (st.att || 1) + "|" + task.n, topic: t.id, att: st.att || 1, n: task.n + 1, type: task.t, ok, at: Date.now(),
-      q: plain(task.q) + (task.big ? " — " + plain(task.big) : ""), ans: answerText(task, resp), right: rightText(task) });
+      q: plain(task.q) + (task.big ? " — " + plain(task.big) : ""), ans: answerText(task, resp), right: rightText(task), sec: fo.sec, away: fo.away, ex: fo.ex });
     if (s.queue.length > 3000) s.queue = s.queue.slice(-3000);
     pend = null; saveLocal(); scheduleSync(); render();
   }

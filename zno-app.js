@@ -180,7 +180,7 @@
     /* ── Картка завдання ── */
     function card(t, task, i, n, st) {
       const done = !!st.res[task.id], resp = done ? st.ch[task.id] : undefined;
-      if (!pend || pend.id !== task.id) pend = { id: task.id, v: task.type === "multiple" ? [] : task.type === "matching" ? {} : null };
+      if (!pend || pend.id !== task.id) pend = { id: task.id, v: task.type === "multiple" ? [] : task.type === "matching" ? {} : null, f: done ? null : host.focusMark() };
       let h = `<article class="task zt" aria-live="polite"><div class="task-head"><span class="mono">Завдання ${i + 1} / ${n}</span><span class="kind">${TYPE[task.type]}</span></div>
         <div class="zq">${M(task.q)}</div>`;
       h += body(task, done, resp);
@@ -249,14 +249,14 @@
     function answer(t, task, resp) {
       const st = zstate(t.id, true);
       if (st.res[task.id]) return;
-      const ok = check(task, resp);
+      const ok = check(task, resp), fo = host.focusSince(pend && pend.f);
       st.res[task.id] = ok ? "1" : "0";
       st.ch[task.id] = resp;
       const s = host.me();
       (s.queue = s.queue || []).push({
         id: host.currentKey() + "|" + t.id + "|" + (st.att || 1) + "|" + task.id, topic: t.id, att: st.att || 1,
         n: host.ui.zcur + 1, type: task.type, ok, at: Date.now(),
-        q: plain(task.q).slice(0, 400), ans: respText(task, resp), right: answerText(task)
+        q: plain(task.q).slice(0, 400), ans: respText(task, resp), right: answerText(task), sec: fo.sec, away: fo.away, ex: fo.ex
       });
       pend = null; host.saveLocal(); host.scheduleSync(); host.render();
     }

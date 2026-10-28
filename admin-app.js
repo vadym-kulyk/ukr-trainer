@@ -119,6 +119,9 @@
     o.seen = Math.max(o.act.last || 0, s.updated || 0, s.lastLogin || 0);
     o.week = sumDays(o.act.days, 7);
     o.fx = s.fix || null;
+    const f = o.act.focus;
+    o.fo = f && f.timed ? { timed: f.timed, exits: f.exits, exAns: f.exAns, exOk: f.exOk, fast: f.fast, fastOk: f.fastOk, recent: f.recent || [],
+      focus: f.sec + f.away ? f.sec / (f.sec + f.away) : 1, exShare: f.exAns / f.timed, avgSec: f.sec / f.timed, fastShare: f.fast / f.timed, awayMin: f.away / 60 } : null;
     return o;
   }
   function sumDays(days, n) { let k = 0; for (let i = 0; i < n; i++) k += (days || {})[dayKey(D.now - i * DAY)] || 0; return k; }
@@ -166,6 +169,11 @@
   const startOfDay = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
   const hours = m => m >= 60 ? (m / 60).toFixed(1).replace(".", ",") + " год" : Math.round(m) + " хв";
   const plain = h => { const d = document.createElement("div"); d.innerHTML = h || ""; return d.textContent.replace(/\s+/g, " ").trim(); };
+  /* Зосередженість: тривожні ознаки (від 15 відповідей з вимірюванням часу). */
+  const distracted = s => s.fo && s.fo.timed >= 15 && (s.fo.exShare >= .2 || s.fo.focus < .75);
+  const guessing = s => s.fo && s.fo.timed >= 15 && s.fo.fastShare >= .3;
+  const secTxt = v => v == null ? "—" : v < 60 ? Math.round(v) + " с" : (v / 60).toFixed(1).replace(".", ",") + " хв";
+  const focusCell = s => s.fo ? cellBar(s.fo.focus, pctTxt(s.fo.focus)) : "—";
   const kpi = (v, l, e) => `<div class="kpi"><b>${v}</b><span>${l}</span>${e ? `<em>${e}</em>` : ""}</div>`;
   const nameLink = s => `<a href="#student/${encodeURIComponent(s.key)}">${esc(s.name)}</a>`;
 
@@ -300,6 +308,7 @@
       ${kpi(tot.nn ? Math.round(tot.nb / tot.nn) : "—", "середній найкращий бал НМТ", tot.nn + " учнів проходили")}
       ${kpi(tot.ft ? tot.fd + " / " + tot.ft : "—", "виправлено помилок", tot.ft ? pctTxt(tot.fd / tot.ft) : "")}
       ${kpi(hours(tot.m), "час у тренажері", "орієнтовно, за журналом")}
+      ${(() => { const l = S.filter(x => x.fo); if (!l.length) return ""; const fs = l.reduce((a, x) => a + x.fo.focus, 0) / l.length, ds = S.filter(distracted).length; return kpi(pctTxt(fs), "середня зосередженість", ds ? `<a href="#students">часто відволікаються: ${ds}</a>` : "часу на сторінці під час завдань"); })()}
       ${kpi(D.replies.filter(x => !x.seen).length, "нових відповідей учнів", `<a href="#messages">відкрити</a>`)}
     </div>
     <div class="card"><h3>Активність за 30 днів</h3>${chartDays(days, 30, { label: "Відповіді учнів по днях" })}<div class="legend"><span><i style="background:color-mix(in srgb, var(--violet) 55%, transparent)"></i>відповіді в тренажері й ЗНО</span></div></div>`;
@@ -316,6 +325,8 @@
       <div class="card"><h3>Потребують уваги</h3>
         <h4>Не заходили понад 7 днів (${need.length})</h4>${need.length ? `<div class="chips">${need.slice(0, 20).map(s => `<a class="tag" href="#student/${encodeURIComponent(s.key)}">${esc(s.name)} · ${esc(s.cls)} · ${ago(s.seen)}</a>`).join("")}</div>` : '<p class="empty">Усі активні.</p>'}
         <h4>Низька точність (нижче 60 %)</h4>${weak.length ? `<div class="chips">${weak.slice(0, 20).map(s => `<a class="tag red" href="#student/${encodeURIComponent(s.key)}">${esc(s.name)} · ${pctTxt(s.tr.acc)}</a>`).join("")}</div>` : '<p class="empty">Немає.</p>'}
+        <h4>Часто відволікаються під час завдань</h4>${(() => { const l = S.filter(distracted).sort((a, b) => b.fo.exShare - a.fo.exShare); return l.length ? `<div class="chips">${l.slice(0, 20).map(s => `<a class="tag red" href="#student/${encodeURIComponent(s.key)}">${esc(s.name)} · виходи у ${pctTxt(s.fo.exShare)} відповідей</a>`).join("")}</div>` : '<p class="empty">Немає.</p>'; })()}
+        <h4>Відповідають надто швидко (менше 3 с)</h4>${(() => { const l = S.filter(guessing).sort((a, b) => b.fo.fastShare - a.fo.fastShare); return l.length ? `<div class="chips">${l.slice(0, 20).map(s => `<a class="tag red" href="#student/${encodeURIComponent(s.key)}">${esc(s.name)} · ${pctTxt(s.fo.fastShare)} відповідей</a>`).join("")}</div>` : '<p class="empty">Немає.</p>'; })()}
         ${overdueHtml()}</div>
       <div class="card"><h3>Найактивніші за 7 днів</h3>${topW.length ? table("ov-a", [
         { k: "n", t: "Учень", h: r => nameLink(r) + ` <span class="muted">${esc(r.cls)}</span>` },
@@ -344,6 +355,9 @@
         { k: "zno", t: "ЗНО", v: r => r.zn.acc, h: r => r.zn.a ? cellBar(r.zn.acc, pctTxt(r.zn.acc) + " з " + r.zn.a) : "—" },
         { k: "nmt", t: "НМТ найкраще", v: r => r.nm.best || null, num: 1, h: r => r.nm.best || (r.nm.tests ? "поріг не подолано" : "—") },
         { k: "fix", t: "Помилки виправлено", v: r => r.fx ? r.fx.done : null, h: r => r.fx && (r.fx.done + r.fx.open) ? r.fx.done + " з " + (r.fx.done + r.fx.open) : "—" },
+        { k: "foc", t: "Зосередженість", v: r => r.fo ? r.fo.focus : null, h: r => focusCell(r) },
+        { k: "exa", t: "Відп. після виходу", v: r => r.fo ? r.fo.exShare : null, num: 1, h: r => r.fo ? `<span class="${distracted(r) ? "err" : ""}">${pctTxt(r.fo.exShare)}</span>` : "—" },
+        { k: "avg", t: "Сер. час на завдання", v: r => r.fo ? r.fo.avgSec : null, num: 1, h: r => r.fo ? `<span class="${guessing(r) ? "err" : ""}">${secTxt(r.fo.avgSec)}</span>` : "—" },
         { k: "week", t: "За 7 днів", v: r => r.week, num: 1, h: r => r.week },
         { k: "mins", t: "Час", v: r => r.act.mins || 0, num: 1, h: r => hours(r.act.mins || 0) }
       ], rows, { sort: { k: "name", d: 1 }, link: r => "#student/" + encodeURIComponent(r.key), empty: "Учнів ще немає." })}</div>`;
@@ -362,7 +376,8 @@
         <div class="hint">Профіль створено ${fmtDate(s.created)} · останній вхід ${fmtDT(s.lastLogin)} · остання активність ${ago(s.seen)}${s.pin ? "" : " · <b>PIN скинуто — учень задасть новий під час входу</b>"}</div>
         <div class="kpis">${kpi(s.tr.a + "/" + T.length * N, "виконано в тренажері", pctTxt(s.tr.prog))}${kpi(pctTxt(s.tr.acc), "точність у тренажері")}${kpi(s.zn.a ? pctTxt(s.zn.acc) : "—", "точність у ЗНО", s.zn.a + " завдань")}
           ${kpi(s.nm.best || "—", "найкращий бал НМТ", s.nm.tests + " тестів")}${kpi(s.fx && (s.fx.done + s.fx.open) ? s.fx.done + "/" + (s.fx.done + s.fx.open) : "—", "виправлено помилок")}${kpi(hours(s.act.mins || 0), "час у тренажері", "за 7 днів: " + s.week + " відповідей")}</div></div>
-      <div class="card"><h3>Активність за 60 днів</h3>${chartDays(s.act.days || {}, 60)}</div>`;
+      <div class="card"><h3>Активність за 60 днів</h3>${chartDays(s.act.days || {}, 60)}</div>
+      ${focusCard(s)}`;
     if (weak.length) h += `<div class="card"><h3>Найслабші теми</h3><div class="chips">${weak.map(x => `<a class="tag red" href="#topic/t:${x.t.id}">${esc(x.t.title)} · ${pctTxt(x.x.c / x.x.a)}</a>`).join("")}</div></div>`;
     h += `<div class="card"><div class="row"><h3>Прогрес</h3><span class="spacer"></span><div class="seg">${[["t", "Тренажер"], ["z", "ЗНО"], ["n", "НМТ"], ["e", "Помилки"]].map(([k, l]) => `<button class="${ui.stuTab === k ? "on" : ""}" data-stab="${k}">${l}</button>`).join("")}</div></div>`;
     if (ui.stuTab === "t") h += table("stu-t-" + s.key, [
@@ -389,6 +404,26 @@
     h += `<div class="card"><h3>Повідомлення й відповіді</h3>${msgs.length || reps.length ? `<div class="list">${msgs.slice(0, 20).map(m => `<div class="item"><div class="meta"><b>${esc(m.title || "Повідомлення")}</b><span>${fmtDT(m.at)}</span><span>${esc(m.toLabel)}</span>${m.readers.includes(s.key) ? '<span class="tag green">прочитано</span>' : '<span class="tag red">не прочитано</span>'}</div><div class="text">${esc(m.text)}</div></div>`).join("")}
       ${reps.map(r => `<div class="item ${r.seen ? "" : "unread"}"><div class="meta"><b>Відповідь учня</b><span>${fmtDT(r.at)}</span></div><div class="text">${esc(r.text)}</div></div>`).join("")}</div>` : '<p class="empty">Повідомлень ще немає.</p>'}</div></div>`;
     return h;
+  }
+  function focusCard(s) {
+    const f = s.fo;
+    if (!f) return `<div class="card"><h3>Зосередженість</h3><p class="empty">Ще немає відповідей із вимірюванням часу (з’являться після нових відповідей учня).</p></div>`;
+    const flags = [];
+    if (distracted(s)) flags.push('<span class="tag red">часто виходить зі сторінки під час завдань</span>');
+    if (guessing(s)) flags.push('<span class="tag red">багато дуже швидких відповідей — можливо, навмання</span>');
+    if (!flags.length && f.timed >= 15) flags.push('<span class="tag green">працює зосереджено</span>');
+    let h = `<div class="card"><h3>Зосередженість ${flags.join(" ")}</h3>
+      <div class="kpis">${kpi(pctTxt(f.focus), "часу на сторінці", "решта — поза сайтом: " + hours(f.awayMin))}
+        ${kpi(f.exits, "виходів зі сторінки", "під час " + f.exAns + " з " + f.timed + " відповідей (" + pctTxt(f.exShare) + ")")}
+        ${kpi(f.exAns ? pctTxt(f.exOk / f.exAns) : "—", "правильних після виходу", "порівняйте з точністю " + pctTxt(s.tr.acc))}
+        ${kpi(secTxt(f.avgSec), "середній час на завдання")}
+        ${kpi(pctTxt(f.fastShare), "відповідей швидше 3 с", f.fast ? "з них правильних " + pctTxt(f.fastOk / f.fast) : "")}</div>`;
+    if (f.recent.length) h += `<details class="more"><summary>Останні відповіді, під час яких учень виходив зі сторінки (${f.recent.length})</summary>${table("foc-" + s.key, [
+      { k: "at", t: "Коли", v: r => r.at, h: r => fmtDT(r.at) }, { k: "t", t: "Тема", v: r => r.topic, h: r => esc(r.topic) + (r.fix ? ' <span class="tag violet">робота над помилками</span>' : "") },
+      { k: "n", t: "№", v: r => r.n, num: 1, h: r => r.n }, { k: "ok", t: "Результат", v: r => r.ok ? 1 : 0, h: r => r.ok ? '<span class="tag green">правильно</span>' : '<span class="tag red">помилка</span>' },
+      { k: "ex", t: "Виходів", v: r => r.ex, num: 1, h: r => r.ex }, { k: "aw", t: "Поза сторінкою", v: r => r.away, num: 1, h: r => secTxt(r.away) },
+      { k: "sec", t: "На сторінці", v: r => r.sec, num: 1, h: r => secTxt(r.sec) }], f.recent, { sort: { k: "at", d: -1 } })}</details>`;
+    return h + `<p class="hint" style="margin:0">Сайт бачить лише, коли сторінка зникає з екрана (інша вкладка чи застосунок, згорнутий браузер, вимкнений екран), але не що учень робив поза сайтом. Це сигнал для розмови, а не доказ.</p></div>`;
   }
   function studentMistakes(s) {
     const blocks = [];
@@ -619,6 +654,7 @@
       <div class="card"><h3>Довідка</h3><ul class="small">
         <li><b>Точність</b> — частка правильних серед виконаних завдань (тренажер — поточна спроба теми).</li>
         <li><b>Час у тренажері</b> — орієнтовний: сума проміжків між відповідями до 5 хвилин.</li>
+        <li><b>Зосередженість</b> — частка часу на сторінці від показу завдання до відповіді. <b>Виходи</b> — скільки разів сторінка зникала з екрана (інша вкладка чи застосунок, згорнутий браузер, вимкнений екран). Що учень робив поза сайтом, браузер не повідомляє; розділений екран і другий пристрій не відстежуються. Позначки «часто відволікаються» (виходи у 20 % відповідей або зосередженість нижче 75 %) і «надто швидко» (30 % відповідей швидше 3 с) з’являються від 15 відповідей.</li>
         <li><b>Скинути PIN</b> — учень під час наступного входу задасть новий PIN-код.</li>
         <li><b>Найчастіші хибні відповіді</b> — з журналу «Спроби», по всіх учнях.</li>
         <li>Повідомлення й призначення учні отримують під час входу або збереження прогресу (кожні кілька секунд роботи).</li></ul></div></div>`;
@@ -633,8 +669,10 @@
   }
   const p100 = v => v == null ? "" : Math.round(v * 1000) / 10;
   const CSV = {
-    "csv-students": () => csv("uchni", ["Учень", "Клас", "Остання активність", "Тренажер виконано", "Тренажер точність %", "ЗНО виконано", "ЗНО точність %", "НМТ найкращий", "Помилок виправлено", "Помилок усього", "Відповідей за 7 днів", "Хвилин"],
-      S.map(s => [s.name, s.cls, s.seen ? new Date(s.seen).toLocaleString("uk-UA") : "", s.tr.a, p100(s.tr.acc), s.zn.a, p100(s.zn.acc), s.nm.best || "", s.fx ? s.fx.done : "", s.fx ? s.fx.done + s.fx.open : "", s.week, s.act.mins || 0])),
+    "csv-students": () => csv("uchni", ["Учень", "Клас", "Остання активність", "Тренажер виконано", "Тренажер точність %", "ЗНО виконано", "ЗНО точність %", "НМТ найкращий", "Помилок виправлено", "Помилок усього", "Відповідей за 7 днів", "Хвилин",
+      "Зосередженість %", "Виходів зі сторінки", "Відповідей після виходу %", "Сер. час на завдання, с", "Відповідей швидше 3 с %"],
+      S.map(s => [s.name, s.cls, s.seen ? new Date(s.seen).toLocaleString("uk-UA") : "", s.tr.a, p100(s.tr.acc), s.zn.a, p100(s.zn.acc), s.nm.best || "", s.fx ? s.fx.done : "", s.fx ? s.fx.done + s.fx.open : "", s.week, s.act.mins || 0,
+        s.fo ? p100(s.fo.focus) : "", s.fo ? s.fo.exits : "", s.fo ? p100(s.fo.exShare) : "", s.fo ? Math.round(s.fo.avgSec) : "", s.fo ? p100(s.fo.fastShare) : ""])),
     "csv-topics": () => csv("temy", ["Розділ", "Тема", "Почали", "Завершили", "Середнє виконання", "Точність %", "Помилок"], topicStats(S).map(r => [r.t.sec, r.t.title, r.started, r.full, Math.round(r.avg), p100(r.acc), r.w])),
     "csv-tasks": () => csv("skladni-zavdannia", ["Тема", "№", "Завдання", "Помилок %", "Хибних", "Відповідей", "Найчастіші хибні"], hardRows().map(r => [r.title, r.i + 1, taskPreview(r), Math.round(r.e * 100), r.w, r.a, Object.keys(D.wrong[r.tid + "|" + (r.i + 1)] || {}).join(" | ")])),
     "csv-classes": () => csv("klasy", ["Клас", "Учнів", "Активні 7 днів", "Відповідей", "Точність тренажера %", "Точність ЗНО %", "НМТ сер. найкращий", "Виправлено помилок", "Хвилин"],
