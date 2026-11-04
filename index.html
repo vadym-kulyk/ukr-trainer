@@ -127,6 +127,28 @@ main { padding-block: 22px 60px; }
 .tabs.three .tab { padding-inline: 6px; line-height: 1.2; font-size: 15px; }
 @media (max-width: 420px) { .tabs.three .tab { font-size: 13px; } }
 .th-lead { margin: 0 0 8px; font-size: 15px; color: var(--muted); }
+.today { background: color-mix(in srgb, var(--lime) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--lime) 50%, var(--line)); border-radius: var(--r); padding: 14px; display: grid; gap: 12px; margin-bottom: 18px; }
+.td-top { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.td-stat { display: flex; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; min-width: 0; }
+.td-stat > div { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.td-stat b { font-size: 22px; line-height: 1.1; } .td-stat b small { font-size: 14px; color: var(--muted); }
+.td-stat span:not(.td-ic) { font-size: 13px; color: var(--muted); }
+.td-ic { font-size: 26px; }
+.td-acts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.td-acts .btn { justify-content: flex-start; text-align: left; white-space: normal; line-height: 1.25; min-height: 48px; }
+@media (max-width: 520px) { .td-acts { grid-template-columns: minmax(0, 1fr); } }
+.pl-card { display: grid; gap: 10px; margin: 14px 0; } .pl-card h2 { font-size: 20px; margin: 0; } .pl-card p { margin: 0; }
+.pl-group { margin: 18px 0; display: grid; gap: 8px; } .pl-group h2 { font-size: 18px; margin: 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pl-sec { font-size: 14px; color: var(--muted); margin: 8px 0 0; font-family: var(--f-display); }
+.pl-row { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; }
+.pl-row > div:first-child { display: grid; gap: 2px; min-width: 0; flex: 1 1 200px; } .pl-btns { display: flex; gap: 6px; }
+.fc-big { display: grid; gap: 4px; text-align: center; padding: 8px 0; } .fc-big b { font-size: 48px; line-height: 1; font-family: var(--f-display); }
+.fc-big .lbl { font-size: 14px; color: var(--muted); } .fc-facts { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.goal-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+.bdg { display: grid; gap: 4px; justify-items: center; text-align: center; padding: 14px 10px; border: 1px dashed var(--line); border-radius: var(--r); opacity: .55; filter: grayscale(1); }
+.bdg.on { opacity: 1; filter: none; border-style: solid; border-color: var(--lime); background: color-mix(in srgb, var(--lime) 10%, var(--surface)); }
+.bdg-ic { font-size: 32px; } .bdg b { font-size: 15px; }
 
 .theory { display: grid; gap: 16px; padding-block: 20px; }
 .theory h2 { font-size: clamp(20px, 5vw, 26px); }
@@ -692,6 +714,7 @@ body.has-fab main { padding-bottom: 110px; }
 <script src="nmt-app.js?v=16"></script>
 <script src="fix-app.js?v=16"></script>
 <script src="theory-app.js?v=16"></script>
+<script src="plus-app.js?v=16"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -795,6 +818,20 @@ body.has-fab main { padding-bottom: 110px; }
     esc, T, E, get ui() { return ui; }, me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
     saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), render: () => render(), gateHtml: () => gateHtml(), scrollTask: () => scrollTask(),
     theoryOf: id => theoryOf(id), focusMark: () => focusMark(), focusSince: m => focusSince(m),
+    correctHtml: task => correctHtml(task), plain: h => plain(h), answerText: (task, resp) => answerText(task, resp), rightText: task => rightText(task),
+    trainerNewPend: (task, topic) => newPend(task, topic),
+    trainerBody: (task, done, resp, p) => { const keep = pend; pend = p; const h = bodyHtml(task, done, resp); pend = keep; return h; },
+    trainerReady: (task, p) => { const keep = pend; pend = p; const ok = ready(task); pend = keep; return ok; },
+    trainerInput: (b, p) => inputClick(b.dataset, p),
+    trainerResp: (task, p) => task.t === "one" ? p.v : task.t === "multi" ? p.v.slice().sort((a, b) => a - b) : p.v.slice()
+  });
+  /* Розминка, діагностика, прогноз НМТ, серія, ціль, нагороди (plus-app.js). */
+  const PL = window.MGPlus({
+    esc, T, E, S, get ui() { return ui; }, me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
+    saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), render: () => render(), toast: m => toast(m), gateHtml: () => gateHtml(),
+    scrollTask: () => scrollTask(), tasksOf: id => tasksOf(id), topicStats: id => topicStats(id), setHome: h => { store.home = h; saveLocal(); },
+    fixDone: () => { const x = FX.payload(); return x && x.sum ? x.sum.done : 0; }, typeName: t => TYPE[t],
+    focusMark: () => focusMark(), focusSince: m => focusSince(m),
     correctHtml: task => correctHtml(task), plain: h => plain(h), answerText: (task, resp) => answerText(task, resp), rightText: task => rightText(task),
     trainerNewPend: (task, topic) => newPend(task, topic),
     trainerBody: (task, done, resp, p) => { const keep = pend; pend = p; const h = bodyHtml(task, done, resp); pend = keep; return h; },
@@ -1016,6 +1053,7 @@ body.has-fab main { padding-bottom: 110px; }
       if (zp) Z.sent(zp);
       if (readSent.length) { const done = new Set(readSent); s.readQueue = (s.readQueue || []).filter(id => !done.has(id)); saveLocal(); }
       if (applyExtras(s, d)) { saveLocal(); updateBell(); if (ui.view === "home") render(); if (inboxOpen && !sheet.hidden && !sheetBody.querySelector("textarea:focus")) sheetBody.innerHTML = inboxHtml(); maybeShowImportant(); }
+      if (events.length) PL.countEvents(events);
       if (events.length) { const gone = new Set(events); s.queue = (s.queue || []).filter(e => !gone.has(e)); saveLocal(); if (s.queue.some(canSend)) syncAgain = true; }
       setSync("saved");
     } else if (d && d.error === "auth") {
@@ -1140,6 +1178,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (ui.view === "topic" && ui.topic) renderTopic();
     else if (ui.view === "ztopic") { const h = Z.topicHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
     else if (ui.view === "fix") { const h = FX.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
+    else if (ui.view === "plus") { const h = PL.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
     else if (ui.view === "nmt") { const h = NM.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; document.body.classList.toggle("exam", NM.inExam()); }
     else renderHome();
     updateFab();
@@ -1158,6 +1197,7 @@ body.has-fab main { padding-bottom: 110px; }
     h += assignHtml();
     if (home === "zno") { app.innerHTML = h + Z.homeHtml() + reportSection() + "</main>"; return; }
     if (home === "nmt") { app.innerHTML = h + NM.homeHtml() + reportSection() + "</main>"; return; }
+    h += PL.todayHtml();
     S.forEach(sec => {
       h += `<section class="section"><div class="section-h"><span class="mono">${sec.id}</span><h2>${esc(sec.title)}</h2></div><div class="cards">`;
       T.filter(t => t.sec === sec.id).forEach(t => {
@@ -1392,6 +1432,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (d.home) { store.home = d.home; saveLocal(); render(); return; }
     if (d.theory) { openTheory(d.theory); return; }
     if (TH.onClick(b)) return;
+    if (PL.onClick(b)) return;
     if (FX.onClick(b)) return;
     if (NM.onClick(b)) return;
     if (Z.onClick(b)) return;
