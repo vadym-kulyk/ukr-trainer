@@ -127,6 +127,9 @@ main { padding-block: 22px 60px; }
 .tabs.three .tab { padding-inline: 6px; line-height: 1.2; font-size: 15px; }
 @media (max-width: 420px) { .tabs.three .tab { font-size: 13px; } }
 .th-lead { margin: 0 0 8px; font-size: 15px; color: var(--muted); }
+.ctl-timer { margin-left: auto; font-size: 18px; font-weight: 800; background: var(--surface-2); padding: 4px 10px; border-radius: 999px; }
+.ctl-timer.warn { background: var(--wrong-bg); color: var(--wrong); }
+.ctl-grid { grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); margin-top: 8px; }
 .today { background: color-mix(in srgb, var(--lime) 10%, var(--surface)); border: 1px solid color-mix(in srgb, var(--lime) 50%, var(--line)); border-radius: var(--r); padding: 14px; display: grid; gap: 12px; margin-bottom: 18px; }
 .td-top { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .td-stat { display: flex; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; min-width: 0; }
@@ -715,6 +718,7 @@ body.has-fab main { padding-bottom: 110px; }
 <script src="fix-app.js?v=16"></script>
 <script src="theory-app.js?v=16"></script>
 <script src="plus-app.js?v=16"></script>
+<script src="exam-app.js?v=16"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -833,6 +837,18 @@ body.has-fab main { padding-bottom: 110px; }
     fixDone: () => { const x = FX.payload(); return x && x.sum ? x.sum.done : 0; }, typeName: t => TYPE[t],
     focusMark: () => focusMark(), focusSince: m => focusSince(m),
     correctHtml: task => correctHtml(task), plain: h => plain(h), answerText: (task, resp) => answerText(task, resp), rightText: task => rightText(task),
+    trainerNewPend: (task, topic) => newPend(task, topic),
+    trainerBody: (task, done, resp, p) => { const keep = pend; pend = p; const h = bodyHtml(task, done, resp); pend = keep; return h; },
+    trainerReady: (task, p) => { const keep = pend; pend = p; const ok = ready(task); pend = keep; return ok; },
+    trainerInput: (b, p) => inputClick(b.dataset, p),
+    trainerResp: (task, p) => task.t === "one" ? p.v : task.t === "multi" ? p.v.slice().sort((a, b) => a - b) : p.v.slice()
+  });
+  /* Контрольні роботи від учителя (exam-app.js). */
+  const EX = window.MGExam({
+    esc, T, E, get ui() { return ui; }, me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
+    saveLocal: () => saveLocal(), render: () => render(), toast: m => toast(m), scrollTask: () => scrollTask(), tasksOf: id => tasksOf(id),
+    api: body => api(body), applyExtras: (s, d) => { if (applyExtras(s, d)) updateBell(); }, typeName: t => TYPE[t],
+    focusMark: () => focusMark(), focusSince: m => focusSince(m), correctHtml: task => correctHtml(task),
     trainerNewPend: (task, topic) => newPend(task, topic),
     trainerBody: (task, done, resp, p) => { const keep = pend; pend = p; const h = bodyHtml(task, done, resp); pend = keep; return h; },
     trainerReady: (task, p) => { const keep = pend; pend = p; const ok = ready(task); pend = keep; return ok; },
@@ -1082,7 +1098,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (!s || !d || !Array.isArray(d.msgs)) return false;
     if (d.exv) s.exv = d.exv;
     const queued = new Set(s.readQueue || []);
-    const next = { msgs: d.msgs.map(m => Object.assign({}, m, { read: m.read || queued.has(m.id) })), replies: d.replies || [], assign: d.assign || [] };
+    const next = { msgs: d.msgs.map(m => Object.assign({}, m, { read: m.read || queued.has(m.id) })), replies: d.replies || [], assign: d.assign || [], tests: d.tests || [] };
     const changed = JSON.stringify(next) !== JSON.stringify(s.inbox || null);
     s.inbox = next;
     return changed;
@@ -1178,6 +1194,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (ui.view === "topic" && ui.topic) renderTopic();
     else if (ui.view === "ztopic") { const h = Z.topicHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
     else if (ui.view === "fix") { const h = FX.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
+    else if (ui.view === "ctl") app.innerHTML = EX.pageHtml();
     else if (ui.view === "plus") { const h = PL.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
     else if (ui.view === "nmt") { const h = NM.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; document.body.classList.toggle("exam", NM.inExam()); }
     else renderHome();
@@ -1194,7 +1211,7 @@ body.has-fab main { padding-bottom: 110px; }
       <button class="tab" role="tab" aria-selected="${home === "nmt"}" data-home="nmt">Симуляція НМТ</button>
       <button class="tab" role="tab" aria-selected="${home === "fix"}" data-home="fix">Мої помилки${nfix ? ` <span class="tab-badge" aria-label="відкритих помилок: ${nfix}">${nfix}</span>` : ""}</button></div>`;
     if (home === "fix") { app.innerHTML = h + FX.homeHtml() + "</main>"; return; }
-    h += assignHtml();
+    h += assignHtml() + EX.homeHtml();
     if (home === "zno") { app.innerHTML = h + Z.homeHtml() + reportSection() + "</main>"; return; }
     if (home === "nmt") { app.innerHTML = h + NM.homeHtml() + reportSection() + "</main>"; return; }
     h += PL.todayHtml();
@@ -1431,6 +1448,7 @@ body.has-fab main { padding-bottom: 110px; }
     const d = b.dataset;
     if (d.home) { store.home = d.home; saveLocal(); render(); return; }
     if (d.theory) { openTheory(d.theory); return; }
+    if (EX.onClick(b)) return;
     if (TH.onClick(b)) return;
     if (PL.onClick(b)) return;
     if (FX.onClick(b)) return;

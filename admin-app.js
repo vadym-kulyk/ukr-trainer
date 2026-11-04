@@ -204,7 +204,7 @@
   function table(id, cols, rows, opt) {
     opt = opt || {};
     const so = ui.sorts[id] || opt.sort || null;
-    if (so) { const c = cols.find(x => x.k === so.k); if (c) rows = rows.slice().sort((a, b) => { const x = c.v(a), y = c.v(b); const r = x == null ? 1 : y == null ? -1 : typeof x === "string" ? x.localeCompare(y, "uk") : x - y; return so.d * r; }); }
+    if (so) { const c = cols.find(x => x.k === so.k); if (c) rows = rows.slice().sort((a, b) => { const x = c.v(a), y = c.v(b); if (x == null || y == null) return (x == null) - (y == null); /* порожні — завжди внизу */ return so.d * (typeof x === "string" ? x.localeCompare(y, "uk") : x - y); }); }
     let h = `<div class="tbl-wrap"><table class="t" data-tbl="${id}"><thead><tr>${cols.map(c => `<th ${c.v ? `data-sort="${c.k}"` : ""} class="${so && so.k === c.k ? (so.d > 0 ? "asc" : "desc") : ""} ${c.num ? "num" : ""}">${c.t}</th>`).join("")}</tr></thead><tbody>`;
     if (!rows.length) h += `<tr><td colspan="${cols.length}" class="empty">${opt.empty || "Немає даних."}</td></tr>`;
     rows.slice(0, opt.limit || 1000).forEach((r, i) => { h += `<tr ${opt.link ? `class="click" data-href="${esc(opt.link(r))}"` : ""}>${cols.map(c => `<td class="${c.num ? "num" : ""} ${c.wrap ? "wrapcell" : ""}">${c.h ? c.h(r, i) : esc(c.v(r))}</td>`).join("")}</tr>`; });
@@ -296,10 +296,10 @@
 
   /* ───── Маршрути й шапка ───── */
   const route = () => (location.hash.slice(1) || "overview").split("/").map(decodeURIComponent);
-  const NAV = [["overview", "Огляд"], ["students", "Учні"], ["topics", "Теми"], ["tasks", "Завдання"], ["classes", "Класи"], ["messages", "Повідомлення"], ["assign", "Призначення"], ["settings", "Налаштування"]];
+  const NAV = [["overview", "Огляд"], ["live", "Урок наживо"], ["students", "Учні"], ["topics", "Теми"], ["tasks", "Завдання"], ["rules", "Правила"], ["classes", "Класи"], ["tests", "Контрольні"], ["messages", "Повідомлення"], ["assign", "Призначення"], ["settings", "Налаштування"]];
   function shell(body) {
     const r = route()[0], unread = D ? D.replies.filter(x => !x.seen).length : 0;
-    const cur = { student: "students", topic: "topics" }[r] || r;
+    const cur = { student: "students", topic: "topics", test: "tests" }[r] || r;
     return `<header class="top"><div class="wrap"><div class="top-row"><img class="logo" src="img/logo-wordmark.png" alt="Midgard"><h1>Адмін-панель</h1><span class="spacer"></span>
       <button class="btn sm" data-act="refresh" title="Оновити дані" ${loading ? "disabled" : ""}>↻<span class="small"> ${loading ? "Оновлюю…" : "Оновити"}</span></button></div>
       <nav class="nav" aria-label="Розділи">${NAV.map(([k, l]) => `<a href="#${k}" class="${cur === k ? "on" : ""}">${l}${k === "messages" && unread ? `<span class="badge">${unread}</span>` : ""}</a>`).join("")}</nav>
@@ -311,7 +311,8 @@
     if (!session) { root.innerHTML = loginHtml(); const pw = $("#pw"); if (pw) pw.focus(); return; }
     if (!D) { root.innerHTML = shell(loading ? '<div class="loading">Завантажую статистику…</div>' : `<div class="card"><p class="err">${esc(loadErr || "Немає даних.")}</p><div><button class="btn primary" data-act="refresh">Спробувати ще раз</button></div></div>`); return; }
     const [r, a1] = route();
-    const V = { overview, students, student: () => studentPage(a1), topics, topic: () => topicPage(a1), tasks, classes: classesPage, messages, assign, settings }[r] || overview;
+    const V = { overview, students, student: () => studentPage(a1), topics, topic: () => topicPage(a1), tasks, classes: classesPage, messages, assign, settings,
+      live: AP.routes.live, tests: AP.routes.tests, test: () => AP.routes.test(a1), rules: AP.routes.rules }[r] || overview;
     const y = window.scrollY;
     root.innerHTML = shell(V());
     if (render.keepScroll) window.scrollTo(0, y);
@@ -334,7 +335,8 @@
       ${(() => { const l = S.filter(x => x.fo); if (!l.length) return ""; const fs = l.reduce((a, x) => a + x.fo.focus, 0) / l.length, ds = S.filter(distracted).length; return kpi(pctTxt(fs), "середня зосередженість", ds ? `<a href="#students">часто відволікаються: ${ds}</a>` : "часу на сторінці під час завдань"); })()}
       ${kpi(D.replies.filter(x => !x.seen).length, "нових відповідей учнів", `<a href="#messages">відкрити</a>`)}
     </div>
-    <div class="card"><h3>Активність за 30 днів</h3>${chartDays(days, 30, { label: "Відповіді учнів по днях" })}<div class="legend"><span><i style="background:color-mix(in srgb, var(--violet) 55%, transparent)"></i>відповіді в тренажері й ЗНО</span></div></div>`;
+    <div class="card"><h3>Активність за 30 днів</h3>${chartDays(days, 30, { label: "Відповіді учнів по днях" })}<div class="legend"><span><i style="background:color-mix(in srgb, var(--violet) 55%, transparent)"></i>відповіді в тренажері й ЗНО</span></div></div>
+    ${AP.dynamicsCard(S, "Цей тиждень порівняно з минулим")}${AP.suggestionsHtml(3)}${AP.topRulesHtml(5)}`;
     const ts = topicStats(S).filter(x => x.a >= 20).sort((a, b) => a.acc - b.acc).slice(0, 6);
     const need = S.filter(s => s.seen < D.now - 7 * DAY).sort((a, b) => a.seen - b.seen);
     const weak = S.filter(s => s.tr.a >= 30 && s.tr.acc < .6).sort((a, b) => a.tr.acc - b.tr.acc);
@@ -420,6 +422,7 @@
       { k: "d", t: "Коли", v: r => (s.nmt[r.id] || {}).at || 0, h: r => s.nmt[r.id] ? fmtDate(s.nmt[r.id].at) : "—" }], NI ? NI.tests : []);
     if (ui.stuTab === "e") h += studentMistakes(s);
     h += `</div>`;
+    h += AP.studentCards(s);
     const myAsg = D.assign.filter(a => addressed(a.code, s));
     if (myAsg.length) h += `<div class="card"><h3>Призначення</h3>${table("stu-a-" + s.key, [
       { k: "t", t: "Назва", v: r => r.title }, { k: "d", t: "Термін", v: r => r.due || 0, h: r => r.due ? `<span class="${r.due < D.now && itemsProgress(s, r.items) < 1 ? "err" : ""}">${fmtDate(r.due)}</span>` : "—" },
@@ -594,7 +597,8 @@
   }
   function classesPage() {
     if (!classes().length) return '<div class="card"><p class="empty">Учнів ще немає.</p></div>';
-    return `<div class="stack"><div class="card"><div class="row"><h3>Порівняння класів</h3><span class="spacer"></span><button class="btn sm" data-act="csv-classes">⬇ CSV</button></div>${classTable()}<p class="hint">Натисніть клас, щоб відфільтрувати всю панель за ним.</p></div></div>`;
+    return `<div class="stack"><div class="card"><div class="row"><h3>Порівняння класів</h3><span class="spacer"></span><button class="btn sm" data-act="csv-classes">⬇ CSV</button></div>${classTable()}<p class="hint">Натисніть клас, щоб відфільтрувати всю панель за ним.</p></div>
+      ${classes().map(c => AP.dynamicsCard(all().filter(s => s.cls === c), "Динаміка: " + c)).join("")}</div>`;
   }
 
   /* ───── Повідомлення ───── */
@@ -633,7 +637,7 @@
     return { rec, avg: ps.length ? ps.reduce((x, y) => x + y, 0) / ps.length : 0, done: ps.filter(p => p >= 1).length };
   }
   function assign() {
-    let h = `<div class="stack">`;
+    let h = `<div class="stack">` + (asg.open ? "" : AP.suggestionsHtml());
     if (!asg.open) h += `<div><button class="btn primary" data-act="asg-new">+ Нове призначення</button></div>`;
     else {
       const iq = asg.iq.toLowerCase(), match = t => !iq || t.toLowerCase().includes(iq);
@@ -658,7 +662,7 @@
       h += `<div class="card"><div class="row"><h3>${esc(a.title)}</h3>${a.due ? `<span class="tag ${overdue ? "red" : ""}">до ${fmtDate(a.due)}${overdue ? " · прострочено" : ""}</span>` : ""}<span class="tag">${esc(a.toLabel)}</span><span class="spacer"></span>
         <button class="btn sm" data-asgedit="${esc(a.id)}">Змінити</button><button class="btn sm danger" data-asgdel="${esc(a.id)}">Видалити</button></div>
         ${a.note ? `<div class="hint">${esc(a.note)}</div>` : ""}<div class="chips">${a.items.map(c => `<span class="tag violet">${esc(itemTitle(c))}</span>`).join("")}</div>
-        <div class="kpis">${kpi(pctTxt(st.avg), "середнє виконання")}${kpi(st.done + " з " + st.rec.length, "виконали повністю")}</div>
+        <div class="kpis">${kpi(pctTxt(st.avg), "середнє виконання")}${kpi(st.done + " з " + st.rec.length, "виконали повністю")}${AP.assignEffect(a, st.rec)}</div>
         <details class="more"><summary>Прогрес учнів</summary>${table("asg-" + a.id, [{ k: "n", t: "Учень", v: r => r.name, h: r => nameLink(r) }, { k: "c", t: "Клас", v: r => r.cls },
           { k: "p", t: "Разом", v: r => itemsProgress(r, a.items), h: r => cellBar(itemsProgress(r, a.items)) }].concat(a.items.map((c, j) => ({ k: "i" + j, t: esc(itemTitle(c).replace(/^[^:]+: /, "")).slice(0, 26), v: r => itemProgress(r, c), h: r => pctTxt(itemProgress(r, c)) }))), st.rec, { sort: { k: "p", d: 1 }, empty: "Немає адресатів." })}</details></div>`;
     });
@@ -706,6 +710,7 @@
   root.addEventListener("submit", e => { if (e.target.id === "login") { e.preventDefault(); doLogin($("#pw").value); } });
   root.addEventListener("input", e => {
     const el = e.target, id = el.id;
+    if (AP.onInput(el)) return;
     if (id === "sq") { ui.q = el.value; rerenderKeepFocus("sq"); return; }
     if (id === "mtitle") compose.title = el.value;
     if (id === "mtext") compose.text = el.value;
@@ -713,7 +718,7 @@
     if (id === "anote") asg.note = el.value;
     if (id === "adue") asg.due = el.value;
     if (id === "aiq") { asg.iq = el.value; rerenderKeepFocus("aiq"); return; }
-    if (el.dataset.rq) { (el.dataset.rq === "m" ? compose : asg).q = el.value; rerenderKeepFocus(null, el.dataset.rq); }
+    if (el.dataset.rq) { formOf(el.dataset.rq).q = el.value; rerenderKeepFocus(null, el.dataset.rq); }
   });
   function rerenderKeepFocus(id, rq) {
     render.keepScroll = true; render();
@@ -723,12 +728,14 @@
   root.addEventListener("change", e => {
     const el = e.target;
     if (el.id === "clsf") { ui.cls = el.value; derive(); render(); return; }
+    if (AP.onChange(el)) return;
     if (el.id === "mimp") { compose.imp = el.checked; return; }
     if (el.id === "tktopic") { ui.taskTopic = el.value; render.keepScroll = true; render(); return; }
     if (el.id === "tkmin") { ui.taskMin = Number(el.value); render.keepScroll = true; render(); return; }
-    if (el.dataset.rkey) { const [p, k] = splitOnce(el.dataset.rkey); const st = p === "m" ? compose : asg; if (el.checked) st.keys.add(k); else st.keys.delete(k); render.keepScroll = true; render(); return; }
+    if (el.dataset.rkey) { const [p, k] = splitOnce(el.dataset.rkey); const st = formOf(p); if (el.checked) st.keys.add(k); else st.keys.delete(k); render.keepScroll = true; render(); return; }
     if (el.dataset.aitem) { if (el.checked) asg.items.add(el.dataset.aitem); else asg.items.delete(el.dataset.aitem); render.keepScroll = true; render(); }
   });
+  const formOf = p => p === "m" ? compose : p === "k" ? AP.ctl : asg;
   const splitOnce = s => { const i = s.indexOf("|"); return [s.slice(0, i), s.slice(i + 1)]; };
   root.addEventListener("toggle", e => { if (e.target.tagName === "DETAILS" && e.target.open) { /* ЗНО-тексти довантажуються під час рендеру */ } }, true);
   root.addEventListener("click", async e => {
@@ -738,6 +745,7 @@
     if (th) { const id = th.closest("table").dataset.tbl, k = th.dataset.sort, cur = ui.sorts[id]; ui.sorts[id] = { k, d: cur && cur.k === k ? -cur.d : 1 }; render.keepScroll = true; render(); return; }
     const b = e.target.closest("button, a[data-pickcls]"); if (!b) return;
     const d = b.dataset;
+    if (await AP.onClick(b)) return;
     if (d.pickcls) { ui.cls = d.pickcls; derive(); return; }
     if (d.act === "refresh") { refresh(); return; }
     if (d.act === "logout") { logout(); return; }
@@ -747,10 +755,10 @@
     if (d.tsrc) { ui.topicSrc = d.tsrc; render(); return; }
     if (d.tksrc) { ui.taskSrc = d.tksrc; ui.taskTopic = ""; render(); return; }
     if (d.heat) { const [t, i] = splitOnce(d.heat); ui.sel = { topic: t, i: Number(i) }; render.keepScroll = true; render(); return; }
-    if (d.rtype) { const [p, k] = splitOnce(d.rtype); (p === "m" ? compose : asg).type = k; render.keepScroll = true; render(); return; }
-    if (d.rcls) { const [p, c] = splitOnce(d.rcls); const st = p === "m" ? compose : asg; if (st.classes.has(c)) st.classes.delete(c); else st.classes.add(c); render.keepScroll = true; render(); return; }
-    if (d.rall) { const st = d.rall === "m" ? compose : asg, q = st.q.toLowerCase(); D.students.filter(s => !q || (s.name + " " + s.cls).toLowerCase().includes(q)).forEach(s => st.keys.add(s.key)); render.keepScroll = true; render(); return; }
-    if (d.rnone) { (d.rnone === "m" ? compose : asg).keys.clear(); render.keepScroll = true; render(); return; }
+    if (d.rtype) { const [p, k] = splitOnce(d.rtype); formOf(p).type = k; render.keepScroll = true; render(); return; }
+    if (d.rcls) { const [p, c] = splitOnce(d.rcls); const st = formOf(p); if (st.classes.has(c)) st.classes.delete(c); else st.classes.add(c); render.keepScroll = true; render(); return; }
+    if (d.rall) { const st = formOf(d.rall), q = st.q.toLowerCase(); D.students.filter(s => !q || (s.name + " " + s.cls).toLowerCase().includes(q)).forEach(s => st.keys.add(s.key)); render.keepScroll = true; render(); return; }
+    if (d.rnone) { formOf(d.rnone).keys.clear(); render.keepScroll = true; render(); return; }
     if (d.msgto) { compose.type = "keys"; compose.keys = new Set([d.msgto]); compose.q = ""; location.hash = "messages"; setTimeout(() => { const t = $("#mtext"); if (t) t.focus(); }, 50); return; }
     if (d.act === "send") {
       const pl = toPayload(compose);
@@ -799,6 +807,12 @@
     render.keepScroll = true; render();
   }
   window.addEventListener("hashchange", () => { ui.sel = null; render(); window.scrollTo(0, 0); });
+
+  /* Додаткові розділи (admin-plus.js). */
+  const AP = window.MGAdminPlus({
+    esc, T, SECS, E, N, DAY, D: () => D, S: () => S, all, ui, asg, route, render, rerenderKeepFocus, csv, addressed, trainerTaskStats, trainerTasks, trainerTaskHtml,
+    topicTitle, recipientsHtml, toPayload, api, toast, refreshQuiet, dayKey, fmtDate, fmtDT, pctTxt, kpi, cellBar, table, nameLink, ago
+  });
 
   if (session) boot(); else render();
 })();

@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 11;
+const SERVICE_VERSION = 12;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -702,7 +702,10 @@ function doPost(e) {
   try { d = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false, error: 'server', detail: 'bad json' }); }
   // Читання статистики й вхід адміністратора нічого не записують у спільні аркуші,
   // тож не стоять у черзі за збереженнями учнів.
-  if (d.action === 'admin_data' || d.action === 'admin_login') {
+  if (d.action === 'parent') {
+    try { return out_(parentReport_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
+  }
+  if (d.action === 'admin_data' || d.action === 'admin_login' || d.action === 'admin_live') {
     try { return out_(admin_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
   }
   const lock = LockService.getScriptLock();
@@ -714,9 +717,11 @@ function doPost(e) {
       if (res.ok) Object.assign(res, studentExtras_(res.key, res.cls));
       return out_(res);
     }
-    if (d.action === 'load' || d.action === 'save' || d.action === 'reply') {
+    if (d.action === 'load' || d.action === 'save' || d.action === 'reply' || d.action === 'test_start' || d.action === 'test_submit') {
       const p = auth_(d);
       if (!p) return out_({ ok: false, error: 'auth' });
+      if (d.action === 'test_start') return out_(Object.assign(testStart_(d, p), studentExtras_(p.key, p.cls)));
+      if (d.action === 'test_submit') return out_(Object.assign(testSubmit_(d, p), studentExtras_(p.key, p.cls)));
       if (d.action === 'reply') return out_(Object.assign(studentReply_(d, p), studentExtras_(p.key, p.cls)));
       if (Array.isArray(d.read) && d.read.length) markRead_(p.key, d.read);
       if (d.action === 'load') {
@@ -844,7 +849,11 @@ function extrasData_() {
     .map(r => [String(r[0]), iso_(r[1]), String(r[2]), String(r[4] || ''), String(r[5] || '')]).slice(-5000);
   const a = rows_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), ASSIGN_HEADER.length).filter(r => r[0])
     .map(r => [String(r[0]), iso_(r[1]), String(r[2] || ''), String(r[4] || ''), String(r[5] || ''), iso_(r[6]), String(r[7] || '')]);
-  const o = { m, r: rp, a };
+  const c = rows_(simpleSheet_(TEST_SHEET, TEST_HEADER), TEST_HEADER.length).filter(r => r[0])
+    .map(r => [String(r[0]), iso_(r[1]), String(r[2] || ''), String(r[4] || ''), String(r[5] || '[]'), Number(r[6]) || 0, r[7] ? 1 : 0, iso_(r[8]), String(r[9] || '')]);
+  const cr = rows_(simpleSheet_(TRES_SHEET, TRES_HEADER), TRES_HEADER.length).filter(r => r[0])
+    .map(r => [String(r[0]), String(r[1]), iso_(r[3]), iso_(r[4]), Number(r[5]) || 0, Number(r[6]) || 0, Number(r[8]) || 0, String(r[11] || '').replace(/^'/, ''), String(r[12] || '')]);
+  const o = { m, r: rp, a, c, cr };
   o.h = hash_(JSON.stringify(o)).replace(/[^A-Za-z0-9]/g, '').slice(0, 12);
   cachePutBig_(EX_KEY, JSON.stringify(o), EX_TTL);
   return o;
@@ -862,7 +871,13 @@ function studentExtras_(key, cls, exv) {
   const replies = x.r.filter(r => r[2] === key).map(r => ({ id: r[0], at: r[1], msg: r[3], text: r[4] })).slice(-100);
   const assign = x.a.filter(r => addressed_(r[3], key, cls))
     .map(r => ({ id: r[0], at: r[1], title: r[2], items: r[4].split(',').filter(Boolean), due: r[5], note: r[6] }));
-  return { msgs, replies, assign, exv: x.h };
+  const mine = {}; (x.cr || []).forEach(r => { if (r[1] === key) mine[r[0]] = r; });
+  const tests = (x.c || []).filter(r => addressed_(r[3], key, cls)).map(r => {
+    const res = mine[r[0]], show = !!r[6] && res && res[3];
+    return { id: r[0], at: r[1], title: r[2], items: JSON.parse(r[4] || '[]'), min: r[5], show: !!r[6], due: r[7], note: r[8],
+      res: res ? { started: res[2], done: res[3], score: res[4], max: res[5], grade: res[6], okStr: show ? res[7] : '', late: res[8] === 'так' } : null };
+  });
+  return { msgs, replies, assign, tests, exv: x.h };
 }
 
 function markRead_(key, ids) {
@@ -909,6 +924,11 @@ function admin_(d) {
   if (!adminOk_(d)) return { ok: false, error: 'admin_auth' };
   switch (d.action) {
     case 'admin_data': return adminData_();
+    case 'admin_live': return adminLive_();
+    case 'admin_test_save': return adminTestSave_(d);
+    case 'admin_test_delete': return deleteById_(simpleSheet_(TEST_SHEET, TEST_HEADER), d.id);
+    case 'admin_test_reset': return adminTestReset_(d);
+    case 'admin_parent_link': return adminParentLink_(d);
     case 'admin_msg_send': return adminMsgSend_(d);
     case 'admin_msg_delete': return deleteById_(simpleSheet_(MSG_SHEET, MSG_HEADER), d.id);
     case 'admin_reply_read': return adminReplyRead_(d);
@@ -978,6 +998,8 @@ function adminDeleteStudent_(d) {
   const key = String(d.key || '');
   if (!key) return { ok: false, error: 'not_found' };
   [profileSheet_(), sheet_(), znoSheet_(), nmtSheet_(), plusSheet_()].forEach(sh => { const r = findRow_(sh, key); if (r > 0) sh.deleteRow(r); });
+  const ts = simpleSheet_(TRES_SHEET, TRES_HEADER), tr = rows_(ts, 2);
+  for (let i = tr.length - 1; i >= 0; i--) if (String(tr[i][1]) === key) ts.deleteRow(i + 2);
   return { ok: true };
 }
 
@@ -1039,7 +1061,8 @@ function adminData_() {
   const assign = rows_(simpleSheet_(ASSIGN_SHEET, ASSIGN_HEADER), ASSIGN_HEADER.length).filter(r => r[0]).map(r => ({
     id: String(r[0]), at: iso_(r[1]), title: String(r[2]), toLabel: String(r[3]), code: String(r[4]), items: String(r[5]).split(',').filter(Boolean), due: iso_(r[6]), note: String(r[7]) }));
 
-  return { ok: true, v: SERVICE_VERSION, now: Date.now(), tz, partial, logRows: agg.row - 1, students: Object.keys(students).map(k => students[k]), days, wrong, msgs, replies, assign,
+  const tr = testsForAdmin_();
+  return { ok: true, v: SERVICE_VERSION, now: Date.now(), tz, partial, logRows: agg.row - 1, tests: tr.tests, tresults: tr.results, students: Object.keys(students).map(k => students[k]), days, wrong, msgs, replies, assign,
     meta: { topics: TOPICS, zno: ZNO_TOPICS, nmt: NMT_TESTS, znoUnique: ZNO_UNIQUE, perTopic: TASKS_PER_TOPIC },
     sheetUrl: SpreadsheetApp.getActiveSpreadsheet().getUrl() };
 }
@@ -1229,4 +1252,151 @@ function plusSummary_(p) {
   if (p.wu) out.wu = { n: Object.keys(p.wu.box || {}).length, done: p.wu.done || {} };
   ['days', 'goal', 'diag', 'badges'].forEach(k => { if (p[k] !== undefined) out[k] = p[k]; });
   return out;
+}
+
+
+/* ═════════════════════════ Контрольні роботи ═════════════════════════
+   Учитель збирає набір завдань тренажера (тема + номер завдання), задає час і чи показувати відповіді після здачі.
+   Одна спроба: рядок результату створюється під час початку й заповнюється під час здачі. */
+const TEST_SHEET = 'Контрольні';
+const TEST_HEADER = ['ID', 'Час', 'Назва', 'Кому', 'Отримувачі (код)', 'Завдання (JSON)', 'Хвилин', 'Показувати відповіді', 'Термін', 'Примітка'];
+const TRES_SHEET = 'Результати контрольних';
+const TRES_HEADER = ['ID контрольної', 'Ключ', 'Учень', 'Почато', 'Здано', 'Балів', 'З', '%', 'Оцінка (12)', 'Виходів зі сторінки', 'Поза сторінкою, с', 'Правильність (1/0)', 'Запізнення', 'Відповіді (JSON)'];
+
+function adminTestSave_(d) {
+  const code = recipients_(d.to), title = txt_(d.title, 120).trim();
+  const items = (Array.isArray(d.items) ? d.items : []).filter(x => Array.isArray(x) && /^[a-z_0-9]+$/.test(String(x[0])) && Number(x[1]) >= 0 && Number(x[1]) < TASKS_PER_TOPIC)
+    .slice(0, 100).map(x => [String(x[0]), Number(x[1])]);
+  if (!code) return { ok: false, error: 'no_recipients' };
+  if (!items.length) return { ok: false, error: 'no_items' };
+  const min = Math.max(1, Math.min(240, Number(d.min) || 30));
+  const due = Number(d.due) ? new Date(Number(d.due)) : '';
+  const row = [d.id || newId_('k'), new Date(), title || 'Контрольна робота', txt_(d.toLabel, 200), code, JSON.stringify(items), min, d.show ? 'так' : '', due, txt_(d.note, 1000)];
+  const sh = simpleSheet_(TEST_SHEET, TEST_HEADER);
+  if (d.id) {
+    const rows = rows_(sh, 1);
+    for (let i = 0; i < rows.length; i++) if (String(rows[i][0]) === String(d.id)) { sh.getRange(i + 2, 1, 1, row.length).setValues([row]); return { ok: true, id: d.id }; }
+  }
+  sh.appendRow(row);
+  return { ok: true, id: row[0] };
+}
+
+function testRow_(id) {
+  const rows = rows_(simpleSheet_(TEST_SHEET, TEST_HEADER), TEST_HEADER.length);
+  for (let i = 0; i < rows.length; i++) if (String(rows[i][0]) === String(id)) return rows[i];
+  return null;
+}
+function resRowNum_(sh, id, key) {
+  const rows = rows_(sh, 2);
+  for (let i = 0; i < rows.length; i++) if (String(rows[i][0]) === String(id) && String(rows[i][1]) === key) return i + 2;
+  return -1;
+}
+
+function testStart_(d, p) {
+  const t = testRow_(d.id);
+  if (!t || !addressed_(t[4], p.key, p.cls)) return { ok: false, error: 'not_found' };
+  const sh = simpleSheet_(TRES_SHEET, TRES_HEADER), row = resRowNum_(sh, d.id, p.key);
+  if (row > 0) { const v = sh.getRange(row, 4, 1, 2).getValues()[0]; return { ok: true, started: iso_(v[0]), done: !!v[1] }; }
+  if (iso_(t[8]) && iso_(t[8]) < Date.now()) return { ok: false, error: 'closed' };
+  const now = new Date();
+  sh.appendRow([String(d.id), p.key, p.name + ' (' + p.cls + ')', now, '', '', '', '', '', '', '', '', '', '']);
+  extrasDrop_();
+  return { ok: true, started: now.getTime(), done: false };
+}
+
+function testSubmit_(d, p) {
+  const t = testRow_(d.id); if (!t) return { ok: false, error: 'not_found' };
+  const sh = simpleSheet_(TRES_SHEET, TRES_HEADER);
+  let row = resRowNum_(sh, d.id, p.key);
+  if (row < 0) { testStart_(d, p); row = resRowNum_(sh, d.id, p.key); }
+  const v = sh.getRange(row, 4, 1, 2).getValues()[0];
+  if (v[1]) return { ok: false, error: 'done' };
+  const n = JSON.parse(String(t[5] || '[]')).length;
+  const okStr = String(d.ok || '').replace(/[^01]/g, '').slice(0, n).padEnd(n, '0');
+  const score = okStr.split('').filter(x => x === '1').length, pct = n ? score / n : 0;
+  const grade = Math.max(1, Math.round(pct * 12));
+  const started = iso_(v[0]) || Date.now(), late = Date.now() - started > (Number(t[6]) + 2) * 60000;
+  sh.getRange(row, 5, 1, 10).setValues([[new Date(), score, n, Math.round(pct * 100), grade, num_(d.ex), num_(d.away), "'" + okStr, late ? 'так' : '', txt_(JSON.stringify(d.ans || []), 20000)]]);
+  extrasDrop_();
+  return { ok: true, score, max: n, grade, late };
+}
+
+function adminTestReset_(d) {
+  const sh = simpleSheet_(TRES_SHEET, TRES_HEADER), row = resRowNum_(sh, d.id, String(d.key || ''));
+  if (row > 0) sh.deleteRow(row);
+  return { ok: true };
+}
+
+function testsForAdmin_() {
+  const tests = rows_(simpleSheet_(TEST_SHEET, TEST_HEADER), TEST_HEADER.length).filter(r => r[0]).map(r => ({
+    id: String(r[0]), at: iso_(r[1]), title: String(r[2]), toLabel: String(r[3]), code: String(r[4]), items: JSON.parse(String(r[5] || '[]')),
+    min: Number(r[6]) || 0, show: !!r[7], due: iso_(r[8]), note: String(r[9] || '') }));
+  const results = rows_(simpleSheet_(TRES_SHEET, TRES_HEADER), TRES_HEADER.length).filter(r => r[0]).map(r => ({
+    id: String(r[0]), key: String(r[1]), name: String(r[2]), started: iso_(r[3]), done: iso_(r[4]), score: Number(r[5]) || 0, max: Number(r[6]) || 0,
+    grade: Number(r[8]) || 0, ex: Number(r[9]) || 0, away: Number(r[10]) || 0, okStr: String(r[11] || '').replace(/^'/, ''), late: String(r[12]) === 'так' }));
+  return { tests, results };
+}
+
+/* ═════════════════════════ Урок наживо ═════════════════════════
+   Останні 20 хвилин журналу «Спроби»: хто зараз відповідає, яка тема, останні відповіді, виходи зі сторінки. */
+function adminLive_() {
+  const ls = logSheet_(), last = ls.getLastRow(), since = Date.now() - 20 * 60000;
+  const byName = {};
+  rows_(profileSheet_(), 3).forEach(r => { if (r[0]) byName[r[1] + ' (' + r[2] + ')'] = { key: String(r[0]), cls: String(r[2]) }; });
+  const out = {};
+  if (last >= 2) {
+    const n = Math.min(800, last - 1), from = last - n + 1;
+    const main = ls.getRange(from, 1, n, 7).getValues(), foc = ls.getMaxColumns() >= 13 ? ls.getRange(from, 11, n, 3).getValues() : [];
+    main.forEach((r, i) => {
+      const t = iso_(r[0]); if (t < since) return;
+      const name = String(r[1]), p = byName[name] || {};
+      const o = out[name] || (out[name] = { name, key: p.key || '', cls: p.cls || '', first: t, last: 0, topic: '', type: '', seq: [], n: 0, ok: 0, ex: 0, away: 0 });
+      const ok = String(r[6]).indexOf('✓') >= 0;
+      o.n++; if (ok) o.ok++;
+      if (t >= o.last) { o.last = t; o.topic = String(r[2]); o.type = String(r[5]); }
+      o.first = Math.min(o.first, t);
+      o.seq.push(ok ? 1 : 0); if (o.seq.length > 12) o.seq.shift();
+      const f = foc[i]; if (f) { o.ex += Number(f[1]) || 0; o.away += Number(f[2]) || 0; }
+    });
+  }
+  const running = [];
+  const tr = testsForAdmin_();
+  tr.results.forEach(r => { if (r.started && !r.done && Date.now() - r.started < 4 * 3600000) running.push(r); });
+  return { ok: true, now: Date.now(), list: Object.keys(out).map(k => out[k]), running, tests: tr.tests.map(t => ({ id: t.id, title: t.title, min: t.min, n: t.items.length })) };
+}
+
+/* ═════════════════════════ Звіт для батьків ═════════════════════════
+   Посилання parent.html?r=<підпис> (без імені учня). Підпис можна змінити в адмін-панелі — старе посилання перестане працювати. */
+function parentToken_(key) {
+  const n = PropertiesService.getScriptProperties().getProperty('PRN_' + key) || '0';
+  return hash_(secret_() + '|parent|' + key + '|' + n).replace(/[^A-Za-z0-9]/g, '').slice(0, 24);
+}
+function adminParentLink_(d) {
+  const key = String(d.key || ''); if (findRow_(profileSheet_(), key) < 0) return { ok: false, error: 'not_found' };
+  if (d.renew) { const pr = PropertiesService.getScriptProperties(), n = Number(pr.getProperty('PRN_' + key) || 0) + 1; pr.setProperty('PRN_' + key, String(n)); }
+  return { ok: true, key, t: parentToken_(key) };
+}
+function parentReport_(d) {
+  // У посиланні лише підпис (без імені учня): шукаємо, кому він належить.
+  const t = String(d.t || '').replace(/[^A-Za-z0-9]/g, '');
+  if (t.length < 8) return { ok: false, error: 'link' };
+  const ps = profileSheet_();
+  const keys = rows_(ps, 1).map(r => String(r[0])).filter(Boolean);
+  const key = keys.find(k => parentToken_(k) === t);
+  if (!key) return { ok: false, error: 'link' };
+  const prow = findRow_(ps, key);
+  const pv = ps.getRange(prow, 1, 1, PROFILE_HEADER.length).getValues()[0];
+  const name = String(pv[1]), cls = String(pv[2]), display = name + ' (' + cls + ')';
+  const sh = sheet_(), stored = readStored_(sh, findRow_(sh, key));
+  const topics = TOPICS.map(([id, title]) => { const r = cleanR_(stored[id]) || ''; let a = 0, c = 0; for (const ch of r) { if (ch !== '.') a++; if (ch === '1') c++; } return { id, title, a, c }; });
+  const zno = znoOut_(key);
+  let za = 0, zc = 0; Object.keys(zno).forEach(id => String(zno[id]).split(';').forEach(x => { const m = x.match(/^\d+:([01])$/); if (m) { za++; if (m[1] === '1') zc++; } }));
+  const nmt = readNmt_(key), plus = plusSummary_(readPlus_(key));
+  let best = 0, tests = 0; Object.keys(nmt || {}).forEach(id => { tests++; best = Math.max(best, Number(nmt[id].bs) || 0); });
+  const { agg } = logAgg_(), x = agg.st[display] || null;
+  const act = x ? { last: x.last, n: x.n, ok: x.ok, mins: Math.round(x.mins), days: x.days, dn: x.dn } : null;
+  const ex = extrasData_();
+  const assign = ex.a.filter(r => addressed_(r[3], key, cls)).map(r => ({ title: r[2], items: r[4].split(',').filter(Boolean), due: r[5] }));
+  const tr = testsForAdmin_(), myTests = tr.results.filter(r => r.key === key && r.done).map(r => { const t = tr.tests.find(z => z.id === r.id); return { title: t ? t.title : 'Контрольна', done: r.done, score: r.score, max: r.max, grade: r.grade }; });
+  return { ok: true, now: Date.now(), name, cls, topics, zno: { a: za, c: zc }, nmt: { tests, best }, fix: stored._fixSum || null, plus, act, assign, tests: myTests };
 }
