@@ -39,18 +39,36 @@
     return (topic.items && topic.kind !== "variants" ? topic.items : []).map(x => {
       const g = groups[x[0]];
       const fills = x[4] !== undefined && x[4] !== "" ? x[4].split("|") : (g.fills || g.cats);
-      return { g: x[0], grp: g, w: x[1], c: x[2], n: x[3] || "", f: fills };
+      const it = { g: x[0], grp: g, w: x[1], c: x[2], n: x[3] || "", f: fills };
+      return g && g.sep ? Object.assign(it, sepForms(x[1], x[2])) : it;
     }).filter(it => it.grp);
   }
+  /* Відокремлені члени речення: зворот у {фігурних дужках} разом із правильними розділовими знаками.
+     c = 0 — відокремлюємо (знаки в дужках), c = 1 — не відокремлюємо. Будуємо обидва записи речення:
+     ff[0] — з відокремленням, ff[1] — без нього; h — речення без цих знаків із виділеним зворотом. */
+  function sepForms(w, c) {
+    const m = w.match(/^(.*?)\{(.*?)\}(.*)$/);
+    if (!m) return {};
+    const b = m[1], inner = m[2], a = m[3];
+    const core = inner.replace(/^\s*[,—–]\s*/, "").replace(/\s*[,—–]\s*$/, "");
+    const s1 = b && !/\s$/.test(b) ? " " : "", s2 = a && !/^[\s.,!?…:;)]/.test(a) ? " " : "";
+    const plain = b + s1 + core + s2 + a;
+    let sep = b + inner + a;
+    if (c !== 0) {
+      const end = /^\s*(\([^)]*\))?\s*[.!?…]*\s*$/.test(a) || /^\s*[,;:—–]/.test(a);
+      sep = (b.trim() ? b.replace(/\s+$/, "") + ", " : "") + core + (end ? a : "," + (/^\s/.test(a) ? a : " " + a));
+    }
+    return { w: plain, h: esc(b) + s1 + '<span class="hl">' + esc(core) + "</span>" + s2 + esc(a), ff: [sep, plain], f: ["", ""] };
+  }
   const markStress = s => esc(s).replace(/([а-яґєії])([АЕЄИІЇОУЮЯ])/g, (m, a, v) => a + '<span class="st">' + v.toLowerCase() + "</span>");
-  const gapHtml = it => it.grp.cls ? (it.grp.stress ? markStress(it.w) : esc(it.w)) : esc(it.w).replace("_", '<span class="gap">…</span>');
+  const gapHtml = it => it.h ? it.h : it.grp.cls ? (it.grp.stress ? markStress(it.w) : esc(it.w)) : esc(it.w).replace("_", '<span class="gap">…</span>');
   /* Прибираємо подвійні пробіли, що лишаються, коли на місці пропуску нічого не вставляємо (тема «Тире»). */
-  const full = (it, k) => it.w.replace("_", it.f[k]).replace(/ {2,}/g, " ");
+  const full = (it, k) => it.ff ? it.ff[k] : it.w.replace("_", it.f[k]).replace(/ {2,}/g, " ");
   const fullHtml = (it, k) => esc(full(it, k));
   const labelOf = (it, k) => it.grp.cats[k];
   function explain(it) {
     const right = it.grp.cls ? it.w + " — " + it.grp.cats[it.c] : full(it, it.c);
-    return "<b>" + esc(right) + "</b>" + (it.n ? " — " + esc(dot(it.n)) : "") + " " + esc(it.grp.rule);
+    return "<b>" + esc(right) + "</b>" + (it.n ? " — " + esc(dot(it.n)) : it.grp.cls && !/[.!?…]$/.test(right) ? "." : "") + " " + esc(it.grp.rule);
   }
   /* Перелік правильних прикладів у поясненні. Речення (grp.lines) вже мають власні крапки. */
   function listNote(list, grp) {

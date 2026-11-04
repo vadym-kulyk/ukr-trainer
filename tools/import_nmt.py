@@ -115,6 +115,10 @@ def topics_for(task):
     # Завдання про вживання тире, де є випадок «між підметом і присудком», — ще й тема тренажера.
     if "тире" in plain(task["q"]) and "підмет" in body and "t:dash_sp" not in found:
         found.append("t:dash_sp")
+    # Відокремлені члени речення — ще й теми тренажера.
+    for z, t in (("z:z3d89e0", "t:sep_attr"), ("z:zeff0df", "t:sep_adv"), ("z:z72d05b", "t:sep_obj")):
+        if z in found and t not in found:
+            found.append(t)
     return found
 
 

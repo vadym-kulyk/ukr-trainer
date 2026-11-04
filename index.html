@@ -257,6 +257,8 @@ main { padding-block: 22px 60px; }
 .task-head .kind { color: var(--violet-ink); font-weight: 700; }
 .task-q { font-family: var(--f-text); font-size: 18px; font-weight: 700; letter-spacing: 0; line-height: 1.35; }
 .big { font-family: var(--f-display); font-size: clamp(20px, 5.6vw, 28px); font-weight: 700; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 14px; text-align: center; overflow-wrap: anywhere; line-height: 1.3; }
+/* Довгі речення (пунктуація): звичайний шрифт, вирівнювання ліворуч. */
+.big.long { font-family: var(--f-text); font-size: 18px; font-weight: 600; text-align: left; line-height: 1.5; }
 .gap { display: inline-block; min-width: 1.6em; border-bottom: 3px solid var(--lime); color: var(--violet-ink); text-align: center; line-height: 1; }
 .opts { display: grid; gap: 8px; }
 .opts.two { grid-template-columns: 1fr 1fr; }
@@ -683,7 +685,7 @@ body.has-fab main { padding-bottom: 110px; }
       </div>
     </div>
     <h1>Українська мова: <em>тренажер, ЗНО і НМТ</em></h1>
-    <p class="sub">Тренажер: 33 теми з теорією і 100 завданнями в кожній. Банк завдань ЗНО з поясненнями. Симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
+    <p class="sub">Тренажер: 36 тем з теорією і 100 завданнями в кожній. Банк завдань ЗНО з поясненнями. Симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
     <div class="namebox" id="profilebox"></div>
     <div class="overall" id="overall"></div>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
@@ -710,15 +712,15 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=18"></script>
-<script src="data-extra.js?v=18"></script>
-<script src="engine.js?v=18"></script>
-<script src="zno-app.js?v=18"></script>
-<script src="nmt-app.js?v=18"></script>
-<script src="fix-app.js?v=18"></script>
-<script src="theory-app.js?v=18"></script>
-<script src="plus-app.js?v=18"></script>
-<script src="exam-app.js?v=18"></script>
+<script src="data.js?v=19"></script>
+<script src="data-extra.js?v=19"></script>
+<script src="engine.js?v=19"></script>
+<script src="zno-app.js?v=19"></script>
+<script src="nmt-app.js?v=19"></script>
+<script src="fix-app.js?v=19"></script>
+<script src="theory-app.js?v=19"></script>
+<script src="plus-app.js?v=19"></script>
+<script src="exam-app.js?v=19"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -727,7 +729,7 @@ body.has-fab main { padding-bottom: 110px; }
   const LS = "mg-ukr-trainer-v1";
   const EMPTY = ".".repeat(N);
   const TYPE = { one: "Оберіть одну відповідь", multi: "Кілька правильних відповідей", sort: "Розподіл за групами", match: "Встановіть відповідність", order: "Розташуйте в правильному порядку" };
-  const IMG = { phonetics: "img/phonetics.jpg", ortho: "img/ortho.jpg", lexic: "img/lexic.jpg", foreign: "img/foreign.jpg", phraseo: "img/phraseo.jpg", compound: "img/compound.jpg", antonym: "img/antonym.jpg", error: "img/error.jpg", assim: "img/assim.jpg", alter: "img/alter.jpg", nn: "img/nn.jpg", dash: "img/dash.jpg", ne: "img/ne.jpg" };
+  const IMG = { phonetics: "img/phonetics.jpg", ortho: "img/ortho.jpg", lexic: "img/lexic.jpg", foreign: "img/foreign.jpg", phraseo: "img/phraseo.jpg", compound: "img/compound.jpg", antonym: "img/antonym.jpg", error: "img/error.jpg", assim: "img/assim.jpg", alter: "img/alter.jpg", nn: "img/nn.jpg", dash: "img/dash.jpg", ne: "img/ne.jpg", sep: "img/sep.jpg" };
   const ALT = { phonetics: "Мікрофон на тлі звукових хвиль", ortho: "Зошит, ручка й маркер на столі", lexic: "Відкритий словник і лупа", foreign: "Книжки, глобус і паспорт", phraseo: "Керамічний кіт біля мішка на вишитому рушнику", compound: "Кубики, з яких складено місток", antonym: "Чорні й білі шахові фігури одна навпроти одної", error: "Червоний і зелений олівці на аркуші з текстом", assim: "Дві скляні кульки, що торкаються, кольори яких змішуються", alter: "Зелені, фіолетова й жовта шестерні", nn: "Дві зелені нитки й одна фіолетова на п’яльцях", dash: "Зелена планка, перекинута між фіолетовим і білим камінцями", ne: "Зелені й фіолетовий кубики: два впритул, два з проміжком" };
   const TASKS = {};
 
@@ -768,7 +770,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "18", THEORY = {}, theoryLoading = {};
+  const VER = "19", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1294,7 +1296,7 @@ body.has-fab main { padding-bottom: 110px; }
     const i = task.n, done = st.r[i] !== ".", resp = done ? st.ch[i] : undefined;
     if (!pend || pend.i !== i || pend.topic !== t.id) { pend = newPend(task, t.id); if (!done) pend.f = focusMark(); }
     let h = `<article class="task" aria-live="polite"><div class="task-head"><span class="mono">Завдання ${i + 1} / 100</span><span class="kind">${TYPE[task.t]}</span></div>
-      <h3 class="task-q">${task.q}</h3>${task.big ? `<div class="big">${task.big}</div>` : ""}`;
+      <h3 class="task-q">${task.q}</h3>${task.big ? `<div class="big${plain(task.big).length > 60 ? " long" : ""}">${task.big}</div>` : ""}`;
     h += bodyHtml(task, done, resp);
     if (done) {
       const ok = st.r[i] === "1";
