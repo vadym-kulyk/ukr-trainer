@@ -367,6 +367,40 @@ main { padding-block: 22px 60px; }
 .mnemo .say u { text-decoration-color: var(--lime); text-decoration-thickness: 3px; text-underline-offset: 4px; }
 .exc { background: color-mix(in srgb, var(--yellow) 16%, var(--surface)); border-left: 6px solid var(--yellow); border-radius: var(--r-sm); padding: 12px 14px; display: grid; gap: 6px; }
 .exc > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.mmap { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 14px; display: grid; gap: 12px; }
+.mm-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.mm-head > b { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--lime-ink); }
+.mm-head > b::before { content: "🧠 "; }
+.mm { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px 22px; align-items: center; }
+.mm-core { grid-column: 2; grid-row: 1; justify-self: center; background: var(--lime); color: #1e1b26; border-radius: 999px; padding: 16px 18px; max-width: 210px; text-align: center; font: 800 16px/1.25 var(--f-display); overflow-wrap: anywhere; hyphens: auto; box-shadow: 0 0 0 6px color-mix(in srgb, var(--lime) 22%, transparent); }
+.mm-l, .mm-r { grid-row: 1; display: grid; gap: 10px; min-width: 0; }
+.mm-l { grid-column: 1; } .mm-r { grid-column: 3; }
+.mm-b { position: relative; border: 2px solid var(--c); border-radius: 14px; padding: 8px 12px; background: color-mix(in srgb, var(--c) 10%, var(--surface)); min-width: 0; overflow-wrap: anywhere; }
+.mm-b > b { display: block; font-family: var(--f-display); font-size: 15px; }
+.mm-b ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 2px; }
+.tbody .mm-b li { font-size: 15px; line-height: 1.35; }
+.mm-l .mm-b::after, .mm-r .mm-b::before { content: ""; position: absolute; top: 50%; width: 20px; border-top: 2px solid var(--c); }
+.mm-l .mm-b::after { right: -22px; } .mm-r .mm-b::before { left: -22px; }
+.mm-tip { margin: 0; font-size: 14px !important; color: var(--muted); }
+.mmap.quiz-on .mm-b:not(.show) ul { filter: blur(6px); user-select: none; }
+.mmap.quiz-on .mm-b { cursor: pointer; }
+.mmap.quiz-on .mm-b:not(.show) > b::after { content: " · торкніться"; font: 600 12px var(--f-text); color: var(--muted); }
+@media (max-width: 700px) {
+  .mm { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .mm-core { grid-column: 1; grid-row: auto; max-width: none; width: 100%; border-radius: 16px; }
+  .mm-l, .mm-r { grid-column: 1; grid-row: auto; margin-left: 12px; padding-left: 16px; border-left: 2px solid var(--line); }
+  .mm-l .mm-b::after { right: auto; left: -18px; width: 16px; }
+  .mm-r .mm-b::before { left: -18px; width: 16px; }
+}
+.fscheme { border: 2px solid var(--yellow); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 10px; background: color-mix(in srgb, var(--yellow) 8%, var(--surface)); }
+.fscheme > b { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; }
+.fscheme > b::before { content: "🧩 "; }
+.frow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.frow + .frow { border-top: 1px dashed var(--line); padding-top: 10px; }
+.frow .fx { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 4px 10px; font-weight: 700; overflow-wrap: anywhere; min-width: 0; }
+.frow .fx.res { background: var(--lime); border-color: var(--lime); color: #1e1b26; }
+.frow i { font: 800 18px var(--f-display); font-style: normal; color: var(--violet-ink); }
+.frow em { flex-basis: 100%; font-style: italic; color: var(--violet-ink); padding-left: 2px; }
 .trap { background: var(--wrong-bg); border-left: 6px solid var(--wrong); border-radius: var(--r-sm); padding: 12px 14px; display: grid; gap: 8px; }
 .trap > b:first-child { font-family: var(--f-display); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--wrong); }
 .pairs { display: grid; gap: 6px; }
@@ -647,12 +681,12 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=15"></script>
-<script src="data-extra.js?v=15"></script>
-<script src="engine.js?v=15"></script>
-<script src="zno-app.js?v=15"></script>
-<script src="nmt-app.js?v=15"></script>
-<script src="fix-app.js?v=15"></script>
+<script src="data.js?v=16"></script>
+<script src="data-extra.js?v=16"></script>
+<script src="engine.js?v=16"></script>
+<script src="zno-app.js?v=16"></script>
+<script src="nmt-app.js?v=16"></script>
+<script src="fix-app.js?v=16"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -702,7 +736,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "15", THEORY = {}, theoryLoading = {};
+  const VER = "16", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1311,6 +1345,17 @@ body.has-fab main { padding-bottom: 110px; }
   }
 
   /* ───── Події ───── */
+  // Ментальна карта в теорії (і в темі, і у вікні теорії): режим самоперевірки — приклади сховано, гілку відкриваємо дотиком.
+  document.addEventListener("click", e => {
+    const q = e.target.closest("[data-mmq]");
+    if (q) {
+      const m = q.closest(".mmap"), on = !m.classList.contains("quiz-on");
+      m.classList.toggle("quiz-on", on); m.querySelectorAll(".mm-b").forEach(x => x.classList.remove("show"));
+      q.textContent = on ? "Показати все" : "Перевір себе"; return;
+    }
+    const br = e.target.closest(".mmap.quiz-on .mm-b");
+    if (br) br.classList.toggle("show");
+  });
   app.addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     const d = b.dataset;
