@@ -119,41 +119,135 @@
       return `<div class="card"><div class="row"><h3>Найпроблемніші правила</h3><span class="spacer"></span><a href="#rules">Усі →</a></div><div class="list">${rows.map(r => `<div class="item"><div class="meta"><b>${esc(r.t.title)}</b><span class="tag red">${h.pctTxt(r.e)} помилок</span><span>${Math.round(r.a)} відп.</span></div><div class="text">${esc(r.rule)}${r.cat ? " → «" + esc(r.cat) + "»" : ""}</div></div>`).join("")}</div></div>`;
     }
 
-    /* ── Урок наживо ── */
+    /* ── Урок наживо: таблиця «учні × завдання» ── */
+    const LV = { min: 20, grp: "", sort: "att", open: null, proj: false };
+    const SIDE = ["тренування теорії", "щоденна розминка", "діагностика", "моніторингова робота", "робота над помилками", "НМТ: симуляція"];
     async function pollLive() {
       if (liveBusy) return; liveBusy = true;
-      const d = await h.api({ action: "admin_live" }); liveBusy = false;
-      if (d && d.ok) { live = d; if (h.route()[0] === "live") { h.render.keepScroll = true; h.render(); } }
+      const d = await h.api({ action: "admin_live", min: LV.min }); liveBusy = false;
+      if (d && d.ok) { live = d; if (h.route()[0] === "live") liveRender(); }
+    }
+    /* Перемальовуємо, не скидаючи прокрутку таблиці й відкритого завдання. */
+    function liveRender() {
+      const w = document.querySelector(".lg-wrap"), m = document.querySelector(".lmodal-box");
+      const sx = w ? w.scrollLeft : 0, sy = m ? m.scrollTop : 0;
+      h.render.keepScroll = true; h.render();
+      const w2 = document.querySelector(".lg-wrap"), m2 = document.querySelector(".lmodal-box");
+      if (w2) w2.scrollLeft = sx; if (m2) m2.scrollTop = sy;
     }
     function liveStart() { if (!liveTimer) { pollLive(); liveTimer = setInterval(() => { if (h.route()[0] !== "live") { clearInterval(liveTimer); liveTimer = null; return; } if (!document.hidden) pollLive(); }, 20000); } }
-    function livePage() {
-      liveStart();
-      if (!live) return '<div class="loading">Завантажую, хто зараз працює…</div>';
-      const now = live.now, cls = h.ui.cls;
-      const rows = live.list.filter(x => !cls || x.cls === cls).map(x => {
+    document.addEventListener("keydown", e => {
+      if (!LV.open || h.route()[0] !== "live") return;
+      if (e.key === "Escape") { LV.open = null; liveRender(); }
+      else if ((e.key === "ArrowRight" || e.key === "ArrowLeft") && !/INPUT|SELECT|TEXTAREA/.test((e.target.tagName || ""))) liveStep(e.key === "ArrowRight" ? 1 : -1);
+    });
+
+    /* Групи = тема (+ окремий вид роботи: тренування теорії, розминка…). У кожній — стовпці-завдання й клітинки учнів. */
+    function liveModel() {
+      const now = live.now, cls = h.ui.cls, G = {};
+      const students = live.list.filter(x => !cls || x.cls === cls).map(x => {
         let tailWrong = 0; for (let i = x.seq.length - 1; i >= 0 && !x.seq[i]; i--) tailWrong++;
         const idle = now - x.last, status = idle < 2 * 60000 ? "on" : idle < 8 * 60000 ? "idle" : "off";
         const flags = [];
-        if (tailWrong >= 3) flags.push(["red", "застряг: " + tailWrong + " помилки поспіль"]);
-        if (x.ex >= 3) flags.push(["red", "виходи зі сторінки: " + x.ex]);
-        if (x.n >= 6 && x.ok / x.n < 0.4) flags.push(["red", "низька точність"]);
-        if (status === "idle") flags.push(["", "пауза " + Math.round(idle / 60000) + " хв"]);
-        return Object.assign({}, x, { status, flags, tailWrong, score: flags.filter(f => f[0] === "red").length * 10 + (status === "on" ? 1 : 0) });
-      }).sort((a, b) => b.score - a.score || b.last - a.last);
-      const running = live.running.filter(r => { const s = D().students.find(z => z.key === r.key); return !cls || (s && s.cls === cls); });
-      let h2 = `<div class="stack"><div class="card"><div class="row"><h3>🔴 Урок наживо</h3><span class="spacer"></span><span class="hint">оновлено ${h.fmtDT(now)} · кожні 20 с</span><button class="btn sm" data-act="live-now">↻</button></div>
-        <p class="hint">Учні, які відповідали за останні 20 хвилин. Угорі — ті, кому, ймовірно, потрібна допомога: кілька помилок поспіль, виходи зі сторінки, низька точність.</p>
-        <div class="kpis">${h.kpi(rows.filter(r => r.status === "on").length, "зараз працюють", "останні 2 хв")}${h.kpi(rows.length, "за 20 хвилин")}${h.kpi(rows.filter(r => r.flags.some(f => f[0] === "red")).length, "потребують уваги")}${h.kpi(running.length, "пишуть моніторингову роботу")}</div></div>`;
-      if (running.length) h2 += `<div class="card"><h3>📝 Пишуть моніторингову роботу</h3><div class="chips">${running.map(r => { const t = live.tests.find(z => z.id === r.id); const left = t ? Math.round((r.started + t.min * 60000 - now) / 60000) : null; return `<span class="tag ${left != null && left < 0 ? "red" : "violet"}">${esc(r.name)} · ${esc(t ? t.title : "")} · ${left == null ? "" : left >= 0 ? "залишилось " + left + " хв" : "час вийшов"}</span>`; }).join("")}</div></div>`;
-      h2 += rows.length ? `<div class="live-grid">${rows.map(r => `<div class="live ${r.status}"><div class="row"><span class="ldot" aria-hidden="true"></span><b>${r.key ? `<a href="#student/${encodeURIComponent(r.key)}">${esc(r.name)}</a>` : esc(r.name)}</b><span class="spacer"></span><span class="hint">${(now - r.last) < 60000 ? "щойно" : Math.round((now - r.last) / 60000) + " хв тому"}</span></div>
-          <div class="small">${esc(r.topic)}${r.type ? ` <span class="muted">· ${esc(r.type)}</span>` : ""}</div>
-          <div class="seq" aria-label="Останні відповіді">${r.seq.map(v => `<i class="${v ? "ok" : "no"}">${v ? "✓" : "✗"}</i>`).join("")}</div>
-          <div class="small">${r.ok}/${r.n} правильно · ${r.ex ? "виходів: " + r.ex : "без виходів"}</div>
-          ${r.flags.length ? `<div class="chips">${r.flags.map(f => `<span class="tag ${f[0]}">${esc(f[1])}</span>`).join("")}</div>` : ""}
-          ${r.key ? `<div><button class="btn sm" data-msgto="${esc(r.key)}">✉ Написати</button></div>` : ""}</div>`).join("")}</div>` : '<div class="card"><p class="empty">За останні 20 хвилин ніхто не відповідав.</p></div>';
-      return h2 + "</div>";
+        if (tailWrong >= 3) flags.push("застряг: " + tailWrong + " помилки поспіль");
+        if (x.ex >= 3) flags.push("виходи зі сторінки: " + x.ex);
+        if (x.n >= 6 && x.ok / x.n < 0.4) flags.push("низька точність");
+        return Object.assign({}, x, { status, flags, idle });
+      });
+      students.forEach(x => (x.ev || []).slice().sort((p, q) => p[0] - q[0]).forEach(([t, ti, n, yi, ok, ans]) => {
+        const title = live.tp[ti] || "", type = live.ty[yi] || "", side = SIDE.includes(type);
+        const gk = title + (side ? " · " + type : "");
+        const g = G[gk] || (G[gk] = { key: gk, title, side: side ? type : "", cols: {}, rows: {}, last: 0, recent: new Set() });
+        g.last = Math.max(g.last, t); if (now - t < 5 * 60000) g.recent.add(x.name);
+        if (!n) return;
+        const c = g.cols[n] || (g.cols[n] = { n, ti, yi, ok: 0, no: 0 });
+        const r = g.rows[x.name] || (g.rows[x.name] = { s: x, cells: {}, ok: 0, a: 0, last: 0 });
+        const prev = r.cells[n];
+        if (prev) { if (prev.ok) c.ok--; else c.no--; r.a--; if (prev.ok) r.ok--; }
+        r.cells[n] = { ok, ans, t, tries: prev ? prev.tries + 1 : 1, first: prev ? prev.first : ok };
+        if (ok) c.ok++; else c.no++; r.a++; if (ok) r.ok++; r.last = Math.max(r.last, t);
+      }));
+      const groups = Object.values(G).filter(g => Object.keys(g.cols).length).sort((a, b) => b.recent.size - a.recent.size || Object.keys(b.rows).length - Object.keys(a.rows).length || b.last - a.last);
+      return { students, groups };
     }
-
+    /* Як відкрити завдання: тренажер — з рушія, ЗНО — з файлу теми, решта — текст із журналу. */
+    function liveTask(g, n) {
+      const c = g.cols[n], q = live.qs[c.ti + "|" + c.yi + "|" + n] || ["", ""];
+      const id = (live.tid || [])[c.ti] || "";
+      if (!g.side && id.startsWith("t:")) { const task = h.trainerTasks(id.slice(2))[n - 1]; if (task) return h.trainerTaskHtml(task); }
+      if (!g.side && id.startsWith("z:")) { const d = h.znoData(id.slice(2)); if (!d) return '<p class="hint">Завантажую завдання…</p>'; if (d.tasks[n - 1]) return h.znoTaskHtml(d.tasks[n - 1]); }
+      return `<div class="q">${esc(q[0] || "Текст завдання не збережено")}</div>${q[1] ? `<p>Правильна відповідь: <span class="ok">${esc(q[1])}</span></p>` : ""}`;
+    }
+    function liveCurGroup() { const M = liveModel(); const g = M.groups.find(x => x.key === LV.grp) || M.groups[0]; return g ? g.key : ""; }
+    function liveStep(dir) {
+      if (!LV.open || !live) return;
+      const g = liveModel().groups.find(x => x.key === LV.open.g); if (!g) return;
+      const ns = Object.keys(g.cols).map(Number).sort((a, b) => a - b), i = ns.indexOf(LV.open.n) + dir;
+      if (i >= 0 && i < ns.length) { LV.open = { g: g.key, n: ns[i], who: "" }; LV.reveal = false; liveRender(); const m = document.querySelector(".lmodal-box"); if (m) m.scrollTop = 0; }
+    }
+    function liveModal(g) {
+      const n = LV.open.n, c = g.cols[n]; if (!c) return "";
+      const ns = Object.keys(g.cols).map(Number).sort((a, b) => a - b), i = ns.indexOf(n);
+      const rows = Object.values(g.rows), done = rows.filter(r => r.cells[n]);
+      const right = done.filter(r => r.cells[n].ok), wrong = done.filter(r => !r.cells[n].ok);
+      const byAns = {}; wrong.forEach(r => { const a = r.cells[n].ans || "без відповіді"; (byAns[a] = byAns[a] || []).push(r.s.name); });
+      const fixed = right.filter(r => r.cells[n].tries > 1 && !r.cells[n].first);
+      const who = LV.open.who && g.rows[LV.open.who];
+      const nm = s => LV.proj ? "" : esc(s);
+      return `<div class="lmodal${LV.proj ? " proj" : ""}" role="dialog" aria-modal="true" aria-label="Завдання №${n}">
+        <button class="lmodal-bg" data-lgclose="1" aria-label="Закрити"></button>
+        <div class="lmodal-box">
+          <div class="row lm-head"><b>${esc(g.title)}${g.side ? ` <span class="muted">· ${esc(g.side)}</span>` : ""} · №${n}</b><span class="spacer"></span>
+            <button class="btn sm" data-lgstep="-1" ${i > 0 ? "" : "disabled"} aria-label="Попереднє завдання">←</button>
+            <button class="btn sm" data-lgstep="1" ${i < ns.length - 1 ? "" : "disabled"} aria-label="Наступне завдання">→</button>
+            <button class="btn sm ${LV.proj ? "primary" : ""}" data-lgproj="1" title="Для показу на екрані: великий шрифт, без імен">🖥 Показ класу</button>
+            <button class="btn sm" data-lgclose="1" aria-label="Закрити">✕</button></div>
+          ${who && who.cells[n] && !LV.proj ? `<div class="lm-who ${who.cells[n].ok ? "ok" : "no"}">${esc(who.s.name)}: ${who.cells[n].ok ? "✓ правильно" : "✗ відповідь «" + esc(who.cells[n].ans || "—") + "»"}${who.cells[n].tries > 1 ? ` <span class="muted">(спроб: ${who.cells[n].tries})</span>` : ""}</div>` : ""}
+          <div class="task-view${LV.proj && !LV.reveal ? " hide-ans" : ""}">${liveTask(g, n).replace(/ ✓/g, '<span class="okm"> ✓</span>')}</div>
+          ${LV.proj ? `<div class="row"><button class="btn sm ${LV.reveal ? "" : "primary"}" data-lgreveal="1">${LV.reveal ? "Сховати відповідь" : "👁 Показати відповідь"}</button></div>` : ""}
+          <div class="lm-stat"><span class="tag green">✓ ${right.length}</span><span class="tag red">✗ ${wrong.length}</span><span class="tag">ще не відповіли: ${Math.max(0, rows.length - done.length)}</span></div>
+          ${wrong.length && (!LV.proj || LV.reveal) ? `<div><h4>Хибні відповіді</h4><div class="list">${Object.entries(byAns).sort((a, b) => b[1].length - a[1].length).map(([a, ws]) => `<div class="item"><div><b>«${esc(a)}»</b> <span class="tag red">${ws.length}</span></div>${LV.proj ? "" : `<div class="small muted">${ws.map(esc).join(", ")}</div>`}</div>`).join("")}</div></div>` : ""}
+          ${!LV.proj && right.length ? `<p class="small"><b>Правильно:</b> ${right.map(r => nm(r.s.name) + (fixed.includes(r) ? " (з другої спроби)" : "")).join(", ")}</p>` : ""}
+          ${!LV.proj && wrong.some(r => r.s.key) ? `<div class="row"><button class="btn sm" data-lgmsg="1">✉ Написати тим, хто помилився (${wrong.filter(r => r.s.key).length})</button></div>` : ""}
+          <p class="hint lm-keys">Стрілки ← → на клавіатурі гортають завдання, Esc закриває.</p>
+        </div></div>`;
+    }
+    function livePage() {
+      liveStart();
+      if (!live) return '<div class="loading">Завантажую, хто зараз працює…</div>';
+      const now = live.now, M = liveModel(), students = M.students;
+      const g = M.groups.find(x => x.key === LV.grp) || M.groups[0];
+      const running = live.running.filter(r => { const s = D().students.find(z => z.key === r.key); return !h.ui.cls || (s && s.cls === h.ui.cls); });
+      const onNow = students.filter(r => r.status === "on").length, attn = students.filter(r => r.flags.length).length;
+      let out = `<div class="stack"><div class="card"><div class="row"><h3>🔴 Урок наживо</h3><span class="spacer"></span>
+        <label class="row small"><span class="muted">за</span><select class="input" id="lvmin" style="width:auto">${[20, 45, 90].map(m => `<option value="${m}" ${LV.min === m ? "selected" : ""}>${m} хв</option>`).join("")}</select></label>
+        <span class="hint">оновлено ${h.fmtDT(now)} · кожні 20 с</span><button class="btn sm" data-act="live-now" aria-label="Оновити">↻</button></div>
+        <div class="kpis">${h.kpi(onNow + " / " + students.length, "учнів онлайн", "відповідали за 2 хв")}${h.kpi(attn, "потребують уваги")}${h.kpi(running.length, "пишуть моніторингову")}</div></div>`;
+      if (running.length) out += `<div class="card"><h3>📝 Пишуть моніторингову роботу</h3><div class="chips">${running.map(r => { const t = live.tests.find(z => z.id === r.id); const left = t ? Math.round((r.started + t.min * 60000 - now) / 60000) : null; return `<span class="tag ${left != null && left < 0 ? "red" : "violet"}">${esc(r.name)} · ${esc(t ? t.title : "")} · ${left == null ? "" : left >= 0 ? "залишилось " + left + " хв" : "час вийшов"}</span>`; }).join("")}</div></div>`;
+      if (!g) return out + `<div class="card"><p class="empty">За останні ${LV.min} хвилин ніхто не відповідав.</p></div></div>`;
+      out += `<div class="card"><div class="chips lg-groups" role="tablist">${M.groups.map(x => `<button class="${x === g ? "on" : ""}" data-lggrp="${esc(x.key)}">${esc(x.title)}${x.side ? ` · ${esc(x.side)}` : ""} <span class="lg-cnt">${Object.keys(x.rows).length}</span></button>`).join("")}</div>`;
+      const ns = Object.keys(g.cols).map(Number).sort((a, b) => a - b);
+      const rows = Object.values(g.rows).sort(LV.sort === "name" ? (a, b) => a.s.name.localeCompare(b.s.name, "uk")
+        : LV.sort === "pct" ? (a, b) => a.ok / a.a - b.ok / b.a || a.s.name.localeCompare(b.s.name, "uk")
+        : (a, b) => b.s.flags.length - a.s.flags.length || a.ok / a.a - b.ok / b.a);
+      const short = nm => h.ui.cls ? nm.replace(/ \([^)]*\)$/, "") : nm;
+      const pc = r => Math.round(r.ok / r.a * 100), band = p => p >= 75 ? "hi" : p >= 50 ? "mid" : "lo";
+      out += `<div class="row lg-tools"><div class="seg">${[["att", "Увага"], ["name", "Ім’я"], ["pct", "Результат"]].map(([k, l]) => `<button class="${LV.sort === k ? "on" : ""}" data-lgsort="${k}">${l}</button>`).join("")}</div>
+        <span class="hint">Натисніть номер завдання, щоб відкрити його й пояснити класу; клітинку — щоб побачити відповідь учня.</span></div>
+        <div class="lg-wrap"><table class="lg"><thead><tr><th class="lg-nm" scope="col">Учень</th><th class="lg-pc" scope="col">%</th>
+        ${ns.map(n => { const c = g.cols[n], all = c.ok + c.no; return `<th scope="col"><button class="lg-h" data-lgopen="${n}" title="Відкрити завдання №${n}"><span>${n}</span><span class="lg-hs ${c.no > c.ok ? "no" : ""}">${c.ok}/${all}</span></button></th>`; }).join("")}</tr></thead><tbody>
+        ${rows.map(r => { const p = pc(r); return `<tr><th class="lg-nm" scope="row"><span class="ldot ${r.s.status}" aria-hidden="true"></span>${r.s.key ? `<a href="#student/${encodeURIComponent(r.s.key)}" title="${esc(r.s.name)}">${esc(short(r.s.name))}</a>` : esc(short(r.s.name))}${r.s.flags.length ? ` <span class="lg-flag" title="${esc(r.s.flags.join("; "))}">⚠</span>` : ""}</th>
+          <td class="lg-pc ${band(p)}">${p}%</td>
+          ${ns.map(n => { const c = r.cells[n]; return c ? `<td class="${c.ok ? "c1" : "c0"}"><button data-lgcell="${n}" data-lgwho="${esc(r.s.name)}" aria-label="${esc(r.s.name)}, завдання ${n}: ${c.ok ? "правильно" : "помилка"}">${c.ok ? "✓" : "✗"}${c.tries > 1 ? `<sup>${c.tries}</sup>` : ""}</button></td>` : `<td class="ce"></td>`; }).join("")}</tr>`; }).join("")}
+        </tbody></table></div>`;
+      const elsewhere = students.filter(s => !g.rows[s.name]);
+      if (elsewhere.length) out += `<p class="small muted">Працюють над іншим: ${elsewhere.map(s => `${esc(s.name)} — ${esc(s.topic)}`).join("; ")}</p>`;
+      const flagged = students.filter(s => s.flags.length);
+      if (flagged.length) out += `<div class="chips">${flagged.map(s => `<span class="tag red">${esc(s.name)}: ${esc(s.flags.join(", "))}</span>`).join("")}</div>`;
+      out += `</div>`;
+      if (LV.open && LV.open.g === g.key) out += liveModal(g);
+      return out + "</div>";
+    }
     /* ── Моніторингові роботи ── */
     const resultsOf = id => (D().tresults || []).filter(r => r.id === id);
     function testsPage() {
@@ -244,6 +338,19 @@
     async function onClick(b) {
       const d = b.dataset;
       if (d.act === "live-now") { pollLive(); return true; }
+      if (d.lggrp !== undefined) { LV.grp = d.lggrp; LV.open = null; liveRender(); return true; }
+      if (d.lgsort) { LV.sort = d.lgsort; liveRender(); return true; }
+      if (d.lgopen) { LV.reveal = false; LV.open = { g: liveCurGroup(), n: +d.lgopen, who: "" }; liveRender(); return true; }
+      if (d.lgcell) { LV.open = { g: liveCurGroup(), n: +d.lgcell, who: d.lgwho || "" }; liveRender(); return true; }
+      if (d.lgclose) { LV.open = null; liveRender(); return true; }
+      if (d.lgstep) { liveStep(+d.lgstep); return true; }
+      if (d.lgproj) { LV.proj = !LV.proj; LV.reveal = false; liveRender(); return true; }
+      if (d.lgreveal) { LV.reveal = !LV.reveal; liveRender(); return true; }
+      if (d.lgmsg) {
+        const g = liveModel().groups.find(x => x.key === (LV.open && LV.open.g)); if (!g) return true;
+        const keys = Object.values(g.rows).filter(r => r.cells[LV.open.n] && !r.cells[LV.open.n].ok && r.s.key).map(r => r.s.key);
+        const n = LV.open.n; LV.open = null; h.msgTo(keys, "Завдання №" + n + " — " + g.title, "Подивись ще раз завдання №" + n + " у темі «" + g.title + "». "); return true;
+      }
       if (d.sgi !== undefined) {
         const x = suggestions()[+d.sgi]; if (!x) return true;
         const due = new Date(D().now + 7 * DAY);
@@ -301,6 +408,7 @@
       if (el.id === "kper") { ctl.per = +el.value; h.render.keepScroll = true; h.render(); return true; }
       if (el.id === "kdue") { ctl.due = el.value; return true; }
       if (el.id === "kshow") { ctl.show = el.checked; return true; }
+      if (el.id === "lvmin") { LV.min = +el.value; live = null; h.render.keepScroll = true; h.render(); pollLive(); return true; }
       if (el.id === "rltopic") { h.ui.ruleTopic = el.value; h.render.keepScroll = true; h.render(); return true; }
       if (el.id === "rlmin") { h.ui.ruleMin = +el.value; h.render.keepScroll = true; h.render(); return true; }
       return false;

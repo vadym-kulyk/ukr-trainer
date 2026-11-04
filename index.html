@@ -710,15 +710,15 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=17"></script>
-<script src="data-extra.js?v=17"></script>
-<script src="engine.js?v=17"></script>
-<script src="zno-app.js?v=17"></script>
-<script src="nmt-app.js?v=17"></script>
-<script src="fix-app.js?v=17"></script>
-<script src="theory-app.js?v=17"></script>
-<script src="plus-app.js?v=17"></script>
-<script src="exam-app.js?v=17"></script>
+<script src="data.js?v=18"></script>
+<script src="data-extra.js?v=18"></script>
+<script src="engine.js?v=18"></script>
+<script src="zno-app.js?v=18"></script>
+<script src="nmt-app.js?v=18"></script>
+<script src="fix-app.js?v=18"></script>
+<script src="theory-app.js?v=18"></script>
+<script src="plus-app.js?v=18"></script>
+<script src="exam-app.js?v=18"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -768,7 +768,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "17", THEORY = {}, theoryLoading = {};
+  const VER = "18", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))

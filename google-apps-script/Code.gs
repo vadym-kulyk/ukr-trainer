@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 12;
+const SERVICE_VERSION = 13;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -927,7 +927,7 @@ function admin_(d) {
   if (!adminOk_(d)) return { ok: false, error: 'admin_auth' };
   switch (d.action) {
     case 'admin_data': return adminData_();
-    case 'admin_live': return adminLive_();
+    case 'admin_live': return adminLive_(d);
     case 'admin_test_save': return adminTestSave_(d);
     case 'admin_test_delete': return deleteById_(simpleSheet_(TEST_SHEET, TEST_HEADER), d.id);
     case 'admin_test_reset': return adminTestReset_(d);
@@ -1342,30 +1342,42 @@ function testsForAdmin_() {
 
 /* ═════════════════════════ Урок наживо ═════════════════════════
    Останні 20 хвилин журналу «Спроби»: хто зараз відповідає, яка тема, останні відповіді, виходи зі сторінки. */
-function adminLive_() {
-  const ls = logSheet_(), last = ls.getLastRow(), since = Date.now() - 20 * 60000;
+/** «Урок наживо»: хто відповідав за останні min хвилин (20–120) і які саме завдання.
+    ev — відповіді учня [час, № теми в tp, № завдання, № типу в ty, 1/0, відповідь учня];
+    qs — текст завдання й правильна відповідь для кожного «тема|тип|№». */
+function adminLive_(d) {
+  const mins = Math.max(10, Math.min(120, Number(d && d.min) || 20));
+  const ls = logSheet_(), last = ls.getLastRow(), since = Date.now() - mins * 60000;
   const byName = {};
   rows_(profileSheet_(), 3).forEach(r => { if (r[0]) byName[r[1] + ' (' + r[2] + ')'] = { key: String(r[0]), cls: String(r[2]) }; });
-  const out = {};
+  const out = {}, tp = [], ty = [], tpi = {}, tyi = {}, qs = {};
+  const idx = (arr, map, v) => (map[v] != null ? map[v] : (map[v] = arr.push(v) - 1));
+  const ids = {};
+  TOPICS.forEach(([id, title]) => { ids[title] = 't:' + id; });
+  ZNO_TOPICS.forEach(([id, title]) => { ids['ЗНО ' + title] = 'z:' + id; });
   if (last >= 2) {
-    const n = Math.min(800, last - 1), from = last - n + 1;
-    const main = ls.getRange(from, 1, n, 7).getValues(), foc = ls.getMaxColumns() >= 13 ? ls.getRange(from, 11, n, 3).getValues() : [];
-    main.forEach((r, i) => {
+    const n = Math.min(mins > 20 ? 4000 : 1500, last - 1), from = last - n + 1, wide = ls.getMaxColumns() >= 13;
+    const vals = ls.getRange(from, 1, n, wide ? 13 : 10).getValues();
+    vals.forEach(r => {
       const t = iso_(r[0]); if (t < since) return;
       const name = String(r[1]), p = byName[name] || {};
-      const o = out[name] || (out[name] = { name, key: p.key || '', cls: p.cls || '', first: t, last: 0, topic: '', type: '', seq: [], n: 0, ok: 0, ex: 0, away: 0 });
-      const ok = String(r[6]).indexOf('✓') >= 0;
+      const o = out[name] || (out[name] = { name, key: p.key || '', cls: p.cls || '', first: t, last: 0, topic: '', type: '', seq: [], n: 0, ok: 0, ex: 0, away: 0, ev: [] });
+      const ok = String(r[6]).indexOf('✓') >= 0 || String(r[6]) === 'поріг подолано';
       o.n++; if (ok) o.ok++;
       if (t >= o.last) { o.last = t; o.topic = String(r[2]); o.type = String(r[5]); }
       o.first = Math.min(o.first, t);
       o.seq.push(ok ? 1 : 0); if (o.seq.length > 12) o.seq.shift();
-      const f = foc[i]; if (f) { o.ex += Number(f[1]) || 0; o.away += Number(f[2]) || 0; }
+      if (wide) { o.ex += Number(r[11]) || 0; o.away += Number(r[12]) || 0; }
+      const a = idx(tp, tpi, String(r[2])), b = idx(ty, tyi, String(r[5])), num = Number(r[4]) || 0;
+      if (o.ev.length < 400) o.ev.push([t, a, num, b, ok ? 1 : 0, String(r[8]).slice(0, 160)]);
+      const qk = a + '|' + b + '|' + num;
+      if (!qs[qk]) qs[qk] = [String(r[7]).slice(0, 400), String(r[9]).slice(0, 200)];
     });
   }
   const running = [];
   const tr = testsForAdmin_();
   tr.results.forEach(r => { if (r.started && !r.done && Date.now() - r.started < 4 * 3600000) running.push(r); });
-  return { ok: true, now: Date.now(), list: Object.keys(out).map(k => out[k]), running, tests: tr.tests.map(t => ({ id: t.id, title: t.title, min: t.min, n: t.items.length })) };
+  return { ok: true, now: Date.now(), min: mins, list: Object.keys(out).map(k => out[k]), tp, tid: tp.map(x => ids[x] || ''), ty, qs, running, tests: tr.tests.map(t => ({ id: t.id, title: t.title, min: t.min, n: t.items.length })) };
 }
 
 /* ═════════════════════════ Звіт для батьків ═════════════════════════

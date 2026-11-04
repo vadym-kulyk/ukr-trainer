@@ -810,7 +810,8 @@
 
   /* Додаткові розділи (admin-plus.js). */
   const AP = window.MGAdminPlus({
-    esc, T, SECS, E, N, DAY, D: () => D, S: () => S, all, ui, asg, route, render, rerenderKeepFocus, csv, addressed, trainerTaskStats, trainerTasks, trainerTaskHtml,
+    esc, T, SECS, E, N, DAY, D: () => D, S: () => S, all, ui, asg, route, render, rerenderKeepFocus, csv, addressed, trainerTaskStats, trainerTasks, trainerTaskHtml, znoTopics, znoData, znoTaskHtml, plain,
+    msgTo: (keys, title, text) => { Object.assign(compose, { type: "keys", keys: new Set(keys), q: "", title: title || "", text: text || "" }); location.hash = "messages"; setTimeout(() => { const t = $("#mtext"); if (t) t.focus(); }, 50); },
     topicTitle, recipientsHtml, toPayload, api, toast, refreshQuiet, dayKey, fmtDate, fmtDT, pctTxt, kpi, cellBar, table, nameLink, ago
   });
 
