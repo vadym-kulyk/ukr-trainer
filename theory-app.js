@@ -66,11 +66,13 @@
       if (resAll.length >= 2) rows.forEach(x => add("formula", oneTask(r, "Формула правила", "Завершіть формулу правила:", x.res, resAll, x.ex ? "Приклад: <i>" + esc(x.ex) + "</i>." : "", esc(x.left.replace(/\[|\]/g, "")) + " …")));
 
       // 3. Алгоритм: порядок кроків.
-      const steps = [...root.querySelectorAll(".algo li")].map(li => txt(li.querySelector("b"))).filter(s => s && s.length <= 80);
-      if (steps.length >= 3) {
+      // Кожен алгоритм сторінки — окреме завдання (у темі може бути кілька алгоритмів).
+      [...root.querySelectorAll(".algo")].slice(0, 3).forEach(ol => {
+        const steps = [...ol.querySelectorAll("li")].map(li => txt(li.querySelector("b"))).filter(s => s && s.length <= 80);
+        if (steps.length < 3) return;
         const items = steps.slice(0, 5);
         add("algo", { t: "order", src: "Алгоритм", q: "Розташуйте кроки алгоритму в правильному порядку.", items, note: items.map((s, i) => (i + 1) + ") " + esc(s)).join(" "), key: hash("algo|" + items.join("|")) });
-      }
+      });
 
       // 4. «Перевір себе»: чому так пишемо.
       const qz = [...root.querySelectorAll(".quiz details")].map(d => {
