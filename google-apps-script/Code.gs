@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 10;
+const SERVICE_VERSION = 11;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -29,7 +29,9 @@ const MAX_FAILS = 8;
 const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми №', 'Завдання №', 'Тип завдання', 'Результат', 'Запитання', 'Відповідь учня', 'Правильна відповідь',
   'Час на завдання, с', 'Виходів зі сторінки', 'Поза сторінкою, с'];
 const TYPE_NAMES = { one: 'одна відповідь', multi: 'кілька відповідей', sort: 'розподіл за групами', match: 'відповідність', order: 'порядок',
-  single: 'ЗНО: одна відповідь', multiple: 'ЗНО: кілька відповідей', matching: 'ЗНО: відповідність', nmt: 'НМТ: симуляція', fix: 'робота над помилками' };
+  single: 'ЗНО: одна відповідь', multiple: 'ЗНО: кілька відповідей', matching: 'ЗНО: відповідність', nmt: 'НМТ: симуляція', fix: 'робота над помилками',
+  th: 'тренування теорії', wu: 'щоденна розминка', diag: 'діагностика', ctl: 'контрольна робота' };
+const EXTRA_TYPES = [TYPE_NAMES.th, TYPE_NAMES.wu, TYPE_NAMES.diag, TYPE_NAMES.ctl];
 const TASKS_PER_TOPIC = 100;
 const TOPICS = [
   ['stress', '1.1 Склад. Наголос'],
@@ -640,7 +642,7 @@ function login_(d) {
   ps.getRange(row, 7).setValue(new Date());
   const rs = sheet_();
   const stored = readStored_(rs, findRow_(rs, key));
-  return { ok: true, key, token: token_(key), name: String(vals[1]), cls: String(vals[2]), topics: topicsOut_(stored), zno: znoOut_(key), nmt: readNmt_(key), fix: stored._fix || {}, v: SERVICE_VERSION };
+  return { ok: true, key, token: token_(key), name: String(vals[1]), cls: String(vals[2]), topics: topicsOut_(stored), zno: znoOut_(key), nmt: readNmt_(key), fix: stored._fix || {}, plus: readPlus_(key), v: SERVICE_VERSION };
 }
 
 /** Перевіряє токен і повертає профіль учня або null. */
@@ -691,6 +693,7 @@ function save_(d, p) {
   writeRow_(sh, rowNum, buildResults_(p.key, display, new Date(), stored));
   saveZno_(d, p, display);
   saveNmt_(d, p, display);
+  if (d.plus && typeof d.plus === 'object') savePlus_(p.key, d.plus);
   return { ok: true, logged, v: SERVICE_VERSION };
 }
 
@@ -719,7 +722,7 @@ function doPost(e) {
       if (d.action === 'load') {
         const sh = sheet_();
         const stored = readStored_(sh, findRow_(sh, p.key));
-        return out_(Object.assign({ ok: true, topics: topicsOut_(stored), zno: znoOut_(p.key), nmt: readNmt_(p.key), fix: stored._fix || {}, v: SERVICE_VERSION }, studentExtras_(p.key, p.cls)));
+        return out_(Object.assign({ ok: true, topics: topicsOut_(stored), zno: znoOut_(p.key), nmt: readNmt_(p.key), fix: stored._fix || {}, plus: readPlus_(p.key), v: SERVICE_VERSION }, studentExtras_(p.key, p.cls)));
       }
       return out_(Object.assign(save_(d, p), studentExtras_(p.key, p.cls, d.exv)));
     }
@@ -974,7 +977,7 @@ function adminResetPin_(d) {
 function adminDeleteStudent_(d) {
   const key = String(d.key || '');
   if (!key) return { ok: false, error: 'not_found' };
-  [profileSheet_(), sheet_(), znoSheet_(), nmtSheet_()].forEach(sh => { const r = findRow_(sh, key); if (r > 0) sh.deleteRow(r); });
+  [profileSheet_(), sheet_(), znoSheet_(), nmtSheet_(), plusSheet_()].forEach(sh => { const r = findRow_(sh, key); if (r > 0) sh.deleteRow(r); });
   return { ok: true };
 }
 
@@ -999,6 +1002,10 @@ function adminData_() {
     Object.keys(z).forEach(id => { if (z[id] && z[id].s) st.zno[id] = z[id].s; });
     st.nmt = nmt[k] ? nmt[k].data : {};
   });
+  rows_(plusSheet_(), 3).forEach(r => {
+    const st = students[r[0]]; if (!st) return;
+    try { st.plus = plusSummary_(JSON.parse(String(r[2]).replace(/^j/, '') || '{}')); } catch (e) {}
+  });
 
   // Журнал «Спроби»: активність по днях і учнях, орієнтовний час роботи, найчастіші хибні відповіді.
   // Підсумки рахуються наростаюче (logAgg_): щоразу обробляються лише нові рядки журналу.
@@ -1009,13 +1016,14 @@ function adminData_() {
   Object.keys(agg.days).forEach(dk => {
     if (dk < cut) return;
     const x = agg.days[dk];
-    days[dk] = { a: x.a, ok: x.ok, fix: x.fix, users: Object.keys(x.u).filter(n => byName[n]).length };
+    days[dk] = { a: x.a, ok: x.ok, fix: x.fix, x: x.x || 0, users: Object.keys(x.u).filter(n => byName[n]).length };
   });
   Object.keys(agg.st).forEach(name => {
     const s = byName[name], x = agg.st[name];
     if (!s) return;
     const dd = {}; Object.keys(x.days).forEach(dk => { if (dk >= cut) dd[dk] = x.days[dk]; });
-    s.act = { last: x.last, n: x.n, ok: x.ok, fix: x.fix, mins: Math.round(x.mins), days: dd };
+    const dn = {}; Object.keys(x.dn || {}).forEach(dk => { if (dk >= cut) dn[dk] = x.dn[dk]; });
+    s.act = { last: x.last, n: x.n, ok: x.ok, fix: x.fix, x: x.x || 0, xs: x.xs || {}, mins: Math.round(x.mins), days: dd, dn, tp: x.tp || {} };
     if (x.focus) s.act.focus = x.focus;
   });
   Object.keys(agg.wrong).forEach(k => {
@@ -1042,7 +1050,7 @@ function adminData_() {
    Наступного разу читаємо лише рядки, додані відтоді, тож час не росте разом із журналом.
    Якщо рядки журналу видалили чи переставили (останній оброблений рядок не збігається), рахуємо все заново. */
 const AGG_SHEET = 'Службове: статистика';
-const AGG_VER = 1;
+const AGG_VER = 2; // 2: динаміка по днях і темах, окремий лічильник тренувань
 const AGG_DAYS = 120;   // скільки днів показувати в графіках активності
 const AGG_BATCH = 5000; // рядків журналу за одне читання
 
@@ -1089,13 +1097,20 @@ function logAgg_() {
     const foc = hasFocus ? ls.getRange(from, 11, n, 3).getValues() : [];
     main.forEach((r, i) => {
       const t = iso_(r[0]); if (!t) return;
-      const name = String(r[1]), type = String(r[5]), ok = String(r[6]).indexOf('✓') >= 0, isFix = type === TYPE_NAMES.fix, isNmt = type === TYPE_NAMES.nmt;
-      const dk = dayOf(t), dd = agg.days[dk] || (agg.days[dk] = { a: 0, ok: 0, fix: 0, u: {} });
-      if (isFix) dd.fix++; else if (!isNmt) { dd.a++; if (ok) dd.ok++; }
+      const name = String(r[1]), type = String(r[5]), ok = String(r[6]).indexOf('✓') >= 0, isX = EXTRA_TYPES.indexOf(type) >= 0;
+      const isFix = type === TYPE_NAMES.fix || isX, isNmt = type === TYPE_NAMES.nmt, plain = !isFix && !isNmt;
+      const dk = dayOf(t), dd = agg.days[dk] || (agg.days[dk] = { a: 0, ok: 0, fix: 0, x: 0, u: {} });
+      if (isX) dd.x++; else if (isFix) dd.fix++; else if (!isNmt) { dd.a++; if (ok) dd.ok++; }
       if (name) dd.u[name] = 1;
       if (name) {
-        const a = agg.st[name] || (agg.st[name] = { last: 0, n: 0, ok: 0, fix: 0, mins: 0, days: {}, prev: 0 });
-        if (isFix) a.fix++; else if (!isNmt) { a.n++; if (ok) a.ok++; }
+        const a = agg.st[name] || (agg.st[name] = { last: 0, n: 0, ok: 0, fix: 0, x: 0, mins: 0, days: {}, dn: {}, tp: {}, xs: {}, prev: 0 });
+        if (isX) { a.x++; a.xs[type] = (a.xs[type] || 0) + 1; } else if (isFix) a.fix++; else if (!isNmt) { a.n++; if (ok) a.ok++; }
+        // Динаміка: відповіді й правильні по днях — загалом і за темами (тренажер і ЗНО).
+        if (plain) {
+          const x = a.dn[dk] || (a.dn[dk] = [0, 0]); x[0]++; if (ok) x[1]++;
+          const tid = titleToId[r[2]];
+          if (tid) { const tp = a.tp[tid] || (a.tp[tid] = {}), y = tp[dk] || (tp[dk] = [0, 0]); y[0]++; if (ok) y[1]++; }
+        }
         a.last = Math.max(a.last, t);
         a.days[dk] = (a.days[dk] || 0) + 1;
         a.mins += a.prev && t > a.prev && t - a.prev <= 5 * 60000 ? (t - a.prev) / 60000 : 0.5;
@@ -1134,7 +1149,11 @@ function logAgg_() {
   if (changed) {
     const cut = dayOf(Date.now() - AGG_DAYS * 86400000);
     Object.keys(agg.days).forEach(dk => { if (dk < cut) delete agg.days[dk]; });
-    Object.keys(agg.st).forEach(nm => { const dd = agg.st[nm].days; Object.keys(dd).forEach(dk => { if (dk < cut) delete dd[dk]; }); });
+    Object.keys(agg.st).forEach(nm => {
+      const x = agg.st[nm];
+      [x.days, x.dn].forEach(dd => Object.keys(dd).forEach(dk => { if (dk < cut) delete dd[dk]; }));
+      Object.keys(x.tp).forEach(id => { const tp = x.tp[id]; Object.keys(tp).forEach(dk => { if (dk < cut) delete tp[dk]; }); if (!Object.keys(tp).length) delete x.tp[id]; });
+    });
     // Два вікна панелі можуть рахувати одночасно: зберігає те, що першим отримало блокування.
     const lock = LockService.getDocumentLock();
     if (lock && lock.tryLock(0)) { try { aggSave_(agg); } finally { lock.releaseLock(); } }
@@ -1149,4 +1168,65 @@ function adminRebuildStats() {
   extrasDrop_();
   logAgg_();
   try { SpreadsheetApp.getUi().alert('Статистику перераховано.'); } catch (e) {}
+}
+
+
+/* ───── Додаткові дані учня (s.plus на сайті) ─────
+   Тренування теорії, щоденна розминка, серії днів, тижнева ціль, діагностика. Окремий службовий аркуш:
+   так рядок «Результати» не переростає обмеження клітинки (50 000 символів). */
+const PLUS_SHEET = 'Службове: дані учнів';
+const PLUS_MAX = 45000;
+
+function plusSheet_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(PLUS_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(PLUS_SHEET);
+    sh.appendRow(['Ключ', 'Оновлено', 'Дані (JSON)']);
+    sh.setFrozenRows(1);
+    try { sh.hideSheet(); } catch (e) {}
+  }
+  return sh;
+}
+
+function readPlus_(key) {
+  const sh = plusSheet_(), row = findRow_(sh, key);
+  if (row < 0) return {};
+  try { return JSON.parse(String(sh.getRange(row, 3).getValue()).replace(/^j/, '') || '{}'); } catch (e) { return {}; }
+}
+
+/** Об’єднання: об’єкти — по ключах; різні номери версії v — беремо новішу цілком (так само, як на сайті). */
+function mergePlus_(a, b) {
+  const isObj = x => x && typeof x === 'object' && !Array.isArray(x);
+  if (!isObj(b)) return b === undefined ? a : b;
+  if (!isObj(a)) return b;
+  if (a.v != null && b.v != null && a.v !== b.v) return a.v > b.v ? a : b;
+  const out = Object.assign({}, a);
+  Object.keys(b).slice(0, 2000).forEach(k => { out[String(k).slice(0, 80)] = k in a ? mergePlus_(a[k], b[k]) : b[k]; });
+  return out;
+}
+
+function savePlus_(key, incoming) {
+  const sh = plusSheet_(), row = findRow_(sh, key);
+  let cur = {};
+  if (row > 0) { try { cur = JSON.parse(String(sh.getRange(row, 3).getValue()).replace(/^j/, '') || '{}'); } catch (e) { cur = {}; } }
+  const merged = mergePlus_(cur, incoming);
+  let json = JSON.stringify(merged);
+  if (json.length > PLUS_MAX) { // спершу жертвуємо збереженими відповідями тренування теорії (сам результат лишається)
+    Object.keys(merged.th || {}).forEach(id => { if (merged.th[id]) merged.th[id].ch = {}; });
+    json = JSON.stringify(merged);
+  }
+  if (json.length > PLUS_MAX) return;
+  // Префікс «j»: таблиця не сприйме текст як число чи формулу.
+  const vals = [[key, new Date(), 'j' + json]];
+  if (row > 0) sh.getRange(row, 1, 1, 3).setValues(vals); else sh.getRange(sh.getLastRow() + 1, 1, 1, 3).setValues(vals);
+}
+
+/** Короткий підсумок для адмін-панелі: без збережених відповідей. */
+function plusSummary_(p) {
+  const out = {};
+  if (p.th) { out.th = {}; Object.keys(p.th).forEach(id => { const m = (p.th[id] || {}).m || {}, v = Object.keys(m).map(k => m[k]); out.th[id] = [v.length, v.filter(x => x === '1').length]; }); }
+  if (p.wu) out.wu = { n: Object.keys(p.wu.box || {}).length, done: p.wu.done || {} };
+  ['days', 'goal', 'diag', 'badges'].forEach(k => { if (p[k] !== undefined) out[k] = p[k]; });
+  return out;
 }

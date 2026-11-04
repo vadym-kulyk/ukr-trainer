@@ -123,6 +123,10 @@ main { padding-block: 22px 60px; }
 .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: var(--surface-2); padding: 4px; border-radius: 999px; }
 .tab { border: 0; background: transparent; border-radius: 999px; padding: 8px 10px; font-weight: 700; min-height: 40px; }
 .tab[aria-selected="true"] { background: var(--lime); color: #1e1b26; }
+.tabs.three { grid-template-columns: repeat(3, minmax(0, 1fr)); border-radius: 22px; }
+.tabs.three .tab { padding-inline: 6px; line-height: 1.2; font-size: 15px; }
+@media (max-width: 420px) { .tabs.three .tab { font-size: 13px; } }
+.th-lead { margin: 0 0 8px; font-size: 15px; color: var(--muted); }
 
 .theory { display: grid; gap: 16px; padding-block: 20px; }
 .theory h2 { font-size: clamp(20px, 5vw, 26px); }
@@ -687,6 +691,7 @@ body.has-fab main { padding-bottom: 110px; }
 <script src="zno-app.js?v=16"></script>
 <script src="nmt-app.js?v=16"></script>
 <script src="fix-app.js?v=16"></script>
+<script src="theory-app.js?v=16"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -784,6 +789,29 @@ body.has-fab main { padding-bottom: 110px; }
     trainerInput: (b, p) => inputClick(b.dataset, p),
     trainerResp: (task, p) => task.t === "one" ? p.v : task.t === "multi" ? p.v.slice().sort((a, b) => a - b) : p.v.slice()
   });
+
+  /* «Тренування теорії» (theory-app.js): третя вкладка теми. */
+  const TH = window.MGTheory({
+    esc, T, E, get ui() { return ui; }, me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
+    saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), render: () => render(), gateHtml: () => gateHtml(), scrollTask: () => scrollTask(),
+    theoryOf: id => theoryOf(id), focusMark: () => focusMark(), focusSince: m => focusSince(m),
+    correctHtml: task => correctHtml(task), plain: h => plain(h), answerText: (task, resp) => answerText(task, resp), rightText: task => rightText(task),
+    trainerNewPend: (task, topic) => newPend(task, topic),
+    trainerBody: (task, done, resp, p) => { const keep = pend; pend = p; const h = bodyHtml(task, done, resp); pend = keep; return h; },
+    trainerReady: (task, p) => { const keep = pend; pend = p; const ok = ready(task); pend = keep; return ok; },
+    trainerInput: (b, p) => inputClick(b.dataset, p),
+    trainerResp: (task, p) => task.t === "one" ? p.v : task.t === "multi" ? p.v.slice().sort((a, b) => a - b) : p.v.slice()
+  });
+  /* Додаткові дані учня (s.plus): тренування теорії, розминка, серії, діагностика. Об’єднуємо з сервером:
+     об’єкти — по ключах; якщо в обох є номер версії v і він різний — беремо новішу версію цілком. */
+  function mergePlus(a, b) {
+    if (!b || typeof b !== "object" || Array.isArray(b)) return b === undefined ? a : b;
+    if (!a || typeof a !== "object" || Array.isArray(a)) return JSON.parse(JSON.stringify(b));
+    if (a.v != null && b.v != null && a.v !== b.v) return a.v > b.v ? a : JSON.parse(JSON.stringify(b));
+    const out = Object.assign({}, a);
+    for (const k in b) out[k] = k in a ? mergePlus(a[k], b[k]) : JSON.parse(JSON.stringify(b[k]));
+    return out;
+  }
 
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2600); }
 
@@ -898,6 +926,7 @@ body.has-fab main { padding-bottom: 110px; }
     Z.merge(rec, d.zno);
     NM.merge(rec, d.nmt);
     FX.merge(rec, d.fix);
+    if (d.plus) rec.plus = mergePlus(rec.plus, d.plus);
     applyExtras(rec, d);
     adoptLegacy(rec, d.name);
     pulledFor = d.key;
@@ -976,6 +1005,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (np) body.nmt = np;
     const fp = FX.payload();
     if (fp) body.fix = fp;
+    if (s.plus) body.plus = s.plus;
     const readSent = (s.readQueue || []).slice(0, 100);
     if (readSent.length) body.read = readSent;
     if (s.exv && s.inbox) body.exv = s.exv; // сервер не повторюватиме незмінні повідомлення
@@ -1003,7 +1033,7 @@ body.has-fab main { padding-bottom: 110px; }
     if (!s || !s.token) return;
     const key = store.current;
     const d = await api({ action: "load", key, token: s.token });
-    if (d && d.ok) { serverV = Number(d.v) || serverV; mergeTopics(s, d.topics); Z.merge(s, d.zno); NM.merge(s, d.nmt); FX.merge(s, d.fix); applyExtras(s, d); saveLocal(); setTimeout(maybeShowImportant, 400); pulledFor = key; render(); scheduleSync(true); }
+    if (d && d.ok) { serverV = Number(d.v) || serverV; mergeTopics(s, d.topics); Z.merge(s, d.zno); NM.merge(s, d.nmt); FX.merge(s, d.fix); if (d.plus) s.plus = mergePlus(s.plus, d.plus); applyExtras(s, d); saveLocal(); setTimeout(maybeShowImportant, 400); pulledFor = key; render(); scheduleSync(true); }
     else if (d && d.error === "auth") { delete s.token; saveLocal(); renderProfile(); render(); }
     else { setSync("error"); pulledFor = key; }
   }
@@ -1162,9 +1192,9 @@ body.has-fab main { padding-bottom: 110px; }
     const t = T.find(x => x.id === ui.topic); if (!t) { ui.view = "home"; return renderHome(); }
     let h = `<div class="topbar"><div class="wrap">
       <div class="tb-row"><button class="btn small ghost" data-act="home" aria-label="До списку тем">← Теми</button><span class="tb-title">${t.sec} · ${esc(t.title)}</span></div>
-      <div class="tabs" role="tablist"><button class="tab" role="tab" aria-selected="${ui.tab === "theory"}" data-tabto="theory">Теорія</button><button class="tab" role="tab" aria-selected="${ui.tab === "tasks"}" data-tabto="tasks">Завдання</button></div>
+      <div class="tabs three" role="tablist"><button class="tab" role="tab" aria-selected="${ui.tab === "theory"}" data-tabto="theory">Теорія</button><button class="tab" role="tab" aria-selected="${ui.tab === "tasks"}" data-tabto="tasks">Завдання</button><button class="tab" role="tab" aria-selected="${ui.tab === "theorytrain"}" data-tabto="theorytrain">Тренування теорії</button></div>
     </div></div><main class="wrap" style="padding-top:0">`;
-    h += ui.tab === "theory" ? theoryHtml(t) : tasksHtml(t);
+    h += ui.tab === "theory" ? theoryHtml(t) : ui.tab === "theorytrain" ? TH.pageHtml(t) : tasksHtml(t);
     h += "</main>";
     app.innerHTML = h;
   }
@@ -1174,7 +1204,7 @@ body.has-fab main { padding-bottom: 110px; }
       <h2>${esc(t.title)}</h2>
       <figure class="photo"><img src="${IMG[t.img]}" alt="${esc(ALT[t.img])}" loading="lazy"><figcaption>Ілюстрацію згенеровано ШІ (Hugging Face, Z-Image Turbo)</figcaption></figure>
       <div class="tbody">${theoryOf(t.id) ?? '<p class="empty">Завантажую теорію…</p>'}</div>
-      <button class="btn primary to-tasks" data-tabto="tasks">До завдань →</button>
+      <div class="task-nav to-tasks"><button class="btn primary" data-tabto="tasks">До завдань →</button><button class="btn" data-tabto="theorytrain">Тренування теорії</button></div>
     </article>`;
   }
 
@@ -1361,11 +1391,12 @@ body.has-fab main { padding-bottom: 110px; }
     const d = b.dataset;
     if (d.home) { store.home = d.home; saveLocal(); render(); return; }
     if (d.theory) { openTheory(d.theory); return; }
+    if (TH.onClick(b)) return;
     if (FX.onClick(b)) return;
     if (NM.onClick(b)) return;
     if (Z.onClick(b)) return;
     if (d.open) { ui = Object.assign(ui, { view: "topic", topic: d.open, tab: d.tab, reviewing: false }); confirmReset = false; pend = null; jumpFirst(); render(); window.scrollTo(0, 0); return; }
-    if (d.tabto) { ui.tab = d.tabto; if (d.tabto === "tasks") jumpFirst(); render(); window.scrollTo(0, 0); return; }
+    if (d.tabto) { ui.tab = d.tabto; TH.leave(); if (d.tabto === "tasks") jumpFirst(); render(); window.scrollTo(0, 0); return; }
     if (b.id === "copy-report") { copyText(reportText(), $("#report-text")); return; }
     const act = d.act;
     if (act === "home") { ui.view = "home"; confirmReset = false; render(); window.scrollTo(0, 0); return; }
