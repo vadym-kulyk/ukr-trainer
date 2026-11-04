@@ -1,4 +1,4 @@
-/* Додаткові розділи адмін-панелі: «Урок наживо», контрольні роботи, аналіз помилок за правилами,
+/* Додаткові розділи адмін-панелі: «Урок наживо», моніторингові роботи, аналіз помилок за правилами,
    динаміка (тиждень до тижня, ефект призначення), розумні призначення, звіт для батьків, тренування й мотивація учня. */
 (function () {
   "use strict";
@@ -143,8 +143,8 @@
       const running = live.running.filter(r => { const s = D().students.find(z => z.key === r.key); return !cls || (s && s.cls === cls); });
       let h2 = `<div class="stack"><div class="card"><div class="row"><h3>🔴 Урок наживо</h3><span class="spacer"></span><span class="hint">оновлено ${h.fmtDT(now)} · кожні 20 с</span><button class="btn sm" data-act="live-now">↻</button></div>
         <p class="hint">Учні, які відповідали за останні 20 хвилин. Угорі — ті, кому, ймовірно, потрібна допомога: кілька помилок поспіль, виходи зі сторінки, низька точність.</p>
-        <div class="kpis">${h.kpi(rows.filter(r => r.status === "on").length, "зараз працюють", "останні 2 хв")}${h.kpi(rows.length, "за 20 хвилин")}${h.kpi(rows.filter(r => r.flags.some(f => f[0] === "red")).length, "потребують уваги")}${h.kpi(running.length, "пишуть контрольну")}</div></div>`;
-      if (running.length) h2 += `<div class="card"><h3>📝 Пишуть контрольну</h3><div class="chips">${running.map(r => { const t = live.tests.find(z => z.id === r.id); const left = t ? Math.round((r.started + t.min * 60000 - now) / 60000) : null; return `<span class="tag ${left != null && left < 0 ? "red" : "violet"}">${esc(r.name)} · ${esc(t ? t.title : "")} · ${left == null ? "" : left >= 0 ? "залишилось " + left + " хв" : "час вийшов"}</span>`; }).join("")}</div></div>`;
+        <div class="kpis">${h.kpi(rows.filter(r => r.status === "on").length, "зараз працюють", "останні 2 хв")}${h.kpi(rows.length, "за 20 хвилин")}${h.kpi(rows.filter(r => r.flags.some(f => f[0] === "red")).length, "потребують уваги")}${h.kpi(running.length, "пишуть моніторингову роботу")}</div></div>`;
+      if (running.length) h2 += `<div class="card"><h3>📝 Пишуть моніторингову роботу</h3><div class="chips">${running.map(r => { const t = live.tests.find(z => z.id === r.id); const left = t ? Math.round((r.started + t.min * 60000 - now) / 60000) : null; return `<span class="tag ${left != null && left < 0 ? "red" : "violet"}">${esc(r.name)} · ${esc(t ? t.title : "")} · ${left == null ? "" : left >= 0 ? "залишилось " + left + " хв" : "час вийшов"}</span>`; }).join("")}</div></div>`;
       h2 += rows.length ? `<div class="live-grid">${rows.map(r => `<div class="live ${r.status}"><div class="row"><span class="ldot" aria-hidden="true"></span><b>${r.key ? `<a href="#student/${encodeURIComponent(r.key)}">${esc(r.name)}</a>` : esc(r.name)}</b><span class="spacer"></span><span class="hint">${(now - r.last) < 60000 ? "щойно" : Math.round((now - r.last) / 60000) + " хв тому"}</span></div>
           <div class="small">${esc(r.topic)}${r.type ? ` <span class="muted">· ${esc(r.type)}</span>` : ""}</div>
           <div class="seq" aria-label="Останні відповіді">${r.seq.map(v => `<i class="${v ? "ok" : "no"}">${v ? "✓" : "✗"}</i>`).join("")}</div>
@@ -154,13 +154,13 @@
       return h2 + "</div>";
     }
 
-    /* ── Контрольні ── */
+    /* ── Моніторингові роботи ── */
     const resultsOf = id => (D().tresults || []).filter(r => r.id === id);
     function testsPage() {
       let out = `<div class="stack">`;
-      out += ctl.open ? ctlForm() : `<div><button class="btn primary" data-act="ctl-new">+ Нова контрольна</button></div>`;
+      out += ctl.open ? ctlForm() : `<div><button class="btn primary" data-act="ctl-new">+ Нова моніторингова робота</button></div>`;
       const list = (D().tests || []).slice().sort((a, b) => b.at - a.at);
-      if (!list.length && !ctl.open) out += `<div class="card"><p class="empty">Контрольних ще немає. Створіть контрольну: оберіть теми, кількість завдань і час. Учні побачать її на головній сторінці тренажера.</p></div>`;
+      if (!list.length && !ctl.open) out += `<div class="card"><p class="empty">Моніторингових робіт ще немає. Створіть моніторингову роботу: оберіть теми, кількість завдань і час. Учні побачать її на головній сторінці тренажера.</p></div>`;
       list.forEach(t => {
         const rec = h.all().filter(s => h.addressed(t.code, s) && (!h.ui.cls || s.cls === h.ui.cls)), res = resultsOf(t.id), done = res.filter(r => r.done && rec.some(s => s.key === r.key));
         const avg = done.length ? done.reduce((a, r) => a + r.score / (r.max || 1), 0) / done.length : null;
@@ -178,8 +178,8 @@
         if (rows) pick += `<div class="grp">${esc(sec.id)} ${esc(sec.title)}</div>${rows}`;
       });
       const n = ctl.topics.size * ctl.per;
-      return `<div class="card"><h3>Нова контрольна</h3>
-        <label class="field"><span>Назва</span><input class="input" id="ktitle" maxlength="120" placeholder="Напр.: Контрольна «Не з різними частинами мови»" value="${esc(ctl.title)}"></label>
+      return `<div class="card"><h3>Нова моніторингова робота</h3>
+        <label class="field"><span>Назва</span><input class="input" id="ktitle" maxlength="120" placeholder="Напр.: Моніторингова робота «Не з різними частинами мови»" value="${esc(ctl.title)}"></label>
         <div class="field"><span>Теми тренажера (вибрано: ${ctl.topics.size})</span><input class="input" id="kiq" placeholder="Пошук теми" value="${esc(ctl.iq)}"><div class="picker">${pick || '<span class="hint">Нічого не знайдено.</span>'}</div></div>
         <div class="row"><label class="field"><span>Завдань з кожної теми</span><select class="input" id="kper">${[1, 2, 3, 4, 5, 6, 8, 10].map(v => `<option ${ctl.per === v ? "selected" : ""}>${v}</option>`).join("")}</select></label>
           <label class="field"><span>Час, хвилин</span><input class="input" type="number" id="kmin" min="1" max="240" value="${ctl.min}"></label>
@@ -192,14 +192,14 @@
     }
     function testPage(id) {
       const t = (D().tests || []).find(x => x.id === id);
-      if (!t) return `<div class="card"><p>Контрольну не знайдено.</p><a href="#tests">← До контрольних</a></div>`;
+      if (!t) return `<div class="card"><p>Моніторингову роботу не знайдено.</p><a href="#tests">← До моніторингових робіт</a></div>`;
       const rec = h.all().filter(s => h.addressed(t.code, s) && (!h.ui.cls || s.cls === h.ui.cls)), res = resultsOf(id);
       const rows = rec.map(s => ({ s, r: res.find(x => x.key === s.key) || null }));
       const done = rows.filter(x => x.r && x.r.done);
       const avg = done.length ? done.reduce((a, x) => a + x.r.score / (x.r.max || 1), 0) / done.length : null;
       const avgG = done.length ? done.reduce((a, x) => a + x.r.grade, 0) / done.length : null;
       const avgT = done.length ? done.reduce((a, x) => a + (x.r.done - x.r.started), 0) / done.length / 60000 : null;
-      let out = `<div class="stack"><div class="crumbs"><a href="#tests">← Контрольні</a></div><div class="card"><div class="row"><h2>${esc(t.title)}</h2><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span><span class="spacer"></span><button class="btn sm noprint" data-act="ctl-csv" data-id="${esc(t.id)}">⬇ CSV</button><button class="btn sm noprint" data-act="print">🖨 Друк</button></div>
+      let out = `<div class="stack"><div class="crumbs"><a href="#tests">← Моніторингові роботи</a></div><div class="card"><div class="row"><h2>${esc(t.title)}</h2><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span><span class="spacer"></span><button class="btn sm noprint" data-act="ctl-csv" data-id="${esc(t.id)}">⬇ CSV</button><button class="btn sm noprint" data-act="print">🖨 Друк</button></div>
         <div class="kpis">${h.kpi(done.length + " з " + rec.length, "здали")}${h.kpi(h.pctTxt(avg), "середній результат")}${h.kpi(avgG == null ? "—" : avgG.toFixed(1).replace(".", ","), "середня оцінка")}${h.kpi(avgT == null ? "—" : Math.round(avgT) + " хв", "середній час")}</div></div>`;
       out += `<div class="card"><h3>Результати</h3>${h.table("ctl-" + t.id, [
         { k: "n", t: "Учень", v: x => x.s.name, h: x => h.nameLink(x.s) }, { k: "c", t: "Клас", v: x => x.s.cls },
@@ -212,7 +212,7 @@
         { k: "a", t: "", v: null, h: x => x.r ? `<button class="btn sm" data-ctlreset="${esc(t.id)}|${esc(x.s.key)}" title="Дозволити пройти ще раз">Скинути спробу</button>` : "" }], rows, { sort: { k: "p", d: -1 } })}</div>`;
       // Складність кожного завдання.
       const items = t.items.map((it, i) => { const okN = done.filter(x => x.r.okStr[i] === "1").length; return { it, i, okN, acc: done.length ? okN / done.length : null }; });
-      out += `<div class="card"><h3>Завдання контрольної</h3><p class="hint">Частка учнів, які розв’язали завдання правильно. Розгорніть, щоб побачити текст і відповідь.</p>
+      out += `<div class="card"><h3>Завдання моніторингової роботи</h3><p class="hint">Частка учнів, які розв’язали завдання правильно. Розгорніть, щоб побачити текст і відповідь.</p>
         ${items.slice().sort((a, b) => (a.acc ?? 2) - (b.acc ?? 2)).map(x => { const task = h.trainerTasks(x.it[0])[x.it[1]]; return `<details class="more"><summary><b>№${x.i + 1}</b> · ${esc(h.topicTitle(x.it[0]))} · завдання ${x.it[1] + 1} — ${x.acc == null ? "ще немає відповідей" : h.pctTxt(x.acc) + " правильно"}</summary>${task ? h.trainerTaskHtml(task) : ""}</details>`; }).join("")}</div>`;
       return out + "</div>";
     }
@@ -230,11 +230,11 @@
         ${diag && diag.res ? `<details class="more"><summary>Помилки в діагностиці (${Object.values(diag.res).filter(v => v === "0").length})</summary><div class="chips">${T.filter(t => diag.res[t.id] === "0").map(t => `<span class="tag red">${esc(t.title)}</span>`).join("") || '<span class="hint">Без помилок.</span>'}</div></details>` : ""}
         ${thRows.length ? `<details class="more"><summary>Тренування теорії за темами (${thRows.length})</summary>${h.table("th-" + s.key, [{ k: "t", t: "Тема", v: r => r.t.title }, { k: "a", t: "Відповідей", num: 1, v: r => r.x[0], h: r => r.x[0] }, { k: "c", t: "Правильно", v: r => r.x[1] / r.x[0], h: r => h.cellBar(r.x[1] / r.x[0]) }], thRows)}</details>` : ""}</div>`;
       const ctlRes = (D().tresults || []).filter(r => r.key === s.key && r.done);
-      if (ctlRes.length) out += `<div class="card"><h3>Контрольні роботи</h3>${h.table("sctl-" + s.key, [
-        { k: "t", t: "Контрольна", v: r => { const t = (D().tests || []).find(z => z.id === r.id); return t ? t.title : "—"; }, h: r => { const t = (D().tests || []).find(z => z.id === r.id); return t ? `<a href="#test/${encodeURIComponent(t.id)}">${esc(t.title)}</a>` : "—"; } },
+      if (ctlRes.length) out += `<div class="card"><h3>Моніторингові роботи</h3>${h.table("sctl-" + s.key, [
+        { k: "t", t: "Моніторингова робота", v: r => { const t = (D().tests || []).find(z => z.id === r.id); return t ? t.title : "—"; }, h: r => { const t = (D().tests || []).find(z => z.id === r.id); return t ? `<a href="#test/${encodeURIComponent(t.id)}">${esc(t.title)}</a>` : "—"; } },
         { k: "d", t: "Здано", v: r => r.done, h: r => h.fmtDT(r.done) }, { k: "s", t: "Бали", num: 1, v: r => r.score, h: r => r.score + "/" + r.max }, { k: "g", t: "Оцінка", num: 1, v: r => r.grade, h: r => "<b>" + r.grade + "</b>" }], ctlRes)}</div>`;
       const pl = parentLinks[s.key];
-      out += `<div class="card noprint"><h3>👪 Звіт для батьків</h3><p class="hint">Окреме посилання лише на цього учня: прогрес, активність, контрольні й призначення. Без входу і без даних інших учнів. Сторінку можна роздрукувати або зберегти як PDF.</p>
+      out += `<div class="card noprint"><h3>👪 Звіт для батьків</h3><p class="hint">Окреме посилання лише на цього учня: прогрес, активність, моніторингові роботи й призначення. Без входу і без даних інших учнів. Сторінку можна роздрукувати або зберегти як PDF.</p>
         ${pl ? `<div class="row"><input class="input" style="flex:1 1 260px" readonly value="${esc(pl)}" id="plink-${esc(s.key)}"><button class="btn sm" data-plcopy="${esc(s.key)}">Копіювати</button><a class="btn sm" href="${esc(pl)}" target="_blank" rel="noopener">Відкрити ↗</a><button class="btn sm danger" data-plrenew="${esc(s.key)}">Нове посилання</button></div><p class="hint">«Нове посилання» вимикає старе.</p>`
         : `<div><button class="btn sm primary" data-plget="${esc(s.key)}">Отримати посилання</button></div>`}</div>`;
       return out;
@@ -262,13 +262,13 @@
         const due = ctl.due ? new Date(ctl.due + "T23:59:00").getTime() : 0;
         const r = await h.api(Object.assign({ action: "admin_test_save", title: ctl.title, items, min: ctl.min, show: ctl.show, due, note: ctl.note }, h.toPayload(ctl)));
         ctl.busy = false;
-        if (r && r.ok) { ctl.open = false; h.toast("Контрольну збережено й надіслано"); await h.refreshQuiet(); } else { h.toast("Не вдалося зберегти"); h.render(); }
+        if (r && r.ok) { ctl.open = false; h.toast("Моніторингову роботу збережено й надіслано"); await h.refreshQuiet(); } else { h.toast("Не вдалося зберегти"); h.render(); }
         return true;
       }
-      if (d.ctldel) { if (!confirm("Видалити контрольну? Учні більше її не бачитимуть (результати лишаться в таблиці).")) return true; await h.api({ action: "admin_test_delete", id: d.ctldel }); await h.refreshQuiet(); h.toast("Видалено"); return true; }
+      if (d.ctldel) { if (!confirm("Видалити моніторингову роботу? Учні більше її не бачитимуть (результати лишаться в таблиці).")) return true; await h.api({ action: "admin_test_delete", id: d.ctldel }); await h.refreshQuiet(); h.toast("Видалено"); return true; }
       if (d.ctlreset) {
         const [id, key] = [d.ctlreset.slice(0, d.ctlreset.indexOf("|")), d.ctlreset.slice(d.ctlreset.indexOf("|") + 1)];
-        if (!confirm("Скинути спробу? Учень зможе пройти контрольну ще раз, поточний результат буде видалено.")) return true;
+        if (!confirm("Скинути спробу? Учень зможе пройти моніторингову роботу ще раз, поточний результат буде видалено.")) return true;
         await h.api({ action: "admin_test_reset", id, key }); await h.refreshQuiet(); h.toast("Спробу скинуто"); return true;
       }
       if (d.act === "ctl-csv") {
@@ -307,7 +307,7 @@
     }
 
     return {
-      ctl, nav: [["live", "Урок наживо"], ["tests", "Контрольні"], ["rules", "Правила"]],
+      ctl, nav: [["live", "Урок наживо"], ["tests", "Моніторингові роботи"], ["rules", "Правила"]],
       routes: { live: livePage, tests: testsPage, test: testPage, rules: rulesPage },
       studentCards, dynamicsCard, assignEffect, suggestionsHtml, topRulesHtml, onClick, onInput, onChange
     };

@@ -843,7 +843,7 @@ body.has-fab main { padding-bottom: 110px; }
     trainerInput: (b, p) => inputClick(b.dataset, p),
     trainerResp: (task, p) => task.t === "one" ? p.v : task.t === "multi" ? p.v.slice().sort((a, b) => a - b) : p.v.slice()
   });
-  /* Контрольні роботи від учителя (exam-app.js). */
+  /* Моніторингові роботи від учителя (exam-app.js). */
   const EX = window.MGExam({
     esc, T, E, get ui() { return ui; }, me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
     saveLocal: () => saveLocal(), render: () => render(), toast: m => toast(m), scrollTask: () => scrollTask(), tasksOf: id => tasksOf(id),

@@ -296,7 +296,7 @@
 
   /* ───── Маршрути й шапка ───── */
   const route = () => (location.hash.slice(1) || "overview").split("/").map(decodeURIComponent);
-  const NAV = [["overview", "Огляд"], ["live", "Урок наживо"], ["students", "Учні"], ["topics", "Теми"], ["tasks", "Завдання"], ["rules", "Правила"], ["classes", "Класи"], ["tests", "Контрольні"], ["messages", "Повідомлення"], ["assign", "Призначення"], ["settings", "Налаштування"]];
+  const NAV = [["overview", "Огляд"], ["live", "Урок наживо"], ["students", "Учні"], ["topics", "Теми"], ["tasks", "Завдання"], ["rules", "Правила"], ["classes", "Класи"], ["tests", "Моніторингові роботи"], ["messages", "Повідомлення"], ["assign", "Призначення"], ["settings", "Налаштування"]];
   function shell(body) {
     const r = route()[0], unread = D ? D.replies.filter(x => !x.seen).length : 0;
     const cur = { student: "students", topic: "topics", test: "tests" }[r] || r;

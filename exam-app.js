@@ -1,5 +1,5 @@
-/* Контрольні роботи від учителя: одна спроба, таймер, відповіді можна змінювати до здачі.
-   Список контрольних приходить разом із повідомленнями (s.inbox.tests). Відповіді під час роботи — лише на пристрої (s.ctl),
+/* Моніторингові роботи від учителя: одна спроба, таймер, відповіді можна змінювати до здачі.
+   Список моніторингових робіт приходить разом із повідомленнями (s.inbox.tests). Відповіді під час роботи — лише на пристрої (s.ctl),
    на сервер ідуть під час здачі; початок фіксує сервер (test_start), тож таймер не обійти перезавантаженням сторінки. */
 (function () {
   "use strict";
@@ -20,7 +20,7 @@
       if (!host.loggedIn()) return "";
       const ts = list().filter(t => !(t.res && t.res.done && t.res.done < Date.now() - 30 * 86400000));
       if (!ts.length) return "";
-      return `<section class="asg ctl-home"><h2>📝 Контрольні роботи</h2>` + ts.map(t => {
+      return `<section class="asg ctl-home"><h2>📝 Моніторингові роботи</h2>` + ts.map(t => {
         const st = local(t.id), r = t.res, closed = t.due && t.due < Date.now() && !(r && r.started);
         let state, btn;
         if (r && r.done) { state = `<span class="pill green">здано: ${r.score}/${r.max} · оцінка ${r.grade}</span>`; btn = t.show ? `<button class="btn small" data-ctl="open" data-id="${esc(t.id)}">Переглянути</button>` : ""; }
@@ -31,17 +31,17 @@
       }).join("") + "</section>";
     }
 
-    /* ── Сторінка контрольної ── */
+    /* ── Сторінка моніторингової роботи ── */
     function pageHtml() {
       const t = testOf(host.ui.ctl);
-      const top = `<div class="topbar"><div class="wrap"><div class="tb-row"><button class="btn small ghost" data-ctl="home">← Головна</button><span class="tb-title">${t ? esc(t.title) : "Контрольна"}</span>${t && runOn(t) ? `<span class="ctl-timer mono" id="ctl-timer">${mmss(left(t, local(t.id)))}</span>` : ""}</div></div></div>`;
-      if (!t) return top + '<main class="wrap"><p class="empty">Контрольну не знайдено. Можливо, учитель її видалив.</p></main>';
+      const top = `<div class="topbar"><div class="wrap"><div class="tb-row"><button class="btn small ghost" data-ctl="home">← Головна</button><span class="tb-title">${t ? esc(t.title) : "Моніторингова робота"}</span>${t && runOn(t) ? `<span class="ctl-timer mono" id="ctl-timer">${mmss(left(t, local(t.id)))}</span>` : ""}</div></div></div>`;
+      if (!t) return top + '<main class="wrap"><p class="empty">Моніторингову роботу не знайдено. Можливо, учитель її видалив.</p></main>';
       const st = local(t.id), r = t.res;
       if (r && r.done) return top + `<main class="wrap">${resultHtml(t)}</main>`;
       if (!st.started && !(r && r.started)) return top + `<main class="wrap"><section class="card pl-card"><h2>📝 ${esc(t.title)}</h2>
         <ul class="fc-facts"><li><b>${t.items.length}</b> завдань, <b>${t.min}</b> хвилин</li><li>Спроба <b>одна</b>. Після початку таймер не зупиняється, навіть якщо закрити сторінку.</li>
         <li>Відповіді можна змінювати до здачі. Коли час вийде, роботу буде здано автоматично.</li><li>Виходи зі сторінки вчитель бачить.</li>${t.show ? "<li>Після здачі ви побачите правильні відповіді.</li>" : ""}</ul>
-        ${t.note ? `<p class="hint">${esc(t.note)}</p>` : ""}<div class="task-nav"><button class="btn primary" data-ctl="start" ${busy ? "disabled" : ""}>${busy ? "Починаю…" : "Почати контрольну"}</button></div></section></main>`;
+        ${t.note ? `<p class="hint">${esc(t.note)}</p>` : ""}<div class="task-nav"><button class="btn primary" data-ctl="start" ${busy ? "disabled" : ""}>${busy ? "Починаю…" : "Почати моніторингову роботу"}</button></div></section></main>`;
       if (!st.started && r && r.started) st.started = r.started;
       if (left(t, st) <= 0) { setTimeout(() => submit(t, true), 0); return top + '<main class="wrap"><p class="empty">Час вийшов. Здаю роботу…</p></main>'; }
       ensureTick(t);
@@ -93,7 +93,7 @@
       busy = true; host.render();
       const s = host.me(), d = await host.api({ action: "test_start", key: host.currentKey(), token: s.token, id: t.id });
       busy = false;
-      if (!d || !d.ok) { host.toast(d && d.error === "closed" ? "Термін контрольної минув" : "Не вдалося почати. Перевірте інтернет."); host.render(); return; }
+      if (!d || !d.ok) { host.toast(d && d.error === "closed" ? "Термін моніторингової роботи минув" : "Не вдалося почати. Перевірте інтернет."); host.render(); return; }
       host.applyExtras(s, d);
       const st = local(t.id); st.started = d.started; st.mark = host.focusMark(); st.cur = 0;
       host.saveLocal(); host.render(); window.scrollTo(0, 0);

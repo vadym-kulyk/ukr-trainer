@@ -30,7 +30,7 @@ const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми �
   'Час на завдання, с', 'Виходів зі сторінки', 'Поза сторінкою, с'];
 const TYPE_NAMES = { one: 'одна відповідь', multi: 'кілька відповідей', sort: 'розподіл за групами', match: 'відповідність', order: 'порядок',
   single: 'ЗНО: одна відповідь', multiple: 'ЗНО: кілька відповідей', matching: 'ЗНО: відповідність', nmt: 'НМТ: симуляція', fix: 'робота над помилками',
-  th: 'тренування теорії', wu: 'щоденна розминка', diag: 'діагностика', ctl: 'контрольна робота' };
+  th: 'тренування теорії', wu: 'щоденна розминка', diag: 'діагностика', ctl: 'моніторингова робота' };
 const EXTRA_TYPES = [TYPE_NAMES.th, TYPE_NAMES.wu, TYPE_NAMES.diag, TYPE_NAMES.ctl];
 const TASKS_PER_TOPIC = 100;
 const TOPICS = [
@@ -788,9 +788,12 @@ function adminOk_(d) {
   return exp > Date.now() && exp < Date.now() + ADMIN_TTL + 60000 && String(d.atoken || '') === adminToken_(exp);
 }
 
+// Аркуші, які раніше мали іншу назву: перейменовуємо, щоб не загубити дані.
+const LEGACY_SHEETS = { 'Моніторингові роботи': 'Контрольні', 'Результати моніторингових робіт': 'Результати контрольних' };
 function simpleSheet_(name, header) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   let sh = ss.getSheetByName(name);
+  if (!sh && LEGACY_SHEETS[name]) { sh = ss.getSheetByName(LEGACY_SHEETS[name]); if (sh) sh.setName(name); }
   if (!sh) sh = ss.insertSheet(name);
   if (sh.getLastRow() === 0) {
     sh.appendRow(header);
@@ -1255,13 +1258,13 @@ function plusSummary_(p) {
 }
 
 
-/* ═════════════════════════ Контрольні роботи ═════════════════════════
+/* ═════════════════════════ Моніторингові роботи ═════════════════════════
    Учитель збирає набір завдань тренажера (тема + номер завдання), задає час і чи показувати відповіді після здачі.
    Одна спроба: рядок результату створюється під час початку й заповнюється під час здачі. */
-const TEST_SHEET = 'Контрольні';
+const TEST_SHEET = 'Моніторингові роботи';
 const TEST_HEADER = ['ID', 'Час', 'Назва', 'Кому', 'Отримувачі (код)', 'Завдання (JSON)', 'Хвилин', 'Показувати відповіді', 'Термін', 'Примітка'];
-const TRES_SHEET = 'Результати контрольних';
-const TRES_HEADER = ['ID контрольної', 'Ключ', 'Учень', 'Почато', 'Здано', 'Балів', 'З', '%', 'Оцінка (12)', 'Виходів зі сторінки', 'Поза сторінкою, с', 'Правильність (1/0)', 'Запізнення', 'Відповіді (JSON)'];
+const TRES_SHEET = 'Результати моніторингових робіт';
+const TRES_HEADER = ['ID роботи', 'Ключ', 'Учень', 'Почато', 'Здано', 'Балів', 'З', '%', 'Оцінка (12)', 'Виходів зі сторінки', 'Поза сторінкою, с', 'Правильність (1/0)', 'Запізнення', 'Відповіді (JSON)'];
 
 function adminTestSave_(d) {
   const code = recipients_(d.to), title = txt_(d.title, 120).trim();
@@ -1271,7 +1274,7 @@ function adminTestSave_(d) {
   if (!items.length) return { ok: false, error: 'no_items' };
   const min = Math.max(1, Math.min(240, Number(d.min) || 30));
   const due = Number(d.due) ? new Date(Number(d.due)) : '';
-  const row = [d.id || newId_('k'), new Date(), title || 'Контрольна робота', txt_(d.toLabel, 200), code, JSON.stringify(items), min, d.show ? 'так' : '', due, txt_(d.note, 1000)];
+  const row = [d.id || newId_('k'), new Date(), title || 'Моніторингова робота', txt_(d.toLabel, 200), code, JSON.stringify(items), min, d.show ? 'так' : '', due, txt_(d.note, 1000)];
   const sh = simpleSheet_(TEST_SHEET, TEST_HEADER);
   if (d.id) {
     const rows = rows_(sh, 1);
@@ -1397,6 +1400,6 @@ function parentReport_(d) {
   const act = x ? { last: x.last, n: x.n, ok: x.ok, mins: Math.round(x.mins), days: x.days, dn: x.dn } : null;
   const ex = extrasData_();
   const assign = ex.a.filter(r => addressed_(r[3], key, cls)).map(r => ({ title: r[2], items: r[4].split(',').filter(Boolean), due: r[5] }));
-  const tr = testsForAdmin_(), myTests = tr.results.filter(r => r.key === key && r.done).map(r => { const t = tr.tests.find(z => z.id === r.id); return { title: t ? t.title : 'Контрольна', done: r.done, score: r.score, max: r.max, grade: r.grade }; });
+  const tr = testsForAdmin_(), myTests = tr.results.filter(r => r.key === key && r.done).map(r => { const t = tr.tests.find(z => z.id === r.id); return { title: t ? t.title : 'Моніторингова робота', done: r.done, score: r.score, max: r.max, grade: r.grade }; });
   return { ok: true, now: Date.now(), name, cls, topics, zno: { a: za, c: zc }, nmt: { tests, best }, fix: stored._fixSum || null, plus, act, assign, tests: myTests };
 }
