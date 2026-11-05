@@ -43,7 +43,7 @@
   /* ───── Вхід ───── */
   let loginMsg = "";
   function loginHtml() {
-    return `<form class="login" id="login"><img src="img/logo-wordmark.png" alt="Midgard"><h2>Адмін-панель</h2>
+    return `<form class="login" id="login"><span class="logo wordmark">Дослівно</span><h2>Адмін-панель</h2>
       ${API ? `<label class="field"><span>Пароль адміністратора</span><input class="input" id="pw" type="password" autocomplete="current-password" required></label>
       <button class="btn primary" type="submit">Увійти</button>` : '<p class="err">На сайті не підключено таблицю результатів (config.js → resultsUrl).</p>'}
       <p class="hint" id="lmsg">${esc(loginMsg) || "Пароль задається в Google Таблиці: меню «Тренажер» → «Задати пароль адміністратора»."}</p>
@@ -300,7 +300,7 @@
   function shell(body) {
     const r = route()[0], unread = D ? D.replies.filter(x => !x.seen).length : 0;
     const cur = { student: "students", topic: "topics", test: "tests" }[r] || r;
-    return `<header class="top"><div class="wrap"><div class="top-row"><img class="logo" src="img/logo-wordmark.png" alt="Midgard"><h1>Адмін-панель</h1><span class="spacer"></span>
+    return `<header class="top"><div class="wrap"><div class="top-row"><span class="logo wordmark">Дослівно</span><h1>Адмін-панель</h1><span class="spacer"></span>
       <button class="btn sm" data-act="refresh" title="Оновити дані" ${loading ? "disabled" : ""}>↻<span class="small"> ${loading ? "Оновлюю…" : "Оновити"}</span></button></div>
       <nav class="nav" aria-label="Розділи">${NAV.map(([k, l]) => `<a href="#${k}" class="${cur === k ? "on" : ""}">${l}${k === "messages" && unread ? `<span class="badge">${unread}</span>` : ""}</a>`).join("")}</nav>
       ${D ? `<div class="filters"><label class="row small"><span class="muted">Клас:</span><select class="input" id="clsf"><option value="">усі класи</option>${classes().map(c => `<option ${ui.cls === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>

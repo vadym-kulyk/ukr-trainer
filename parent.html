@@ -26,6 +26,8 @@ body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(
 .wrap { max-width: 900px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
 h1, h2, h3 { font-family: var(--f-display); margin: 0; line-height: 1.2; } h1 { font-size: 24px; } h2 { font-size: 18px; } h3 { font-size: 15px; }
 .top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .top img { height: 34px; } .spacer { flex: 1; }
+.wordmark { font-family: var(--f-display); font-weight: 800; font-size: 26px; line-height: 1; letter-spacing: -.02em; color: var(--lime-ink); }
+.site-foot { text-align: center; color: var(--muted); font-size: 14px; padding: 24px 0 8px; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; display: grid; gap: 10px; min-width: 0; }
 .hint { color: var(--muted); font-size: 14px; margin: 0; }
 .kpis { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
@@ -92,7 +94,7 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; line-height: 1.2; } h1 { 
     const started = t.filter(x => x.a >= 10).map(x => Object.assign({ acc: x.c / x.a }, x));
     const weak = started.filter(x => x.acc < 0.6).sort((x, y) => x.acc - y.acc).slice(0, 5), strong = started.filter(x => x.acc >= 0.85).sort((x, y) => y.acc - x.acc).slice(0, 5);
     const diag = plus.diag;
-    let h = `<div class="top"><img src="img/logo-wordmark.png" alt="Midgard"><span class="spacer"></span><button class="btn noprint" onclick="window.print()">🖨 Друк / PDF</button></div>
+    let h = `<div class="top"><span class="logo wordmark">Дослівно</span><span class="spacer"></span><button class="btn noprint" onclick="window.print()">🖨 Друк / PDF</button></div>
       <div class="card"><h1>Звіт про навчання</h1><p><b>${esc(d.name)}</b>, клас ${esc(d.cls)}</p><p class="hint">Українська мова: тренажер, завдання ЗНО й симуляції НМТ. Сформовано ${new Date(d.now).toLocaleString("uk-UA")}.</p>
       <div class="kpis"><div class="kpi"><b>${a} / ${t.length * 100}</b><span>виконано завдань тренажера</span></div><div class="kpi"><b>${pct(a ? c / a : null)}</b><span>правильних відповідей</span></div>
       <div class="kpi"><b>${d.zno.a ? pct(d.zno.c / d.zno.a) : "—"}</b><span>точність у завданнях ЗНО (${d.zno.a})</span></div><div class="kpi"><b>${d.nmt.best || "—"}</b><span>найкращий бал симуляції НМТ (100–200)</span></div>
@@ -106,7 +108,8 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; line-height: 1.2; } h1 { 
     if (d.tests && d.tests.length) h += `<div class="card"><h2>Моніторингові роботи</h2><div class="rows">${d.tests.map(x => `<div class="trow"><span>${esc(x.title)} <span class="hint">· ${new Date(x.done).toLocaleDateString("uk-UA")}</span></span><span class="num">${x.score}/${x.max}</span><b class="num">${x.grade}</b></div>`).join("")}</div><p class="hint">Оцінка — за 12-бальною шкалою.</p></div>`;
     if (d.assign && d.assign.length) h += `<div class="card"><h2>Завдання від учителя</h2><div class="rows">${d.assign.map(x => { const ts = x.items.filter(i => i[0] === "t").map(i => t.find(z => z.id === i.slice(2))).filter(Boolean); const p = ts.length ? ts.reduce((s, z) => s + z.a / 100, 0) / ts.length : null; return `<div class="trow"><span>${esc(x.title)}${x.due ? ` <span class="hint">· до ${new Date(x.due).toLocaleDateString("uk-UA")}</span>` : ""}</span><div class="pbar">${p != null ? `<i style="width:${p * 100}%"></i>` : ""}</div><span class="num">${p != null ? pct(p) : ""}</span></div>`; }).join("")}</div></div>`;
     h += `<div class="card"><h2>Теми тренажера</h2><p class="hint">Смужка — скільки зі 100 завдань теми виконано; число — частка правильних.</p><div class="rows">${t.map(x => `<div class="trow"><span>${esc(x.title)}</span><div class="pbar"><i class="${x.a && x.c / x.a < 0.6 ? "low" : x.a && x.c / x.a < 0.8 ? "mid" : ""}" style="width:${x.a}%"></i></div><span class="num">${x.a ? pct(x.c / x.a) : "—"}</span></div>`).join("")}</div></div>
-      <p class="hint">Посилання особисте: воно відкриває звіт лише цього учня. Не пересилайте його стороннім. Якщо посилання потрапило до чужих рук, попросіть учителя створити нове — старе перестане працювати.</p>`;
+      <p class="hint">Посилання особисте: воно відкриває звіт лише цього учня. Не пересилайте його стороннім. Якщо посилання потрапило до чужих рук, попросіть учителя створити нове — старе перестане працювати.</p>
+      <footer class="site-foot">Створено Вадимом Куликом</footer>`;
     root.innerHTML = h;
   });
 })();

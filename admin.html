@@ -80,7 +80,11 @@ textarea.input { min-height: 120px; resize: vertical; }
 .top-row .logo { width: 110px; flex: none; }
 .top-row h1 { font-size: 15px; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .top-row .btn { flex: none; }
-@media (max-width: 480px) { .top-row .logo { width: 88px; } .top-row h1 { font-size: 13px; } .top-row .btn .small { display: none; } }
+.top-row .wordmark { font-size: 22px; }
+.login .wordmark { font-size: 30px; display: block; text-align: center; }
+/* Назва сайту текстом замість логотипа. */
+.wordmark { width: auto !important; font-family: var(--f-display); font-weight: 800; font-size: clamp(24px, 6.5vw, 32px); line-height: 1; letter-spacing: -.02em; color: var(--lime-ink); white-space: nowrap; }
+@media (max-width: 480px) { .top-row .logo { width: 88px; } .top-row .wordmark { font-size: 18px; } .top-row h1 { font-size: 13px; } .top-row .btn .small { display: none; } }
 .nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .nav::-webkit-scrollbar { display: none; }
 .nav a { flex: none; padding: 7px 12px; border-radius: 999px; font-weight: 700; font-size: 14px; text-decoration: none; color: var(--text); background: var(--surface-2); white-space: nowrap; }
@@ -242,10 +246,10 @@ details.more > summary { cursor: pointer; font-weight: 700; }
 <div id="root"><div class="loading">Завантаження…</div></div>
 <div class="toast" id="toast" hidden></div>
 <script src="config.js"></script>
-<script src="data.js?v=19"></script>
-<script src="data-extra.js?v=19"></script>
-<script src="engine.js?v=19"></script>
-<script src="admin-plus.js?v=19"></script>
-<script src="admin-app.js?v=19"></script>
+<script src="data.js?v=20"></script>
+<script src="data-extra.js?v=20"></script>
+<script src="engine.js?v=20"></script>
+<script src="admin-plus.js?v=20"></script>
+<script src="admin-app.js?v=20"></script>
 </body>
 </html>

@@ -88,6 +88,11 @@ body.compact .who { display: flex; }
 body.compact .hero h1, body.compact .sub, body.compact .namebox, body.compact .overall { display: none; }
 body.compact .hero .wrap { padding-block: 10px; gap: 8px; }
 body.compact .logo { width: 132px; }
+body.compact .wordmark { font-size: 22px; }
+/* Назва сайту текстом замість логотипа. */
+.wordmark { width: auto !important; font-family: var(--f-display); font-weight: 800; font-size: clamp(24px, 6.5vw, 32px); line-height: 1; letter-spacing: -.02em; color: var(--lime-ink); white-space: nowrap; }
+.site-foot { text-align: center; color: var(--muted); font-size: 14px; padding: 8px 16px 32px; }
+body.has-fab .site-foot { padding-bottom: 100px; }
 /* ── Кнопки ── */
 .btn { border: 2px solid var(--line); background: var(--bg); border-radius: 999px; padding: 9px 16px; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
 .btn:hover { border-color: var(--violet); }
@@ -677,7 +682,7 @@ body.has-fab main { padding-bottom: 110px; }
   <img class="mark mark--l" src="img/mark-purple-spiral.png" alt="">
   <div class="wrap">
     <div class="brand">
-      <img class="logo" src="img/logo-wordmark.png" alt="Midgard">
+      <span class="logo wordmark">Дослівно</span>
       <div class="brand-tools">
         <button class="chip dict-btn" id="dict-btn" type="button" aria-label="Відкрити тлумачний словник">📖<span class="lbl"> Словник</span></button>
         <button class="chip bell-btn" id="bell-btn" type="button" aria-label="Повідомлення від учителя" hidden>🔔<span class="tab-badge" id="bell-n" hidden></span></button>
@@ -693,6 +698,7 @@ body.has-fab main { padding-bottom: 110px; }
 </header>
 
 <div id="app"></div>
+<footer class="site-foot">Створено Вадимом Куликом</footer>
 <div class="toast" id="toast" hidden></div>
 <button class="fab" id="fab-theory" type="button" hidden>📖 Теорія</button>
 <button class="selchip" id="selchip" type="button" hidden></button>
@@ -712,15 +718,15 @@ body.has-fab main { padding-bottom: 110px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=19"></script>
-<script src="data-extra.js?v=19"></script>
-<script src="engine.js?v=19"></script>
-<script src="zno-app.js?v=19"></script>
-<script src="nmt-app.js?v=19"></script>
-<script src="fix-app.js?v=19"></script>
-<script src="theory-app.js?v=19"></script>
-<script src="plus-app.js?v=19"></script>
-<script src="exam-app.js?v=19"></script>
+<script src="data.js?v=20"></script>
+<script src="data-extra.js?v=20"></script>
+<script src="engine.js?v=20"></script>
+<script src="zno-app.js?v=20"></script>
+<script src="nmt-app.js?v=20"></script>
+<script src="fix-app.js?v=20"></script>
+<script src="theory-app.js?v=20"></script>
+<script src="plus-app.js?v=20"></script>
+<script src="exam-app.js?v=20"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -770,7 +776,7 @@ body.has-fab main { padding-bottom: 110px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "19", THEORY = {}, theoryLoading = {};
+  const VER = "20", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
