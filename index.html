@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=22"></script>
+<script src="theme.js?v=23"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
 <style>
 [hidden] { display: none !important; }
 /* Layout: одна центральна колонка (макс. 860px) — шапка з ім’ям, картки тем, екран теми з вкладками «Теорія / Завдання». */
@@ -850,6 +850,121 @@ body.compact .wordmark { font-size: 22px; }
   .cards > .card > .acts .btn { flex: 1 1 0; }
 }
 .hero h1 em { color: inherit; }
+
+/* ═════ «Дослівно», другий шар: розбір речення, знаки тем, кольори розділів ═════ */
+:root { --grid: rgb(36 69 199 / .07); --margin: rgb(194 56 43 / .45); --f-book: 'Literata', Georgia, 'Times New Roman', serif;
+  --s11: #0d7a85; --s12: #2445c7; --s13: #a65f00; --s16: #8b3a9e; --sc: var(--lime); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --grid: rgb(143 166 255 / .07); --margin: rgb(255 128 114 / .4); --s11: #46bfcb; --s12: #8fa6ff; --s13: #e3b05a; --s16: #d59be3; } }
+:root[data-theme="dark"] { --grid: rgb(143 166 255 / .07); --margin: rgb(255 128 114 / .4); --s11: #46bfcb; --s12: #8fa6ff; --s13: #e3b05a; --s16: #d59be3; }
+[data-sec="1.1"] { --sc: var(--s11); } [data-sec="1.2"] { --sc: var(--s12); } [data-sec="1.3"] { --sc: var(--s13); } [data-sec="1.6"] { --sc: var(--s16); }
+
+/* Лінії розбору речення (як у шкільному зошиті) */
+.u { position: relative; display: inline-block; }
+.u::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.2em; height: .28em; background-color: var(--uc, var(--lime)); }
+.u-sub::after { -webkit-mask: linear-gradient(#000 0 0) bottom / 100% 2px no-repeat; mask: linear-gradient(#000 0 0) bottom / 100% 2px no-repeat; }
+.u-pred::after { -webkit-mask: linear-gradient(#000 0 0) bottom / 100% 2px no-repeat, linear-gradient(#000 0 0) top / 100% 2px no-repeat; mask: linear-gradient(#000 0 0) bottom / 100% 2px no-repeat, linear-gradient(#000 0 0) top / 100% 2px no-repeat; }
+.u-attr::after { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='6' viewBox='0 0 12 6'%3E%3Cpath d='M0 3 Q3 0 6 3 T12 3' fill='none' stroke='%23000' stroke-width='1.8'/%3E%3C/svg%3E") left center / 12px 100% repeat-x; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='6' viewBox='0 0 12 6'%3E%3Cpath d='M0 3 Q3 0 6 3 T12 3' fill='none' stroke='%23000' stroke-width='1.8'/%3E%3C/svg%3E") left center / 12px 100% repeat-x; }
+.u-obj::after { -webkit-mask: repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 13px) bottom / 100% 2px no-repeat; mask: repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 13px) bottom / 100% 2px no-repeat; }
+.u-adv::after { -webkit-mask: repeating-linear-gradient(90deg, #000 0 9px, transparent 9px 12px, #000 12px 14px, transparent 14px 17px) bottom / 100% 2px no-repeat; mask: repeating-linear-gradient(90deg, #000 0 9px, transparent 9px 12px, #000 12px 14px, transparent 14px 17px) bottom / 100% 2px no-repeat; }
+
+/* Шапка: речення з розбором + легенда, тло — клітинка */
+.hero { background-color: var(--bg); background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; background-position: -1px -1px; }
+.hero h1.parse { max-width: none; font-size: clamp(28px, 7vw, 52px); line-height: 1.35; letter-spacing: -0.035em; font-weight: 700; padding-bottom: .1em; }
+.parse .u { white-space: nowrap; }
+.parse .u::after { bottom: -.12em; height: .3em; transform-origin: left; }
+@media (prefers-reduced-motion: no-preference) {
+  .parse .u::after { animation: draw .55s cubic-bezier(.3, .7, .2, 1) both; }
+  .parse .u:nth-child(1)::after { animation-delay: .15s; } .parse .u:nth-child(2)::after { animation-delay: .3s; }
+  .parse .u:nth-child(3)::after { animation-delay: .45s; } .parse .u:nth-child(4)::after { animation-delay: .6s; }
+  .parse .u:nth-child(5)::after { animation-delay: .75s; } .parse .u:nth-child(6)::after { animation-delay: .9s; }
+  @keyframes draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+}
+.parse-key { list-style: none; margin: -4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; color: var(--muted); }
+.parse-key li { display: inline-flex; align-items: center; gap: 8px; }
+.parse-key .k { position: relative; display: inline-block; width: 28px; height: 10px; }
+.parse-key .k::after { content: ""; position: absolute; inset: 0; background: var(--lime); }
+.parse-key .k.u-sub::after, .parse-key .k.u-pred::after, .parse-key .k.u-obj::after, .parse-key .k.u-adv::after { -webkit-mask-position: center; mask-position: center; }
+.parse-key .k.u-pred::after { -webkit-mask: linear-gradient(#000 0 0) 0 2px / 100% 2px no-repeat, linear-gradient(#000 0 0) 0 6px / 100% 2px no-repeat; mask: linear-gradient(#000 0 0) 0 2px / 100% 2px no-repeat, linear-gradient(#000 0 0) 0 6px / 100% 2px no-repeat; }
+.parse-key .k.u-sub::after { -webkit-mask: linear-gradient(#000 0 0) 0 4px / 100% 2px no-repeat; mask: linear-gradient(#000 0 0) 0 4px / 100% 2px no-repeat; }
+.parse-key .k.u-obj::after { -webkit-mask: repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 12px) 0 4px / 100% 2px no-repeat; mask: repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 12px) 0 4px / 100% 2px no-repeat; }
+.parse-key .k.u-adv::after { -webkit-mask: repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 11px, #000 11px 13px, transparent 13px 16px) 0 4px / 100% 2px no-repeat; mask: repeating-linear-gradient(90deg, #000 0 8px, transparent 8px 11px, #000 11px 13px, transparent 13px 16px) 0 4px / 100% 2px no-repeat; }
+
+/* Знак теми */
+.gl { flex: none; width: 52px; height: 52px; border: 1px solid color-mix(in srgb, var(--sc) 40%, var(--line)); border-radius: var(--r-sm); background: color-mix(in srgb, var(--sc) 7%, var(--bg)); color: var(--sc); display: grid; place-content: center; justify-items: center; text-align: center; line-height: 1; gap: 3px; }
+.gl b { font-size: 19px; font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; }
+.gl small { font-size: 10px; font-weight: 600; color: color-mix(in srgb, var(--sc) 80%, var(--text)); }
+.gl-sep { font-size: 22px; font-weight: 800; display: inline-flex; align-items: baseline; }
+.gl-sep .u { width: 16px; --uc: var(--sc); }
+.gl-sep .u::after { bottom: -2px; height: 6px; }
+.gl.big { width: 84px; height: 84px; border-radius: var(--r); }
+.gl.big b { font-size: 30px; } .gl.big small { font-size: 13px; } .gl.big .gl-sep { font-size: 34px; } .gl.big .gl-sep .u { width: 26px; }
+
+/* Розділи й рядки тем */
+.section-h { border-bottom-color: var(--sc); }
+.section-h .mono { color: var(--sc); }
+.cards > .card.topic { grid-template-columns: 52px minmax(0, 1fr) auto auto; column-gap: 16px; }
+.cards > .card.topic > .gl { grid-column: 1; grid-row: 1 / span 2; align-self: center; }
+.cards > .card.topic > h3 { grid-column: 2; grid-row: 1; align-self: end; }
+.cards > .card.topic > .meta { grid-column: 2; grid-row: 2; align-self: start; }
+.cards > .card.topic > .mini { grid-column: 3; grid-row: 1 / span 2; }
+.cards > .card.topic > .acts { grid-column: 4; grid-row: 1 / span 2; }
+.mini { display: grid; grid-template-columns: repeat(10, 5px); gap: 1px; align-self: center; }
+.mini i { width: 5px; height: 5px; border-radius: 1px; background: var(--surface-2); }
+.mini i.c1 { background: var(--right); } .mini i.c0 { background: var(--wrong); }
+@media (max-width: 560px) {
+  .cards > .card.topic { grid-template-columns: 52px minmax(0, 1fr) auto; column-gap: 12px; }
+  .cards > .card.topic > .mini { grid-column: 3; }
+  .cards > .card.topic > .acts { grid-column: 1 / -1; grid-row: 3; }
+  .cards > .card.topic > .meta { gap: 10px; font-size: 12px; }
+}
+
+/* Обкладинка теорії: знак + розділ + назва */
+.t-cover { display: flex; align-items: center; gap: 16px; padding-bottom: 16px; border-bottom: 2px solid var(--sc); }
+.t-cover h2 { font-size: clamp(22px, 5vw, 30px); letter-spacing: -0.025em; }
+.t-sec { display: block; font-size: 14px; color: var(--sc); font-weight: 600; margin-bottom: 4px; }
+body[data-sec] .tab[aria-selected="true"] { background: linear-gradient(var(--sc), var(--sc)) left calc(100% - 1px) / 100% 2px no-repeat, linear-gradient(var(--sc), var(--sc)) left calc(100% - 6px) / 100% 2px no-repeat; }
+body[data-sec] .rule { --c: var(--sc); }
+
+/* Теорія як підручник: книжковий шрифт і поле з червоною лінією */
+.tbody { font-family: var(--f-book); font-size: 18px; line-height: 1.7; border-left: 1px solid var(--margin); padding-left: 22px; }
+.tbody h3, .tbody h4, .tbody b, .tbody strong, .tbody .tbl th, .tbody .algo li b, .tbody .box b, .tbody .mm-b > b, .tbody .mm-core, .tbody .mnemo .say, .tbody summary, .tbody .rule > b:first-child, .tbody .mnemo > b:first-child, .tbody .exc > b:first-child, .tbody .trap > b:first-child, .tbody .fscheme > b, .tbody .mm-head > b, .tbody .quiz > b:first-child, .tbody .btn, .tbody .frow .fx, .tbody .tri-in, .tbody .tri-out { font-family: var(--f-text); }
+.tbody .tbl, .tbody .mm, .tbody .mm-tip, .tbody .frow, .tbody .algo li span, .tbody .box span, .tbody .hint { font-family: var(--f-text); }
+.tbody i, .tbody em { font-family: var(--f-book); }
+@media (max-width: 560px) { .tbody { padding-left: 12px; font-size: 17px; } }
+
+/* Позначки вчителя у відповідях */
+.opt.ok { position: relative; }
+.opt.ok::after { content: ""; position: absolute; right: 12px; top: 50%; width: 26px; height: 22px; margin-top: -11px; background: var(--right);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 22'%3E%3Cpath d='M2 12.5c2.5 1.6 4.6 3.8 6.2 6.6C12 11.2 17.4 5.4 24 2' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 22'%3E%3Cpath d='M2 12.5c2.5 1.6 4.6 3.8 6.2 6.6C12 11.2 17.4 5.4 24 2' fill='none' stroke='%23000' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+.opt.ok .tag { visibility: hidden; }
+.opt.no > span:not(.key):not(.box-ic):not(.tag) { text-decoration: underline wavy var(--wrong) 1.5px; text-underline-offset: 5px; text-decoration-skip-ink: none; }
+@media (prefers-reduced-motion: no-preference) { .opt.ok::after { animation: draw .45s ease-out both; } }
+.done-card { grid-template-columns: auto minmax(0, 1fr); column-gap: 16px; align-items: center; }
+.done-card > *:not(.grade) { grid-column: 2; }
+.grade { grid-column: 1; grid-row: 1 / span 3; width: 64px; height: 64px; border: 2px solid var(--wrong); border-radius: 50%; color: var(--wrong); display: grid; place-items: center; font: 700 28px/1 var(--f-book); font-style: italic; transform: rotate(-6deg); }
+@media (max-width: 480px) { .done-card { grid-template-columns: minmax(0, 1fr); } .done-card > * { grid-column: 1 !important; } .grade { grid-row: auto; } }
+
+/* Календар занять */
+.heat-wrap { display: grid; gap: 6px; }
+.heatmap { display: grid; grid-template-rows: repeat(7, 10px); grid-auto-flow: column; grid-auto-columns: 10px; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+.heatmap i { width: 10px; height: 10px; border-radius: 2px; background: var(--surface-2); }
+.heatmap i.l1 { background: color-mix(in srgb, var(--right) 30%, var(--surface-2)); } .heatmap i.l2 { background: color-mix(in srgb, var(--right) 55%, var(--surface-2)); }
+.heatmap i.l3 { background: color-mix(in srgb, var(--right) 80%, var(--surface-2)); } .heatmap i.l4 { background: var(--right); }
+.heatmap i.lf { background: transparent; }
+.today { background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; }
+
+/* Порожні стани — на клітинці */
+.fx-empty, .gate { background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; }
+
+.gl-key { display: inline-flex; align-items: flex-end; gap: 1px; font-size: 20px; font-weight: 800; line-height: .8; }
+.gl-key i { font-style: normal; }
+.gl-key .k { position: relative; display: inline-block; width: 18px; height: 10px; }
+.gl-key .k::after { content: ""; position: absolute; inset: 0; background: var(--sc); }
+.gl.big .gl-key { font-size: 32px; } .gl.big .gl-key .k { width: 30px; height: 14px; }
+.cards > .card.topic > .acts .btn.primary { min-width: 120px; }
+
+body.compact .parse-key { display: none; }
 </style>
 
 </head>
@@ -865,8 +980,9 @@ body.compact .wordmark { font-size: 22px; }
         <span class="chip" id="sync-chip"><span class="dot"></span><span id="sync-text">Прогрес у профілі</span></span>
       </div>
     </div>
-    <h1>Українська мова: <em>тренажер, ЗНО і НМТ</em></h1>
-    <p class="sub">Тренажер: 36 тем з теорією і 100 завданнями в кожній. Банк завдань ЗНО з поясненнями. Симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
+    <h1 class="parse" aria-label="Уважний учень щодня вивчає рідну мову."><span class="u u-attr">Уважний</span> <span class="u u-sub">учень</span> <span class="u u-adv">щодня</span> <span class="u u-pred">вивчає</span> <span class="u u-attr">рідну</span> <span class="u u-obj">мову</span>.</h1>
+    <ul class="parse-key" aria-label="Як підкреслюємо члени речення"><li><i class="k u-sub"></i>підмет</li><li><i class="k u-pred"></i>присудок</li><li><i class="k u-attr"></i>означення</li><li><i class="k u-obj"></i>додаток</li><li><i class="k u-adv"></i>обставина</li></ul>
+    <p class="sub">Тренажер з української мови для ЗНО і НМТ: 36 тем з теорією і 100 завданнями в кожній. Банк завдань ЗНО з поясненнями. Симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
     <div class="namebox" id="profilebox"></div>
     <div class="overall" id="overall"></div>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
@@ -894,15 +1010,15 @@ body.compact .wordmark { font-size: 22px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=22"></script>
-<script src="data-extra.js?v=22"></script>
-<script src="engine.js?v=22"></script>
-<script src="zno-app.js?v=22"></script>
-<script src="nmt-app.js?v=22"></script>
-<script src="fix-app.js?v=22"></script>
-<script src="theory-app.js?v=22"></script>
-<script src="plus-app.js?v=22"></script>
-<script src="exam-app.js?v=22"></script>
+<script src="data.js?v=23"></script>
+<script src="data-extra.js?v=23"></script>
+<script src="engine.js?v=23"></script>
+<script src="zno-app.js?v=23"></script>
+<script src="nmt-app.js?v=23"></script>
+<script src="fix-app.js?v=23"></script>
+<script src="theory-app.js?v=23"></script>
+<script src="plus-app.js?v=23"></script>
+<script src="exam-app.js?v=23"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -952,7 +1068,7 @@ body.compact .wordmark { font-size: 22px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "22", THEORY = {}, theoryLoading = {};
+  const VER = "23", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1385,8 +1501,29 @@ body.compact .wordmark { font-size: 22px; }
     updateFab();
   }
 
+  /* Знак теми — коротка типографічна «обкладинка» замість ілюстрації. */
+  const GLYPH = { stress: "á", sounds: "[ш]", eio: "е/и", prefix: "при-", simpl: "сн", change: "г→ж", apos: "ʼ", soft: "ь", yo: "йо", double: "лл",
+    foreign: "і/и", caps: "Аа", compound: "пів-", ne: "не", uv: "у/в", meaning: "зн.", antonym: "↔", lexerr: "≠", phraseo: "«»",
+    assim_place: "с→ш", assim_manner: "дц", alt_vowels: "о/і", alt_cons: "к/ч", unst_ph: "[еи]", nn_adj: "нн", nn_part: "-ний",
+    comp_tog: "о/е", comp_hyph: "а-б", dash_sp: "—", ne_verb: ["не", "дієсл."], ne_noun: ["не", "ім."], ne_part: ["не", "дієпр."], ne_adv: ["ні", "присл."],
+    sep_attr: ["u-attr", "озн."], sep_adv: ["u-adv", "обст."], sep_obj: ["u-obj", "дод."] };
+  function glyphHtml(t, big) {
+    const g = GLYPH[t.id] || t.title.slice(0, 2);
+    let inner;
+    if (Array.isArray(g) && g[0].startsWith("u-")) inner = `<span class="gl-key"><i>,</i><span class="k ${g[0]}"></span><i>,</i></span><small>${esc(g[1])}</small>`;
+    else if (Array.isArray(g)) inner = `<b>${esc(g[0])}</b><small>${esc(g[1])}</small>`;
+    else inner = `<b>${esc(g)}</b>`;
+    return `<span class="gl${big ? " big" : ""}" aria-hidden="true">${inner}</span>`;
+  }
+  /* Мінікарта теми: 100 клітинок, як карта завдань. */
+  function miniMap(id) {
+    const s = me(), r = s && s.topics[id] ? s.topics[id].r || "" : "";
+    let h = '<span class="mini" aria-hidden="true">';
+    for (let i = 0; i < N; i++) { const c = r[i]; h += c === "1" ? '<i class="c1"></i>' : c === "0" ? '<i class="c0"></i>' : "<i></i>"; }
+    return h + "</span>";
+  }
   function renderHome() {
-    ui.view = "home";
+    ui.view = "home"; delete document.body.dataset.sec;
     const home = store.home || "trainer";
     const nfix = loggedIn() ? FX.openCount() : 0;
     let h = `<main class="wrap"><div class="tabs hometabs four" role="tablist" aria-label="Розділи сайту">
@@ -1400,11 +1537,11 @@ body.compact .wordmark { font-size: 22px; }
     if (home === "nmt") { app.innerHTML = h + NM.homeHtml() + reportSection() + "</main>"; return; }
     h += PL.todayHtml();
     S.forEach(sec => {
-      h += `<section class="section"><div class="section-h"><span class="mono">${sec.id}</span><h2>${esc(sec.title)}</h2></div><div class="cards">`;
+      h += `<section class="section" data-sec="${sec.id}"><div class="section-h"><span class="mono">${sec.id}</span><h2>${esc(sec.title)}</h2></div><div class="cards">`;
       T.filter(t => t.sec === sec.id).forEach(t => {
         const st = topicStats(t.id);
-        h += `<article class="card"><h3>${esc(t.title)}</h3>
-          <div class="bar" aria-hidden="true"><b style="width:${st.a}%"></b><i style="width:${st.c}%"></i></div>
+        h += `<article class="card topic">${glyphHtml(t)}<h3>${esc(t.title)}</h3>
+          ${miniMap(t.id)}
           <div class="meta"><span>Виконано <b class="mono">${st.a}</b>/100</span><span>Результат <b class="mono">${st.c}%</b> ${st.c === 100 ? '<span class="badge100">100%</span>' : ""}</span></div>
           <div class="acts"><button class="btn small" data-open="${t.id}" data-tab="theory">Теорія</button><button class="btn small primary" data-open="${t.id}" data-tab="tasks">${st.a ? (st.a === 100 ? "Переглянути" : "Продовжити") : "Почати"}</button></div></article>`;
       });
@@ -1431,6 +1568,7 @@ body.compact .wordmark { font-size: 22px; }
 
   function renderTopic() {
     const t = T.find(x => x.id === ui.topic); if (!t) { ui.view = "home"; return renderHome(); }
+    document.body.dataset.sec = t.sec;
     let h = `<div class="topbar"><div class="wrap">
       <div class="tb-row"><button class="btn small ghost" data-act="home" aria-label="До списку тем">← Теми</button><span class="tb-title">${t.sec} · ${esc(t.title)}</span></div>
       <div class="tabs three" role="tablist"><button class="tab" role="tab" aria-selected="${ui.tab === "theory"}" data-tabto="theory">Теорія</button><button class="tab" role="tab" aria-selected="${ui.tab === "tasks"}" data-tabto="tasks">Завдання</button><button class="tab" role="tab" aria-selected="${ui.tab === "theorytrain"}" data-tabto="theorytrain">Тренування теорії</button></div>
@@ -1442,8 +1580,7 @@ body.compact .wordmark { font-size: 22px; }
 
   function theoryHtml(t) {
     return `<article class="theory">
-      <h2>${esc(t.title)}</h2>
-      <figure class="photo"><img src="${IMG[t.img]}" alt="${esc(ALT[t.img])}" loading="lazy"><figcaption>Ілюстрацію згенеровано ШІ (Hugging Face, Z-Image Turbo)</figcaption></figure>
+      <header class="t-cover">${glyphHtml(t, true)}<div><span class="t-sec">${t.sec} ${esc((S.find(x => x.id === t.sec) || {}).title || "")}</span><h2>${esc(t.title)}</h2></div></header>
       <div class="tbody">${theoryOf(t.id) ?? '<p class="empty">Завантажую теорію…</p>'}</div>
       <div class="task-nav to-tasks"><button class="btn primary" data-tabto="tasks">До завдань →</button><button class="btn" data-tabto="theorytrain">Тренування теорії</button></div>
     </article>`;
@@ -1466,7 +1603,7 @@ body.compact .wordmark { font-size: 22px; }
     }
     h += "</div>";
     if (stat.a === N && !ui.reviewing) {
-      h += `<div class="done-card"><h3 style="font-size:18px">Тему завершено: ${stat.c}%</h3><p style="margin:0">${stat.c === 100 ? "Бездоганно! Усі 100 завдань правильно." : nfix ? "Попрацюй над помилками: розбір, те саме завдання й схожі на те саме правило." : "Усі помилки цієї теми виправлено. Щоб покращити результат, можна почати тему заново."}</p>
+      h += `<div class="done-card"><span class="grade" aria-label="Оцінка ${Math.max(1, Math.round(stat.c * 12 / 100))} з 12">${Math.max(1, Math.round(stat.c * 12 / 100))}</span><h3 style="font-size:18px">Тему завершено: ${stat.c}%</h3><p style="margin:0">${stat.c === 100 ? "Бездоганно! Усі 100 завдань правильно." : nfix ? "Попрацюй над помилками: розбір, те саме завдання й схожі на те саме правило." : "Усі помилки цієї теми виправлено. Щоб покращити результат, можна почати тему заново."}</p>
         <div class="task-nav">${nfix ? `<button class="btn primary" data-fixstart="t:${t.id}">Робота над помилками (${nfix})</button>` : ""}<button class="btn" data-act="review">Переглянути відповіді</button><button class="btn" data-act="home">До тем</button></div></div>`;
     } else h += taskCard(t, tasks[ui.cur], st);
     h += `<div class="foot-acts">${nfix && stat.a < N ? `<button class="btn small" data-fixstart="t:${t.id}">Робота над помилками (${nfix})</button>` : ""}<button class="btn small" data-act="finish">Завершити й вийти</button><button class="btn small ghost" data-act="reset">Почати тему заново</button></div>`;

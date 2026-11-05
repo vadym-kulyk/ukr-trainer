@@ -184,12 +184,27 @@
           <div class="td-stat"><div><b class="mono">${sk}</b><span>${sk === 1 ? "день" : sk >= 2 && sk <= 4 ? "дні" : "днів"} поспіль</span></div></div>
           <div class="td-stat td-goal"><div><b class="mono">${wk}<small> / ${goal}</small></b><span>ціль тижня</span><div class="bar" aria-hidden="true"><b style="width:${Math.min(100, wk / goal * 100)}%"></b></div></div></div>
         </div>
+        ${heatHtml(x)}
         <div class="td-acts">
           <button class="btn ${wuDone ? "" : "primary"}" data-pl="wu">${wuDone ? "✓ Розминку виконано · ще 10" : "Щоденна розминка · " + WU_N + " завдань"}</button>
           <button class="btn" data-pl="${diagDone ? "plan" : "diag"}">${diagDone ? "Мій план" : diagRun ? "Продовжити діагностику" : "Діагностика · 15 хв"}</button>
           <button class="btn" data-pl="forecast">${esc(fc)}</button>
           <button class="btn" data-pl="badges">Нагороди ${nb}/${BADGES.length}</button>
         </div></section>`;
+    }
+
+    /* Календар занять за 20 тижнів: стовпчик — тиждень, клітинка — день (пн–нд). */
+    function heatHtml(x) {
+      const W = 20, now = new Date(); now.setHours(12, 0, 0, 0);
+      const start = new Date(now.getTime() - ((now.getDay() + 6) % 7) * DAY - (W - 1) * 7 * DAY);
+      let h = '<div class="heat-wrap"><div class="heatmap" role="img" aria-label="Календар занять за 20 тижнів">', act = 0;
+      for (let i = 0; i < W * 7; i++) {
+        const t = start.getTime() + i * DAY, n = x.days[dk(t)] || 0, fut = t > now.getTime();
+        if (n) act++;
+        const lv = fut ? "f" : n >= 60 ? 4 : n >= 30 ? 3 : n >= 10 ? 2 : n ? 1 : 0;
+        h += `<i class="l${lv}" title="${fut ? "" : new Date(t).toLocaleDateString("uk-UA") + ": " + n}"></i>`;
+      }
+      return h + `</div><span class="hint">Днів із заняттями за 20 тижнів: ${act}</span></div>`;
     }
 
     /* ── Сторінки ── */
