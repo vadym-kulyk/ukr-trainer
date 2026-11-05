@@ -43,7 +43,7 @@
   /* ───── Вхід ───── */
   let loginMsg = "";
   function loginHtml() {
-    return `<form class="login" id="login"><span class="logo wordmark">Дослівно</span><h2>Адмін-панель</h2>
+    return `<form class="login" id="login"><span class="logo wordmark" aria-label="Дослівно">Досл<span class="wm-st">і</span>вно</span><h2>Адмін-панель</h2>
       ${API ? `<label class="field"><span>Пароль адміністратора</span><input class="input" id="pw" type="password" autocomplete="current-password" required></label>
       <button class="btn primary" type="submit">Увійти</button>` : '<p class="err">На сайті не підключено таблицю результатів (config.js → resultsUrl).</p>'}
       <p class="hint" id="lmsg">${esc(loginMsg) || "Пароль задається в Google Таблиці: меню «Тренажер» → «Задати пароль адміністратора»."}</p>
@@ -300,7 +300,7 @@
   function shell(body) {
     const r = route()[0], unread = D ? D.replies.filter(x => !x.seen).length : 0;
     const cur = { student: "students", topic: "topics", test: "tests" }[r] || r;
-    return `<header class="top"><div class="wrap"><div class="top-row"><span class="logo wordmark">Дослівно</span><h1>Адмін-панель</h1><span class="spacer"></span>
+    return `<header class="top"><div class="wrap"><div class="top-row"><span class="logo wordmark" aria-label="Дослівно">Досл<span class="wm-st">і</span>вно</span><h1>Адмін-панель</h1><span class="spacer"></span>
       <button class="btn sm" data-act="refresh" title="Оновити дані" ${loading ? "disabled" : ""}>↻<span class="small"> ${loading ? "Оновлюю…" : "Оновити"}</span></button></div>
       <nav class="nav" aria-label="Розділи">${NAV.map(([k, l]) => `<a href="#${k}" class="${cur === k ? "on" : ""}">${l}${k === "messages" && unread ? `<span class="badge">${unread}</span>` : ""}</a>`).join("")}</nav>
       ${D ? `<div class="filters"><label class="row small"><span class="muted">Клас:</span><select class="input" id="clsf"><option value="">усі класи</option>${classes().map(c => `<option ${ui.cls === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
@@ -396,7 +396,7 @@
     const msgs = D.msgs.filter(m => addressed(m.code, s)).sort((a, b) => b.at - a.at), reps = D.replies.filter(r => r.key === s.key).sort((a, b) => b.at - a.at);
     let h = `<div class="stack"><div class="crumbs"><a href="#students">← Учні</a></div>
       <div class="card"><div class="row"><h2>${esc(s.name)}</h2><span class="tag violet">${esc(s.cls)}</span><span class="spacer"></span>
-        <button class="btn sm primary noprint" data-msgto="${esc(s.key)}">✉ Написати</button><button class="btn sm noprint" data-act="print">🖨 Друк</button>
+        <button class="btn sm primary noprint" data-msgto="${esc(s.key)}">Написати</button><button class="btn sm noprint" data-act="print">Друк</button>
         <button class="btn sm noprint" data-resetpin="${esc(s.key)}">Скинути PIN</button><button class="btn sm danger noprint" data-delstu="${esc(s.key)}">Видалити</button></div>
         <div class="hint">Профіль створено ${fmtDate(s.created)} · останній вхід ${fmtDT(s.lastLogin)} · остання активність ${ago(s.seen)}${s.pin ? "" : " · <b>PIN скинуто — учень задасть новий під час входу</b>"}</div>
         <div class="kpis">${kpi(s.tr.a + "/" + T.length * N, "виконано в тренажері", pctTxt(s.tr.prog))}${kpi(pctTxt(s.tr.acc), "точність у тренажері")}${kpi(s.zn.a ? pctTxt(s.zn.acc) : "—", "точність у ЗНО", s.zn.a + " завдань")}
@@ -609,7 +609,7 @@
       <label class="field"><span>Заголовок (необов’язково)</span><input class="input" id="mtitle" maxlength="120" value="${esc(compose.title)}"></label>
       <label class="field"><span>Текст</span><textarea class="input" id="mtext" maxlength="4000">${esc(compose.text)}</textarea></label>
       <label class="check"><input type="checkbox" id="mimp" ${compose.imp ? "checked" : ""}> Важливе — показати учневі одразу після входу</label>
-      <div class="row"><button class="btn primary" data-act="send" ${compose.busy ? "disabled" : ""}>${compose.busy ? "Надсилаю…" : "Надіслати"}</button><span class="hint">Учні побачать повідомлення під дзвіночком 🔔 на сайті.</span></div></div>`;
+      <div class="row"><button class="btn primary" data-act="send" ${compose.busy ? "disabled" : ""}>${compose.busy ? "Надсилаю…" : "Надіслати"}</button><span class="hint">Учні побачать повідомлення під дзвіночком на сайті.</span></div></div>`;
     h += `<div class="card"><h3>Відповіді учнів ${unread.length ? `<span class="badge">${unread.length}</span>` : ""}</h3>${unread.length || seen.length ? `<div class="list">${unread.concat(seen.slice(0, 30)).map(r => `<div class="item ${r.seen ? "" : "unread"}"><div class="meta"><b><a href="#student/${encodeURIComponent(r.key)}">${esc(r.name)}</a></b><span>${fmtDT(r.at)}</span><span>на «${esc(msgTitle(r.msg))}»</span></div><div class="text">${esc(r.text)}</div>
       <div class="row">${r.seen ? "" : `<button class="btn sm" data-seen="${esc(r.id)}">Позначити прочитаним</button>`}<button class="btn sm" data-msgto="${esc(r.key)}">Відповісти</button></div></div>`).join("")}</div>
       ${unread.length > 1 ? `<div><button class="btn sm" data-act="seen-all">Позначити всі прочитаними</button></div>` : ""}` : '<p class="empty">Відповідей поки немає.</p>'}</div>`;

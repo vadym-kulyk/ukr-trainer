@@ -74,8 +74,8 @@
     }
     function suggestionsHtml(limit) {
       const sg = suggestions().slice(0, limit || 12);
-      if (!sg.length) return limit ? "" : '<div class="card"><h3>💡 Розумні призначення</h3><p class="empty">Зараз нема тем, які варто призначити: немає груп учнів із точністю нижче 50 % (від 10 відповідей) чи помилками в діагностиці.</p></div>';
-      return `<div class="card"><h3>💡 Розумні призначення</h3><p class="hint">Панель шукає учнів, яким тема дається важко: точність нижче 50 % (від 10 відповідей) або помилка в діагностиці, якщо тему ще не проходили.</p>
+      if (!sg.length) return limit ? "" : '<div class="card"><h3>Розумні призначення</h3><p class="empty">Зараз нема тем, які варто призначити: немає груп учнів із точністю нижче 50 % (від 10 відповідей) чи помилками в діагностиці.</p></div>';
+      return `<div class="card"><h3>Розумні призначення</h3><p class="hint">Панель шукає учнів, яким тема дається важко: точність нижче 50 % (від 10 відповідей) або помилка в діагностиці, якщо тему ще не проходили.</p>
         <div class="list">${sg.map((x, i) => `<div class="item sg"><div class="meta"><b>${esc(x.cls)}: ${esc(x.t.title)}</b><span class="tag red">${x.who.length} учн.</span></div>
           <div class="text">${x.weak.length ? `Точність нижче 50 %: ${x.weak.map(s => esc(s.name) + " (" + h.pctTxt(s.tt[x.t.id].c / s.tt[x.t.id].a) + ")").join(", ")}. ` : ""}${x.diag.length ? `Помилка в діагностиці: ${x.diag.map(s => esc(s.name)).join(", ")}.` : ""}</div>
           <div><button class="btn sm primary" data-sgi="${i}">Призначити цим учням</button></div></div>`).join("")}</div></div>`;
@@ -200,15 +200,15 @@
           <div class="row lm-head"><b>${esc(g.title)}${g.side ? ` <span class="muted">· ${esc(g.side)}</span>` : ""} · №${n}</b><span class="spacer"></span>
             <button class="btn sm" data-lgstep="-1" ${i > 0 ? "" : "disabled"} aria-label="Попереднє завдання">←</button>
             <button class="btn sm" data-lgstep="1" ${i < ns.length - 1 ? "" : "disabled"} aria-label="Наступне завдання">→</button>
-            <button class="btn sm ${LV.proj ? "primary" : ""}" data-lgproj="1" title="Для показу на екрані: великий шрифт, без імен">🖥 Показ класу</button>
+            <button class="btn sm ${LV.proj ? "primary" : ""}" data-lgproj="1" title="Для показу на екрані: великий шрифт, без імен">Показ класу</button>
             <button class="btn sm" data-lgclose="1" aria-label="Закрити">✕</button></div>
           ${who && who.cells[n] && !LV.proj ? `<div class="lm-who ${who.cells[n].ok ? "ok" : "no"}">${esc(who.s.name)}: ${who.cells[n].ok ? "✓ правильно" : "✗ відповідь «" + esc(who.cells[n].ans || "—") + "»"}${who.cells[n].tries > 1 ? ` <span class="muted">(спроб: ${who.cells[n].tries})</span>` : ""}</div>` : ""}
           <div class="task-view${LV.proj && !LV.reveal ? " hide-ans" : ""}">${liveTask(g, n).replace(/ ✓/g, '<span class="okm"> ✓</span>')}</div>
-          ${LV.proj ? `<div class="row"><button class="btn sm ${LV.reveal ? "" : "primary"}" data-lgreveal="1">${LV.reveal ? "Сховати відповідь" : "👁 Показати відповідь"}</button></div>` : ""}
+          ${LV.proj ? `<div class="row"><button class="btn sm ${LV.reveal ? "" : "primary"}" data-lgreveal="1">${LV.reveal ? "Сховати відповідь" : "Показати відповідь"}</button></div>` : ""}
           <div class="lm-stat"><span class="tag green">✓ ${right.length}</span><span class="tag red">✗ ${wrong.length}</span><span class="tag">ще не відповіли: ${Math.max(0, rows.length - done.length)}</span></div>
           ${wrong.length && (!LV.proj || LV.reveal) ? `<div><h4>Хибні відповіді</h4><div class="list">${Object.entries(byAns).sort((a, b) => b[1].length - a[1].length).map(([a, ws]) => `<div class="item"><div><b>«${esc(a)}»</b> <span class="tag red">${ws.length}</span></div>${LV.proj ? "" : `<div class="small muted">${ws.map(esc).join(", ")}</div>`}</div>`).join("")}</div></div>` : ""}
           ${!LV.proj && right.length ? `<p class="small"><b>Правильно:</b> ${right.map(r => nm(r.s.name) + (fixed.includes(r) ? " (з другої спроби)" : "")).join(", ")}</p>` : ""}
-          ${!LV.proj && wrong.some(r => r.s.key) ? `<div class="row"><button class="btn sm" data-lgmsg="1">✉ Написати тим, хто помилився (${wrong.filter(r => r.s.key).length})</button></div>` : ""}
+          ${!LV.proj && wrong.some(r => r.s.key) ? `<div class="row"><button class="btn sm" data-lgmsg="1">Написати тим, хто помилився (${wrong.filter(r => r.s.key).length})</button></div>` : ""}
           <p class="hint lm-keys">Стрілки ← → на клавіатурі гортають завдання, Esc закриває.</p>
         </div></div>`;
     }
@@ -219,11 +219,11 @@
       const g = M.groups.find(x => x.key === LV.grp) || M.groups[0];
       const running = live.running.filter(r => { const s = D().students.find(z => z.key === r.key); return !h.ui.cls || (s && s.cls === h.ui.cls); });
       const onNow = students.filter(r => r.status === "on").length, attn = students.filter(r => r.flags.length).length;
-      let out = `<div class="stack"><div class="card"><div class="row"><h3>🔴 Урок наживо</h3><span class="spacer"></span>
+      let out = `<div class="stack"><div class="card"><div class="row"><h3>Урок наживо</h3><span class="spacer"></span>
         <label class="row small"><span class="muted">за</span><select class="input" id="lvmin" style="width:auto">${[20, 45, 90].map(m => `<option value="${m}" ${LV.min === m ? "selected" : ""}>${m} хв</option>`).join("")}</select></label>
         <span class="hint">оновлено ${h.fmtDT(now)} · кожні 20 с</span><button class="btn sm" data-act="live-now" aria-label="Оновити">↻</button></div>
         <div class="kpis">${h.kpi(onNow + " / " + students.length, "учнів онлайн", "відповідали за 2 хв")}${h.kpi(attn, "потребують уваги")}${h.kpi(running.length, "пишуть моніторингову")}</div></div>`;
-      if (running.length) out += `<div class="card"><h3>📝 Пишуть моніторингову роботу</h3><div class="chips">${running.map(r => { const t = live.tests.find(z => z.id === r.id); const left = t ? Math.round((r.started + t.min * 60000 - now) / 60000) : null; return `<span class="tag ${left != null && left < 0 ? "red" : "violet"}">${esc(r.name)} · ${esc(t ? t.title : "")} · ${left == null ? "" : left >= 0 ? "залишилось " + left + " хв" : "час вийшов"}</span>`; }).join("")}</div></div>`;
+      if (running.length) out += `<div class="card"><h3>Пишуть моніторингову роботу</h3><div class="chips">${running.map(r => { const t = live.tests.find(z => z.id === r.id); const left = t ? Math.round((r.started + t.min * 60000 - now) / 60000) : null; return `<span class="tag ${left != null && left < 0 ? "red" : "violet"}">${esc(r.name)} · ${esc(t ? t.title : "")} · ${left == null ? "" : left >= 0 ? "залишилось " + left + " хв" : "час вийшов"}</span>`; }).join("")}</div></div>`;
       if (!g) return out + `<div class="card"><p class="empty">За останні ${LV.min} хвилин ніхто не відповідав.</p></div></div>`;
       out += `<div class="card"><div class="chips lg-groups" role="tablist">${M.groups.map(x => `<button class="${x === g ? "on" : ""}" data-lggrp="${esc(x.key)}">${esc(x.title)}${x.side ? ` · ${esc(x.side)}` : ""} <span class="lg-cnt">${Object.keys(x.rows).length}</span></button>`).join("")}</div>`;
       const ns = Object.keys(g.cols).map(Number).sort((a, b) => a - b);
@@ -236,7 +236,7 @@
         <span class="hint">Натисніть номер завдання, щоб відкрити його й пояснити класу; клітинку — щоб побачити відповідь учня.</span></div>
         <div class="lg-wrap"><table class="lg"><thead><tr><th class="lg-nm" scope="col">Учень</th><th class="lg-pc" scope="col">%</th>
         ${ns.map(n => { const c = g.cols[n], all = c.ok + c.no; return `<th scope="col"><button class="lg-h" data-lgopen="${n}" title="Відкрити завдання №${n}"><span>${n}</span><span class="lg-hs ${c.no > c.ok ? "no" : ""}">${c.ok}/${all}</span></button></th>`; }).join("")}</tr></thead><tbody>
-        ${rows.map(r => { const p = pc(r); return `<tr><th class="lg-nm" scope="row"><span class="ldot ${r.s.status}" aria-hidden="true"></span>${r.s.key ? `<a href="#student/${encodeURIComponent(r.s.key)}" title="${esc(r.s.name)}">${esc(short(r.s.name))}</a>` : esc(short(r.s.name))}${r.s.flags.length ? ` <span class="lg-flag" title="${esc(r.s.flags.join("; "))}">⚠</span>` : ""}</th>
+        ${rows.map(r => { const p = pc(r); return `<tr><th class="lg-nm" scope="row"><span class="ldot ${r.s.status}" aria-hidden="true"></span>${r.s.key ? `<a href="#student/${encodeURIComponent(r.s.key)}" title="${esc(r.s.name)}">${esc(short(r.s.name))}</a>` : esc(short(r.s.name))}${r.s.flags.length ? ` <span class="lg-flag" title="${esc(r.s.flags.join("; "))}">!</span>` : ""}</th>
           <td class="lg-pc ${band(p)}">${p}%</td>
           ${ns.map(n => { const c = r.cells[n]; return c ? `<td class="${c.ok ? "c1" : "c0"}"><button data-lgcell="${n}" data-lgwho="${esc(r.s.name)}" aria-label="${esc(r.s.name)}, завдання ${n}: ${c.ok ? "правильно" : "помилка"}">${c.ok ? "✓" : "✗"}${c.tries > 1 ? `<sup>${c.tries}</sup>` : ""}</button></td>` : `<td class="ce"></td>`; }).join("")}</tr>`; }).join("")}
         </tbody></table></div>`;
@@ -293,7 +293,7 @@
       const avg = done.length ? done.reduce((a, x) => a + x.r.score / (x.r.max || 1), 0) / done.length : null;
       const avgG = done.length ? done.reduce((a, x) => a + x.r.grade, 0) / done.length : null;
       const avgT = done.length ? done.reduce((a, x) => a + (x.r.done - x.r.started), 0) / done.length / 60000 : null;
-      let out = `<div class="stack"><div class="crumbs"><a href="#tests">← Моніторингові роботи</a></div><div class="card"><div class="row"><h2>${esc(t.title)}</h2><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span><span class="spacer"></span><button class="btn sm noprint" data-act="ctl-csv" data-id="${esc(t.id)}">⬇ CSV</button><button class="btn sm noprint" data-act="print">🖨 Друк</button></div>
+      let out = `<div class="stack"><div class="crumbs"><a href="#tests">← Моніторингові роботи</a></div><div class="card"><div class="row"><h2>${esc(t.title)}</h2><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span><span class="spacer"></span><button class="btn sm noprint" data-act="ctl-csv" data-id="${esc(t.id)}">⬇ CSV</button><button class="btn sm noprint" data-act="print">Друк</button></div>
         <div class="kpis">${h.kpi(done.length + " з " + rec.length, "здали")}${h.kpi(h.pctTxt(avg), "середній результат")}${h.kpi(avgG == null ? "—" : avgG.toFixed(1).replace(".", ","), "середня оцінка")}${h.kpi(avgT == null ? "—" : Math.round(avgT) + " хв", "середній час")}</div></div>`;
       out += `<div class="card"><h3>Результати</h3>${h.table("ctl-" + t.id, [
         { k: "n", t: "Учень", v: x => x.s.name, h: x => h.nameLink(x.s) }, { k: "c", t: "Клас", v: x => x.s.cls },
@@ -318,7 +318,7 @@
       const thRows = T.map(t => ({ t, x: th[t.id] })).filter(r => r.x && r.x[0]);
       const st = streakOf(p.days), goal = p.goal && p.goal.w;
       const wk = (() => { let n = 0; const ws = weekStart(D().now); for (let i = 0; i < 7; i++) n += (p.days || {})[dk(ws + i * DAY)] || 0; return n; })();
-      out += `<div class="card"><h3>Тренування, мотивація, діагностика</h3><div class="kpis">${h.kpi("🔥 " + st, "днів поспіль")}${h.kpi(goal ? wk + " / " + goal : "—", "ціль тижня")}${h.kpi(p.badges ? Object.keys(p.badges).length : 0, "нагород")}
+      out += `<div class="card"><h3>Тренування, мотивація, діагностика</h3><div class="kpis">${h.kpi(st, "днів поспіль")}${h.kpi(goal ? wk + " / " + goal : "—", "ціль тижня")}${h.kpi(p.badges ? Object.keys(p.badges).length : 0, "нагород")}
         ${h.kpi(diag && diag.res ? Object.values(diag.res).filter(v => v === "1").length + " / " + Object.keys(diag.res).length : "—", "діагностика", diag && diag.done ? "пройдено " + h.fmtDate(diag.at) : diag ? "не завершено" : "не проходив")}
         ${h.kpi(p.wu ? p.wu.n : 0, "завдань у розминці", p.wu && p.wu.done ? "днів розминки: " + Object.keys(p.wu.done).length : "")}${h.kpi(s.act && s.act.xs ? (s.act.xs["тренування теорії"] || 0) : 0, "відповідей у тренуванні теорії")}</div>
         ${diag && diag.res ? `<details class="more"><summary>Помилки в діагностиці (${Object.values(diag.res).filter(v => v === "0").length})</summary><div class="chips">${T.filter(t => diag.res[t.id] === "0").map(t => `<span class="tag red">${esc(t.title)}</span>`).join("") || '<span class="hint">Без помилок.</span>'}</div></details>` : ""}
@@ -328,7 +328,7 @@
         { k: "t", t: "Моніторингова робота", v: r => { const t = (D().tests || []).find(z => z.id === r.id); return t ? t.title : "—"; }, h: r => { const t = (D().tests || []).find(z => z.id === r.id); return t ? `<a href="#test/${encodeURIComponent(t.id)}">${esc(t.title)}</a>` : "—"; } },
         { k: "d", t: "Здано", v: r => r.done, h: r => h.fmtDT(r.done) }, { k: "s", t: "Бали", num: 1, v: r => r.score, h: r => r.score + "/" + r.max }, { k: "g", t: "Оцінка", num: 1, v: r => r.grade, h: r => "<b>" + r.grade + "</b>" }], ctlRes)}</div>`;
       const pl = parentLinks[s.key];
-      out += `<div class="card noprint"><h3>👪 Звіт для батьків</h3><p class="hint">Окреме посилання лише на цього учня: прогрес, активність, моніторингові роботи й призначення. Без входу і без даних інших учнів. Сторінку можна роздрукувати або зберегти як PDF.</p>
+      out += `<div class="card noprint"><h3>Звіт для батьків</h3><p class="hint">Окреме посилання лише на цього учня: прогрес, активність, моніторингові роботи й призначення. Без входу і без даних інших учнів. Сторінку можна роздрукувати або зберегти як PDF.</p>
         ${pl ? `<div class="row"><input class="input" style="flex:1 1 260px" readonly value="${esc(pl)}" id="plink-${esc(s.key)}"><button class="btn sm" data-plcopy="${esc(s.key)}">Копіювати</button><a class="btn sm" href="${esc(pl)}" target="_blank" rel="noopener">Відкрити ↗</a><button class="btn sm danger" data-plrenew="${esc(s.key)}">Нове посилання</button></div><p class="hint">«Нове посилання» вимикає старе.</p>`
         : `<div><button class="btn sm primary" data-plget="${esc(s.key)}">Отримати посилання</button></div>`}</div>`;
       return out;

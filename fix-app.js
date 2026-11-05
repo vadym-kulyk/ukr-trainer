@@ -144,7 +144,7 @@
       else if (m.src === "z") refs = ["z:" + m.topic];
       else refs = task.th || [];
       const items = refs.map(r => host.theoryRef(r)).filter(Boolean);
-      return items.length ? `<div class="rv-th">${items.map(r => `<button class="btn small" data-theory="${esc(r.ref)}">📖 Теорія: ${esc(r.title)}</button>`).join("")}</div>` : "";
+      return items.length ? `<div class="rv-th">${items.map(r => `<button class="btn small" data-theory="${esc(r.ref)}">Теорія: ${esc(r.title)}</button>`).join("")}</div>` : "";
     }
     function explainHtml(m, task) {
       if (m.src === "t") return task.note ? `<span>${task.note}</span>` : "";

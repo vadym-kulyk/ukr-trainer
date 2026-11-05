@@ -4,36 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
-<title>Адмін-панель Midgard</title>
+<title>Адмін-панель · Дослівно</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
 <style>
 [hidden] { display: none !important; }
 :root {
-  --lime: #99cc00; --violet: #9d6bdb; --yellow: #f7c915;
-  --stress: #d0105c; --stress-bg: #ffe0ec;
-  --wrong: #c13f2c; --right: #3f7a16; --warn: #b26a00;
-  --bg: #ffffff; --surface: #faf8fc; --surface-2: #f2eef8; --line: #e5e0ee; --text: #1e1b26;
-  --muted: color-mix(in srgb, var(--text) 62%, transparent);
-  --lime-ink: #3f6a00; --violet-ink: #6b3fb0;
-  --right-bg: color-mix(in srgb, var(--right) 13%, transparent);
-  --wrong-bg: color-mix(in srgb, var(--wrong) 12%, transparent);
-  --f-display: 'Unbounded', 'Rubik', system-ui, sans-serif;
-  --f-text: 'Manrope', 'PT Sans', 'Fira Sans', system-ui, sans-serif;
-  --f-mono: 'JetBrains Mono', 'PT Mono', ui-monospace, monospace;
-  --r: 18px; --r-sm: 10px;
-  color-scheme: light;
+  --lime: #2445c7; --on-lime: #ffffff; --violet: #0d7a85; --yellow: #e5b33a; --stress: #b0245f; --stress-bg: #fbe3ee; --wrong: #c2382b; --right: #1e7f4f; --warn: #a86400; --bg: #ffffff; --surface: #f5f7fb; --surface-2: #eaeef6; --line: #d9e0ec; --text: #18223a; --muted: color-mix(in srgb, var(--text) 64%, transparent); --lime-ink: #2445c7; --violet-ink: #0a6670; --marker: #ffe58a; --right-bg: color-mix(in srgb, var(--right) 11%, transparent); --wrong-bg: color-mix(in srgb, var(--wrong) 10%, transparent); --f-display: 'Onest', 'Segoe UI', system-ui, sans-serif; --f-text: 'Onest', 'Segoe UI', system-ui, sans-serif; --f-mono: 'Onest', 'Segoe UI', system-ui, sans-serif; --r: 12px; --r-sm: 8px; color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #12101a; --surface: #1b1826; --surface-2: #231f31; --line: #332d44; --text: #f4f1f9;
-  --wrong: #ff7a5e; --right: #a5d914; --warn: #f7c915; --lime-ink: #b8e63a; --violet-ink: #c4a3f0; color-scheme: dark;
-  --stress: #ff7aa8; --stress-bg: #4a1730;
+  --lime: #8fa6ff; --on-lime: #0d1430; --violet: #46bfcb; --yellow: #e3c063; --bg: #10162a; --surface: #172038; --surface-2: #1f2944; --line: #2c3756; --text: #e7ecf7; --wrong: #ff8072; --right: #52c48d; --warn: #e3c063; --lime-ink: #a8baff; --violet-ink: #7fd3dc; --marker: rgb(255 214 90 / .3); --stress: #ff86b4; --stress-bg: #4a1a33; color-scheme: dark;
 } }
 :root[data-theme="dark"] {
-  --bg: #12101a; --surface: #1b1826; --surface-2: #231f31; --line: #332d44; --text: #f4f1f9;
-  --wrong: #ff7a5e; --right: #a5d914; --warn: #f7c915; --lime-ink: #b8e63a; --violet-ink: #c4a3f0; color-scheme: dark;
-  --stress: #ff7aa8; --stress-bg: #4a1730;
+  --lime: #8fa6ff; --on-lime: #0d1430; --violet: #46bfcb; --yellow: #e3c063; --bg: #10162a; --surface: #172038; --surface-2: #1f2944; --line: #2c3756; --text: #e7ecf7; --wrong: #ff8072; --right: #52c48d; --warn: #e3c063; --lime-ink: #a8baff; --violet-ink: #7fd3dc; --marker: rgb(255 214 90 / .3); --stress: #ff86b4; --stress-bg: #4a1a33; color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -55,7 +39,7 @@ a { color: var(--violet-ink); }
 /* ── Кнопки, поля ── */
 .btn { border: 2px solid var(--line); background: var(--bg); border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; text-decoration: none; color: inherit; }
 .btn:hover { border-color: var(--violet); }
-.btn.primary { background: var(--lime); border-color: var(--lime); color: #1e1b26; }
+.btn.primary { background: var(--lime); border-color: var(--lime); color: var(--on-lime); }
 .btn.danger { border-color: var(--wrong); color: var(--wrong); }
 .btn.sm { min-height: 34px; padding: 4px 10px; font-size: 14px; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
@@ -88,7 +72,7 @@ textarea.input { min-height: 120px; resize: vertical; }
 .nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
 .nav::-webkit-scrollbar { display: none; }
 .nav a { flex: none; padding: 7px 12px; border-radius: 999px; font-weight: 700; font-size: 14px; text-decoration: none; color: var(--text); background: var(--surface-2); white-space: nowrap; }
-.nav a.on { background: var(--lime); color: #1e1b26; }
+.nav a.on { background: var(--lime); color: var(--on-lime); }
 .badge { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--wrong); color: #fff; font-size: 11px; font-weight: 800; margin-left: 4px; vertical-align: 1px; }
 .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .filters select { width: auto; min-height: 36px; padding: 4px 10px; font-size: 14px; }
@@ -164,7 +148,7 @@ table.t { border-collapse: collapse; width: 100%; font-size: 14px; }
 .picker .grp { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-top: 6px; }
 .seg { display: inline-flex; gap: 4px; background: var(--surface-2); padding: 4px; border-radius: 999px; flex-wrap: wrap; }
 .seg button { border: 0; background: transparent; border-radius: 999px; padding: 6px 12px; font-weight: 700; font-size: 14px; }
-.seg button.on { background: var(--lime); color: #1e1b26; }
+.seg button.on { background: var(--lime); color: var(--on-lime); }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chips button { border: 2px solid var(--line); background: var(--bg); border-radius: 999px; padding: 4px 12px; font-weight: 700; font-size: 14px; }
 .chips button.on { background: var(--violet); border-color: var(--violet); color: #fff; }
@@ -206,7 +190,7 @@ table.t { border-collapse: collapse; width: 100%; font-size: 14px; }
 .lg td.lg-pc.hi { border-left-color: var(--right); } .lg td.lg-pc.mid { border-left-color: var(--warn); } .lg td.lg-pc.lo { border-left-color: var(--wrong); }
 .lg-h { border: 0; background: transparent; width: 100%; min-width: 46px; height: 100%; min-height: 50px; display: grid; place-items: center; gap: 0; padding: 4px 2px; font: inherit; font-weight: 800; color: var(--text); cursor: pointer; }
 .lg-h:hover, .lg-h:focus-visible { background: color-mix(in srgb, var(--violet) 14%, transparent); }
-.lg-h span:first-child::after { content: " 📋"; font-size: 11px; }
+.lg-h span:first-child { text-decoration: underline dotted 1px; text-underline-offset: 3px; }
 .lg-hs { font-size: 10px; font-weight: 700; color: var(--right); font-family: var(--f-mono); }
 .lg-hs.no { color: var(--wrong); }
 .lg td.c1 { background: var(--right-bg); } .lg td.c0 { background: var(--wrong-bg); }
@@ -240,16 +224,46 @@ details.more > summary { cursor: pointer; font-weight: 700; }
   body { background: #fff; color: #000; }
   .card, .kpi { break-inside: avoid; }
 }
+
+/* ═════ Дизайн «Дослівно» (спільний із сайтом) ═════ */
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.018em; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.wordmark { color: var(--text) !important; font-weight: 800; letter-spacing: -0.035em; }
+.wm-st { color: var(--stress); text-decoration: underline 3px var(--stress); text-underline-offset: 5px; text-decoration-skip-ink: none; }
+.btn { border-width: 1px; border-radius: var(--r-sm); font-weight: 600; }
+.btn:hover { border-color: var(--text); }
+.btn.primary { background: var(--lime); border-color: var(--lime); color: var(--on-lime); }
+.btn.primary:hover { background: color-mix(in srgb, var(--lime) 86%, var(--text)); border-color: transparent; }
+.card { background: var(--bg); }
+.kpi { background: var(--surface); }
+.kpi b { font-weight: 700; letter-spacing: -0.02em; }
+.tag, .badge, .pill { border-radius: 4px; }
+.field > span, .t th, .tbl th { text-transform: none; letter-spacing: 0; font-weight: 600; }
+.input, select.input, textarea.input { border-width: 1px; }
+.input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lime) 18%, transparent); }
+.nav { gap: 2px; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+.nav a { border-radius: 0; background: none; color: var(--muted); font-weight: 600; padding: 9px 10px 11px; }
+.nav a:hover { color: var(--text); }
+.nav a.on { background: linear-gradient(var(--lime), var(--lime)) left calc(100% - 1px) / 100% 2px no-repeat, linear-gradient(var(--lime), var(--lime)) left calc(100% - 6px) / 100% 2px no-repeat; color: var(--text); }
+.pbar, .pbar i { border-radius: 3px; }
+.seg { border-radius: var(--r-sm); background: var(--surface-2); padding: 3px; }
+.seg button { border-radius: 6px; font-weight: 600; }
+.seg button.on { background: var(--bg); color: var(--text); box-shadow: 0 0 0 1px var(--line); }
+.chips button { border-width: 1px; border-radius: 6px; font-weight: 600; }
+.chips button.on { background: var(--lime); border-color: var(--lime); color: var(--on-lime); }
+.lg-cnt { border-radius: 4px; }
+.live { border-radius: var(--r-sm); }
+.toast { border-radius: var(--r-sm); }
 </style>
 </head>
 <body>
 <div id="root"><div class="loading">Завантаження…</div></div>
 <div class="toast" id="toast" hidden></div>
 <script src="config.js"></script>
-<script src="data.js?v=20"></script>
-<script src="data-extra.js?v=20"></script>
-<script src="engine.js?v=20"></script>
-<script src="admin-plus.js?v=20"></script>
-<script src="admin-app.js?v=20"></script>
+<script src="data.js?v=21"></script>
+<script src="data-extra.js?v=21"></script>
+<script src="engine.js?v=21"></script>
+<script src="admin-plus.js?v=21"></script>
+<script src="admin-app.js?v=21"></script>
 </body>
 </html>

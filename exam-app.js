@@ -20,7 +20,7 @@
       if (!host.loggedIn()) return "";
       const ts = list().filter(t => !(t.res && t.res.done && t.res.done < Date.now() - 30 * 86400000));
       if (!ts.length) return "";
-      return `<section class="asg ctl-home"><h2>📝 Моніторингові роботи</h2>` + ts.map(t => {
+      return `<section class="asg ctl-home"><h2>Моніторингові роботи</h2>` + ts.map(t => {
         const st = local(t.id), r = t.res, closed = t.due && t.due < Date.now() && !(r && r.started);
         let state, btn;
         if (r && r.done) { state = `<span class="pill green">здано: ${r.score}/${r.max} · оцінка ${r.grade}</span>`; btn = t.show ? `<button class="btn small" data-ctl="open" data-id="${esc(t.id)}">Переглянути</button>` : ""; }
@@ -38,7 +38,7 @@
       if (!t) return top + '<main class="wrap"><p class="empty">Моніторингову роботу не знайдено. Можливо, учитель її видалив.</p></main>';
       const st = local(t.id), r = t.res;
       if (r && r.done) return top + `<main class="wrap">${resultHtml(t)}</main>`;
-      if (!st.started && !(r && r.started)) return top + `<main class="wrap"><section class="card pl-card"><h2>📝 ${esc(t.title)}</h2>
+      if (!st.started && !(r && r.started)) return top + `<main class="wrap"><section class="card pl-card"><h2>${esc(t.title)}</h2>
         <ul class="fc-facts"><li><b>${t.items.length}</b> завдань, <b>${t.min}</b> хвилин</li><li>Спроба <b>одна</b>. Після початку таймер не зупиняється, навіть якщо закрити сторінку.</li>
         <li>Відповіді можна змінювати до здачі. Коли час вийде, роботу буде здано автоматично.</li><li>Виходи зі сторінки вчитель бачить.</li>${t.show ? "<li>Після здачі ви побачите правильні відповіді.</li>" : ""}</ul>
         ${t.note ? `<p class="hint">${esc(t.note)}</p>` : ""}<div class="task-nav"><button class="btn primary" data-ctl="start" ${busy ? "disabled" : ""}>${busy ? "Починаю…" : "Почати моніторингову роботу"}</button></div></section></main>`;
@@ -67,7 +67,7 @@
     }
     function resultHtml(t) {
       const r = t.res;
-      let h = `<section class="card pl-card"><h2>📝 Роботу здано</h2><div class="fc-big"><span class="lbl">Результат</span><b class="mono">${r.score} / ${r.max}</b><span class="hint">оцінка за 12-бальною шкалою: <b>${r.grade}</b>${r.late ? " · здано із запізненням" : ""}</span></div></section>`;
+      let h = `<section class="card pl-card"><h2>Роботу здано</h2><div class="fc-big"><span class="lbl">Результат</span><b class="mono">${r.score} / ${r.max}</b><span class="hint">оцінка за 12-бальною шкалою: <b>${r.grade}</b>${r.late ? " · здано із запізненням" : ""}</span></div></section>`;
       if (!t.show || !r.okStr) return h + '<p class="hint">Правильні відповіді вчитель покаже згодом.</p>';
       const st = local(t.id);
       h += t.items.map((it, i) => {

@@ -60,23 +60,23 @@
 
     /* ── Нагороди ── */
     const BADGES = [
-      ["first", "🌱", "Перший крок", "Перша відповідь"],
-      ["a100", "💯", "Сотня", "100 відповідей"],
-      ["a500", "🚀", "П’ятсот", "500 відповідей"],
-      ["a1000", "🏆", "Тисячник", "1000 відповідей"],
-      ["s3", "🔥", "Три дні поспіль", "Серія 3 дні"],
-      ["s7", "🔥", "Тиждень поспіль", "Серія 7 днів"],
-      ["s30", "🌋", "Місяць поспіль", "Серія 30 днів"],
-      ["goal", "🎯", "Ціль тижня", "Виконати тижневу ціль"],
-      ["t1", "📘", "Перша тема", "Завершити тему (100 завдань)"],
-      ["t5", "📚", "П’ять тем", "Завершити 5 тем"],
-      ["tall", "🎓", "Усі теми", "Завершити всі теми тренажера"],
-      ["perfect", "⭐", "Бездоганно", "Тема на 100 %"],
-      ["th1", "🧠", "Знаю правило", "Пройти тренування теорії в темі"],
-      ["th10", "🧠", "Теоретик", "Тренування теорії в 10 темах"],
-      ["wu7", "☀️", "Розминка ×7", "7 днів щоденної розминки"],
-      ["diag", "🧭", "Знаю, з чого почати", "Пройти діагностику"],
-      ["fix10", "🛠️", "Працюю над помилками", "Виправити 10 помилок"],
+      ["first", "1", "Перший крок", "Перша відповідь"],
+      ["a100", "100", "Сотня", "100 відповідей"],
+      ["a500", "500", "П’ятсот", "500 відповідей"],
+      ["a1000", "1000", "Тисячник", "1000 відповідей"],
+      ["s3", "3", "Три дні поспіль", "Серія 3 дні"],
+      ["s7", "7", "Тиждень поспіль", "Серія 7 днів"],
+      ["s30", "30", "Місяць поспіль", "Серія 30 днів"],
+      ["goal", "ціль", "Ціль тижня", "Виконати тижневу ціль"],
+      ["t1", "1", "Перша тема", "Завершити тему (100 завдань)"],
+      ["t5", "5", "П’ять тем", "Завершити 5 тем"],
+      ["tall", "усі", "Усі теми", "Завершити всі теми тренажера"],
+      ["perfect", "100%", "Бездоганно", "Тема на 100 %"],
+      ["th1", "1", "Знаю правило", "Пройти тренування теорії в темі"],
+      ["th10", "10", "Теоретик", "Тренування теорії в 10 темах"],
+      ["wu7", "×7", "Розминка ×7", "7 днів щоденної розминки"],
+      ["diag", "план", "Знаю, з чого почати", "Пройти діагностику"],
+      ["fix10", "10", "Працюю над помилками", "Виправити 10 помилок"],
     ];
     function earned() {
       const x = plus(), s = host.me(); if (!x || !s) return {};
@@ -181,14 +181,14 @@
       if (f && f.enough && f.sc(f.pts) != null) fc = "Прогноз НМТ: ~" + (f.sc(f.pts) || "< поріг");
       return `<section class="today" aria-label="Сьогодні">
         <div class="td-top">
-          <div class="td-stat"><span class="td-ic" aria-hidden="true">🔥</span><div><b class="mono">${sk}</b><span>${sk === 1 ? "день" : sk >= 2 && sk <= 4 ? "дні" : "днів"} поспіль</span></div></div>
-          <div class="td-stat td-goal"><span class="td-ic" aria-hidden="true">🎯</span><div><b class="mono">${wk}<small> / ${goal}</small></b><span>ціль тижня</span><div class="bar" aria-hidden="true"><b style="width:${Math.min(100, wk / goal * 100)}%"></b></div></div></div>
+          <div class="td-stat"><div><b class="mono">${sk}</b><span>${sk === 1 ? "день" : sk >= 2 && sk <= 4 ? "дні" : "днів"} поспіль</span></div></div>
+          <div class="td-stat td-goal"><div><b class="mono">${wk}<small> / ${goal}</small></b><span>ціль тижня</span><div class="bar" aria-hidden="true"><b style="width:${Math.min(100, wk / goal * 100)}%"></b></div></div></div>
         </div>
         <div class="td-acts">
-          <button class="btn ${wuDone ? "" : "primary"}" data-pl="wu">${wuDone ? "✓ Розминку виконано · ще 10" : "☀️ Щоденна розминка · " + WU_N + " завдань"}</button>
-          <button class="btn" data-pl="${diagDone ? "plan" : "diag"}">${diagDone ? "🧭 Мій план" : diagRun ? "🧭 Продовжити діагностику" : "🧭 Діагностика · 15 хв"}</button>
-          <button class="btn" data-pl="forecast">📈 ${esc(fc)}</button>
-          <button class="btn" data-pl="badges">🏅 Нагороди ${nb}/${BADGES.length}</button>
+          <button class="btn ${wuDone ? "" : "primary"}" data-pl="wu">${wuDone ? "✓ Розминку виконано · ще 10" : "Щоденна розминка · " + WU_N + " завдань"}</button>
+          <button class="btn" data-pl="${diagDone ? "plan" : "diag"}">${diagDone ? "Мій план" : diagRun ? "Продовжити діагностику" : "Діагностика · 15 хв"}</button>
+          <button class="btn" data-pl="forecast">${esc(fc)}</button>
+          <button class="btn" data-pl="badges">Нагороди ${nb}/${BADGES.length}</button>
         </div></section>`;
     }
 
@@ -207,7 +207,7 @@
     function diagIntro() {
       const x = plus(), d = x.diag;
       const going = d && !d.done && d.res && Object.keys(d.res).length;
-      return `<section class="card pl-card"><h2>🧭 Діагностика</h2>
+      return `<section class="card pl-card"><h2>Діагностика</h2>
         <p>${T.length} завдань — по одному з кожної теми тренажера. Це займе близько 15 хвилин. Відповідайте самостійно: результат покаже, з яких тем почати.</p>
         <p class="hint">Діагностика не змінює прогрес тем. Пройти її знову можна будь-коли.</p>
         <div class="task-nav"><button class="btn primary" data-pl="diag-go">${going ? "Продовжити (" + Object.keys(d.res).length + " / " + T.length + ")" : d && d.done ? "Пройти ще раз" : "Почати"}</button>
@@ -252,9 +252,9 @@
     function summaryHtml() {
       const ok = sess.res.filter(Boolean).length, n = sess.res.length;
       if (sess.kind === "diag") return planHtml(true);
-      return `<section class="card pl-card"><h2>☀️ Розминку завершено: ${ok} з ${n}</h2>
+      return `<section class="card pl-card"><h2>Розминку завершено: ${ok} з ${n}</h2>
         <p>${ok === n ? "Чудово! Усі завдання правильно." : "Завдання з помилками повторимо завтра — так правило закріплюється найкраще."}</p>
-        <p class="hint">Серія: 🔥 ${streak()} · ціль тижня: ${weekCount()} / ${plus().goal.w || 50}</p>
+        <p class="hint">Серія: ${streak()} · ціль тижня: ${weekCount()} / ${plus().goal.w || 50}</p>
         <div class="task-nav"><button class="btn primary" data-pl="wu">Ще 10 завдань</button><button class="btn" data-pl="home">На головну</button></div></section>`;
     }
 
@@ -273,10 +273,10 @@
         <div class="pl-btns"><button class="btn small" data-open="${o.t.id}" data-tab="theory">Теорія</button><button class="btn small ${kind === "weak" ? "primary" : ""}" data-open="${o.t.id}" data-tab="tasks">${o.a.a ? "Продовжити" : "Почати"}</button></div></div>`;
       const ok = d && d.res ? Object.values(d.res).filter(v => v === "1").length : 0;
       let h = "";
-      if (fresh || (d && d.done)) h += `<section class="card pl-card"><h2>🧭 ${fresh ? "Діагностику завершено" : "Результат діагностики"}: ${ok} з ${T.length}</h2>
+      if (fresh || (d && d.done)) h += `<section class="card pl-card"><h2>${fresh ? "Діагностику завершено" : "Результат діагностики"}: ${ok} з ${T.length}</h2>
         <p>${fresh ? "План нижче складено за діагностикою й вашим прогресом у темах." : "Пройдено " + new Date(d.at).toLocaleDateString("uk-UA") + "."}</p>
         <div class="task-nav"><button class="btn" data-pl="diag">Пройти діагностику ще раз</button></div></section>`;
-      else h += `<section class="card pl-card"><h2>🧭 Мій план</h2><p>Пройдіть діагностику, щоб план був точнішим.</p><div class="task-nav"><button class="btn primary" data-pl="diag">Діагностика · 15 хв</button></div></section>`;
+      else h += `<section class="card pl-card"><h2>Мій план</h2><p>Пройдіть діагностику, щоб план був точнішим.</p><div class="task-nav"><button class="btn primary" data-pl="diag">Діагностика · 15 хв</button></div></section>`;
       const sec = list => S.map(sc => { const l = list.filter(o => o.t.sec === sc.id); return l.length ? `<h3 class="pl-sec">${esc(sc.id)} ${esc(sc.title)}</h3>` + l.map(o => row(o, list === weak ? "weak" : "")).join("") : ""; }).join("");
       h += `<section class="pl-group"><h2>1. Почніть із цих тем <span class="pill red">${weak.length}</span></h2>${weak.length ? sec(weak) : '<p class="hint">Слабких тем не знайдено. Так тримати!</p>'}</section>`;
       if (untested.length) h += `<section class="pl-group"><h2>2. Ще не перевірено <span class="pill">${untested.length}</span></h2>${sec(untested)}</section>`;
@@ -287,7 +287,7 @@
     function forecastHtml() {
       const f = forecast();
       if (!nmtIndex || nmtIndex === "loading") { loadNmt(); return '<p class="empty">Завантажую шкалу НМТ…</p>'; }
-      let h = `<section class="card pl-card"><h2>📈 Прогноз балу НМТ</h2>`;
+      let h = `<section class="card pl-card"><h2>Прогноз балу НМТ</h2>`;
       if (!f || !f.enough) h += `<p>Для прогнозу потрібно щонайменше <b>30 відповідей</b> у темах тренажера, завданнях ЗНО чи діагностиці. Зараз: ${f ? f.n : 0}.</p><div class="task-nav"><button class="btn primary" data-pl="diag">Пройти діагностику</button></div>`;
       else {
         const mid = f.sc(f.pts), lo = f.sc(f.lo), hi = f.sc(f.hi), fmt = v => v ? v : "нижче порогу";
@@ -308,10 +308,10 @@
 
     function badgesHtml() {
       const x = plus(), e = earned(), goal = x.goal.w || 50, wk = weekCount();
-      let h = `<section class="card pl-card"><h2>🎯 Ціль тижня</h2><p>Цього тижня: <b>${wk}</b> з ${goal} відповідей.</p>
+      let h = `<section class="card pl-card"><h2>Ціль тижня</h2><p>Цього тижня: <b>${wk}</b> з ${goal} відповідей.</p>
         <div class="bar" aria-hidden="true"><b style="width:${Math.min(100, wk / goal * 100)}%"></b></div>
         <div class="goal-opts" role="group" aria-label="Тижнева ціль">${[30, 50, 100, 200].map(g => `<button class="btn small ${g === goal ? "primary" : ""}" data-goal="${g}" aria-pressed="${g === goal}">${g}</button>`).join("")}</div>
-        <p class="hint">Серія зараз: 🔥 ${streak()} · найдовша: ${bestStreak()} · усього відповідей: ${total()}</p></section>`;
+        <p class="hint">Серія зараз: ${streak()} · найдовша: ${bestStreak()} · усього відповідей: ${total()}</p></section>`;
       h += `<section class="badges">${BADGES.map(([id, ic, title, how]) => `<div class="bdg ${e[id] ? "on" : ""}"><span class="bdg-ic" aria-hidden="true">${ic}</span><b>${esc(title)}</b><span class="hint">${esc(how)}${x.badges[id] ? " · " + new Date(x.badges[id]).toLocaleDateString("uk-UA") : ""}</span></div>`).join("")}</section>`;
       return h;
     }

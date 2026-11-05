@@ -282,7 +282,7 @@
       }
       h += `<details class="zex" ${p === m ? "" : "open"}><summary>Пояснення</summary><div class="zex-body">${task.ex || "Пояснення до цього завдання немає."}</div></details>`;
       const refs = (task.th || []).map(r => host.theoryRef(r)).filter(Boolean);
-      if (refs.length) h += `<div class="rv-th">${refs.map(r => `<button class="btn small" data-theory="${esc(r.ref)}">📖 Теорія: ${esc(r.title)}</button>`).join("")}</div>`;
+      if (refs.length) h += `<div class="rv-th">${refs.map(r => `<button class="btn small" data-theory="${esc(r.ref)}">Теорія: ${esc(r.title)}</button>`).join("")}</div>`;
       return h + "</section>";
     }
 

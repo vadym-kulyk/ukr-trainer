@@ -5,22 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
-<title>Звіт про навчання · Midgard</title>
+<title>Звіт про навчання · Дослівно</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
 <style>
 :root {
-  --lime: #99cc00; --violet: #9d6bdb; --wrong: #c13f2c; --right: #3f7a16; --warn: #b26a00;
-  --bg: #ffffff; --surface: #faf8fc; --surface-2: #f2eef8; --line: #e5e0ee; --text: #1e1b26;
-  --muted: color-mix(in srgb, var(--text) 62%, transparent); --lime-ink: #3f6a00; --violet-ink: #6b3fb0;
-  --right-bg: color-mix(in srgb, var(--right) 13%, transparent); --wrong-bg: color-mix(in srgb, var(--wrong) 12%, transparent);
-  --f-display: 'Unbounded', system-ui, sans-serif; --f-text: 'Manrope', system-ui, sans-serif; --r: 18px; --r-sm: 10px; color-scheme: light;
+  --lime: #2445c7; --on-lime: #ffffff; --violet: #0d7a85; --yellow: #e5b33a; --stress: #b0245f; --stress-bg: #fbe3ee; --wrong: #c2382b; --right: #1e7f4f; --warn: #a86400; --bg: #ffffff; --surface: #f5f7fb; --surface-2: #eaeef6; --line: #d9e0ec; --text: #18223a; --muted: color-mix(in srgb, var(--text) 64%, transparent); --lime-ink: #2445c7; --violet-ink: #0a6670; --marker: #ffe58a; --right-bg: color-mix(in srgb, var(--right) 11%, transparent); --wrong-bg: color-mix(in srgb, var(--wrong) 10%, transparent); --f-display: 'Onest', 'Segoe UI', system-ui, sans-serif; --f-text: 'Onest', 'Segoe UI', system-ui, sans-serif; --f-mono: 'Onest', 'Segoe UI', system-ui, sans-serif; --r: 12px; --r-sm: 8px; color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #12101a; --surface: #1b1826; --surface-2: #231f31; --line: #332d44; --text: #f4f1f9; --wrong: #ff7a5e; --right: #a5d914; --lime-ink: #b8e63a; --violet-ink: #c4a3f0; color-scheme: dark;
+  --lime: #8fa6ff; --on-lime: #0d1430; --violet: #46bfcb; --yellow: #e3c063; --bg: #10162a; --surface: #172038; --surface-2: #1f2944; --line: #2c3756; --text: #e7ecf7; --wrong: #ff8072; --right: #52c48d; --warn: #e3c063; --lime-ink: #a8baff; --violet-ink: #7fd3dc; --marker: rgb(255 214 90 / .3); --stress: #ff86b4; --stress-bg: #4a1a33; color-scheme: dark;
 } }
-:root[data-theme="dark"] { --bg: #12101a; --surface: #1b1826; --surface-2: #231f31; --line: #332d44; --text: #f4f1f9; --wrong: #ff7a5e; --right: #a5d914; --lime-ink: #b8e63a; --violet-ink: #c4a3f0; color-scheme: dark; }
+:root[data-theme="dark"] {
+  --lime: #8fa6ff; --on-lime: #0d1430; --violet: #46bfcb; --yellow: #e3c063; --bg: #10162a; --surface: #172038; --surface-2: #1f2944; --line: #2c3756; --text: #e7ecf7; --wrong: #ff8072; --right: #52c48d; --warn: #e3c063; --lime-ink: #a8baff; --violet-ink: #7fd3dc; --marker: rgb(255 214 90 / .3); --stress: #ff86b4; --stress-bg: #4a1a33; color-scheme: dark;
+}
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--f-text); overflow-x: hidden; }
 .wrap { max-width: 900px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
@@ -34,7 +32,7 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; line-height: 1.2; } h1 { 
 .kpi { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 10px 12px; display: grid; gap: 2px; min-width: 0; }
 .kpi b { font: 700 22px/1.15 var(--f-display); } .kpi span { font-size: 13px; color: var(--muted); }
 .btn { font: 700 15px var(--f-text); border: 1px solid var(--line); background: var(--bg); color: var(--text); border-radius: 999px; padding: 9px 16px; cursor: pointer; }
-.btn.primary { background: var(--lime); border-color: var(--lime); color: #1e1b26; }
+.btn.primary { background: var(--lime); border-color: var(--lime); color: var(--on-lime); }
 .rows { display: grid; gap: 6px; }
 .trow { display: grid; grid-template-columns: minmax(0, 1fr) 120px 52px; gap: 10px; align-items: center; font-size: 14px; }
 .pbar { height: 8px; background: var(--surface-2); border-radius: 999px; overflow: hidden; } .pbar i { display: block; height: 100%; background: var(--lime); border-radius: 999px; }
@@ -46,6 +44,28 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; line-height: 1.2; } h1 { 
 .err { color: var(--wrong); }
 @media (max-width: 520px) { .trow { grid-template-columns: minmax(0, 1fr) 70px 44px; } h1 { font-size: 20px; } }
 @media print { .noprint { display: none !important; } body { background: #fff; color: #000; } .card { break-inside: avoid; border-color: #ccc; } }
+
+/* ═════ Дизайн «Дослівно» (спільний із сайтом) ═════ */
+h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.018em; }
+:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.wordmark { color: var(--text) !important; font-weight: 800; letter-spacing: -0.035em; }
+.wm-st { color: var(--stress); text-decoration: underline 3px var(--stress); text-underline-offset: 5px; text-decoration-skip-ink: none; }
+.btn { border-width: 1px; border-radius: var(--r-sm); font-weight: 600; }
+.btn:hover { border-color: var(--text); }
+.btn.primary { background: var(--lime); border-color: var(--lime); color: var(--on-lime); }
+.btn.primary:hover { background: color-mix(in srgb, var(--lime) 86%, var(--text)); border-color: transparent; }
+.card { background: var(--bg); }
+.kpi { background: var(--surface); }
+.kpi b { font-weight: 700; letter-spacing: -0.02em; }
+.tag, .badge, .pill { border-radius: 4px; }
+.field > span, .t th, .tbl th { text-transform: none; letter-spacing: 0; font-weight: 600; }
+.input, select.input, textarea.input { border-width: 1px; }
+.input:focus { border-color: var(--lime); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lime) 18%, transparent); }
+.nav { gap: 2px; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+.nav a { border-radius: 0; background: none; color: var(--muted); font-weight: 600; padding: 9px 10px 11px; }
+.nav a:hover { color: var(--text); }
+.nav a.on { background: linear-gradient(var(--lime), var(--lime)) left calc(100% - 1px) / 100% 2px no-repeat, linear-gradient(var(--lime), var(--lime)) left calc(100% - 6px) / 100% 2px no-repeat; color: var(--text); }
+.pbar, .pbar i { border-radius: 3px; }
 </style>
 </head>
 <body>
@@ -94,11 +114,11 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; line-height: 1.2; } h1 { 
     const started = t.filter(x => x.a >= 10).map(x => Object.assign({ acc: x.c / x.a }, x));
     const weak = started.filter(x => x.acc < 0.6).sort((x, y) => x.acc - y.acc).slice(0, 5), strong = started.filter(x => x.acc >= 0.85).sort((x, y) => y.acc - x.acc).slice(0, 5);
     const diag = plus.diag;
-    let h = `<div class="top"><span class="logo wordmark">Дослівно</span><span class="spacer"></span><button class="btn noprint" onclick="window.print()">🖨 Друк / PDF</button></div>
+    let h = `<div class="top"><span class="logo wordmark" aria-label="Дослівно">Досл<span class="wm-st">і</span>вно</span><span class="spacer"></span><button class="btn noprint" onclick="window.print()">Друк / PDF</button></div>
       <div class="card"><h1>Звіт про навчання</h1><p><b>${esc(d.name)}</b>, клас ${esc(d.cls)}</p><p class="hint">Українська мова: тренажер, завдання ЗНО й симуляції НМТ. Сформовано ${new Date(d.now).toLocaleString("uk-UA")}.</p>
       <div class="kpis"><div class="kpi"><b>${a} / ${t.length * 100}</b><span>виконано завдань тренажера</span></div><div class="kpi"><b>${pct(a ? c / a : null)}</b><span>правильних відповідей</span></div>
       <div class="kpi"><b>${d.zno.a ? pct(d.zno.c / d.zno.a) : "—"}</b><span>точність у завданнях ЗНО (${d.zno.a})</span></div><div class="kpi"><b>${d.nmt.best || "—"}</b><span>найкращий бал симуляції НМТ (100–200)</span></div>
-      <div class="kpi"><b>🔥 ${streak(plus.days)}</b><span>днів поспіль із заняттями</span></div><div class="kpi"><b>${act.mins != null ? (act.mins >= 60 ? (act.mins / 60).toFixed(1).replace(".", ",") + " год" : act.mins + " хв") : "—"}</b><span>час занять (орієнтовно)</span></div>
+      <div class="kpi"><b>${streak(plus.days)}</b><span>днів поспіль із заняттями</span></div><div class="kpi"><b>${act.mins != null ? (act.mins >= 60 ? (act.mins / 60).toFixed(1).replace(".", ",") + " год" : act.mins + " хв") : "—"}</b><span>час занять (орієнтовно)</span></div>
       <div class="kpi"><b>${w0.n}</b><span>відповідей цього тижня (минулого: ${w1.n})</span></div><div class="kpi"><b>${d.fix ? d.fix.done + " / " + (d.fix.done + d.fix.open) : "—"}</b><span>виправлено помилок</span></div></div></div>
       <div class="card"><h2>Активність за 30 днів</h2>${chart(act.days)}<p class="hint">Кількість відповідей щодня.</p></div>`;
     if (weak.length || strong.length) h += `<div class="card"><h2>Що вдається, а над чим попрацювати</h2>
