@@ -193,18 +193,30 @@
         </div></section>`;
     }
 
-    /* Календар занять за 20 тижнів: стовпчик — тиждень, клітинка — день (пн–нд). */
+    /* Календар занять з 1 жовтня (навчальний рік): стовпчик — тиждень, клітинка — день (пн–нд). */
+    const MON = ["січ.", "лют.", "бер.", "квіт.", "трав.", "черв.", "лип.", "серп.", "вер.", "жовт.", "лист.", "груд."];
     function heatHtml(x) {
-      const W = 20, now = new Date(); now.setHours(12, 0, 0, 0);
-      const start = new Date(now.getTime() - ((now.getDay() + 6) % 7) * DAY - (W - 1) * 7 * DAY);
-      let h = '<div class="heat-wrap"><div class="heatmap" role="img" aria-label="Календар занять за 20 тижнів">', act = 0;
-      for (let i = 0; i < W * 7; i++) {
-        const t = start.getTime() + i * DAY, n = x.days[dk(t)] || 0, fut = t > now.getTime();
-        if (n) act++;
-        const lv = fut ? "f" : n >= 60 ? 4 : n >= 30 ? 3 : n >= 10 ? 2 : n ? 1 : 0;
-        h += `<i class="l${lv}" title="${fut ? "" : new Date(t).toLocaleDateString("uk-UA") + ": " + n}"></i>`;
+      const now = new Date(); now.setHours(12, 0, 0, 0);
+      const from = new Date(now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1, 9, 1, 12);
+      const start = new Date(from.getTime() - ((from.getDay() + 6) % 7) * DAY);
+      const weeks = Math.floor((now.getTime() - start.getTime()) / (7 * DAY)) + 1;
+      let cells = "", months = "", act = 0, lastM = -1;
+      for (let w = 0; w < weeks; w++) {
+        const wk = new Date(start.getTime() + w * 7 * DAY + 6 * DAY), m = wk.getMonth();
+        months += `<span>${m !== lastM ? MON[m] : ""}</span>`; lastM = m;
+        for (let d = 0; d < 7; d++) {
+          const t = start.getTime() + (w * 7 + d) * DAY, n = x.days[dk(t)] || 0;
+          const out = t < from.getTime() || t > now.getTime();
+          if (n && !out) act++;
+          const lv = out ? "f" : n >= 60 ? 4 : n >= 30 ? 3 : n >= 10 ? 2 : n ? 1 : 0;
+          cells += `<i class="l${lv}"${out ? "" : ` title="${new Date(t).toLocaleDateString("uk-UA")}: ${n}"`}></i>`;
+        }
       }
-      return h + `</div><span class="hint">Днів із заняттями за 20 тижнів: ${act}</span></div>`;
+      return `<div class="heat-wrap"><div class="heat-scroll"><div class="heat-grid" style="--w:${weeks}">
+          <div class="heat-m" aria-hidden="true"><span></span>${months}</div>
+          <div class="heat-d" aria-hidden="true"><span>пн</span><span></span><span>ср</span><span></span><span>пт</span><span></span><span>нд</span></div>
+          <div class="heatmap" role="img" aria-label="Календар занять з 1 жовтня: днів із заняттями ${act}">${cells}</div></div></div>
+        <div class="heat-foot"><span class="hint">Днів із заняттями з 1 жовтня: <b>${act}</b></span><span class="heat-key" aria-hidden="true">менше <i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i> більше</span></div></div>`;
     }
 
     /* ── Сторінки ── */

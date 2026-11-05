@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=23"></script>
+<script src="theme.js?v=24"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -965,6 +965,22 @@ body[data-sec] .rule { --c: var(--sc); }
 .cards > .card.topic > .acts .btn.primary { min-width: 120px; }
 
 body.compact .parse-key { display: none; }
+
+/* Календар занять: дні тижня ліворуч, місяці згори. */
+.heat-scroll { overflow-x: auto; padding-bottom: 4px; }
+.heat-grid { display: grid; grid-template-columns: 22px auto; grid-template-rows: auto auto; gap: 4px 6px; width: max-content; }
+.heat-m { grid-column: 2; display: grid; grid-auto-flow: column; grid-auto-columns: 16px; gap: 4px; font-size: 12px; color: var(--muted); height: 16px; }
+.heat-m > span:first-child { display: none; }
+.heat-m span { white-space: nowrap; overflow: visible; }
+.heat-d { grid-column: 1; grid-row: 2; display: grid; grid-template-rows: repeat(7, 16px); gap: 4px; font-size: 11px; color: var(--muted); line-height: 16px; }
+.heat-grid .heatmap { grid-column: 2; grid-row: 2; grid-template-rows: repeat(7, 16px); grid-auto-columns: 16px; gap: 4px; overflow: visible; padding: 0; }
+.heat-grid .heatmap i, .heat-key i { width: 16px; height: 16px; border-radius: 3px; }
+.heat-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
+.heat-key { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; color: var(--muted); }
+.heat-key i { display: inline-block; width: 12px !important; height: 12px !important; background: var(--surface-2); }
+.heat-key i.l1 { background: color-mix(in srgb, var(--right) 30%, var(--surface-2)); } .heat-key i.l2 { background: color-mix(in srgb, var(--right) 55%, var(--surface-2)); }
+.heat-key i.l3 { background: color-mix(in srgb, var(--right) 80%, var(--surface-2)); } .heat-key i.l4 { background: var(--right); }
+.heat-key i:first-of-type { margin-left: 4px; } .heat-key i:last-of-type { margin-right: 4px; }
 </style>
 
 </head>
@@ -1010,15 +1026,15 @@ body.compact .parse-key { display: none; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=23"></script>
-<script src="data-extra.js?v=23"></script>
-<script src="engine.js?v=23"></script>
-<script src="zno-app.js?v=23"></script>
-<script src="nmt-app.js?v=23"></script>
-<script src="fix-app.js?v=23"></script>
-<script src="theory-app.js?v=23"></script>
-<script src="plus-app.js?v=23"></script>
-<script src="exam-app.js?v=23"></script>
+<script src="data.js?v=24"></script>
+<script src="data-extra.js?v=24"></script>
+<script src="engine.js?v=24"></script>
+<script src="zno-app.js?v=24"></script>
+<script src="nmt-app.js?v=24"></script>
+<script src="fix-app.js?v=24"></script>
+<script src="theory-app.js?v=24"></script>
+<script src="plus-app.js?v=24"></script>
+<script src="exam-app.js?v=24"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1068,7 +1084,7 @@ body.compact .parse-key { display: none; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "23", THEORY = {}, theoryLoading = {};
+  const VER = "24", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
