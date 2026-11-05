@@ -300,7 +300,7 @@
   function shell(body) {
     const r = route()[0], unread = D ? D.replies.filter(x => !x.seen).length : 0;
     const cur = { student: "students", topic: "topics", test: "tests" }[r] || r;
-    return `<header class="top"><div class="wrap"><div class="top-row"><span class="logo wordmark" aria-label="Дослівно">Досл<span class="wm-st">і</span>вно</span><h1>Адмін-панель</h1><span class="spacer"></span>
+    return `<header class="top"><div class="wrap"><div class="top-row"><span class="logo wordmark" aria-label="Дослівно">Досл<span class="wm-st">і</span>вно</span><h1>Адмін-панель</h1><span class="spacer"></span>${window.MGTheme ? MGTheme.btn() : ""}
       <button class="btn sm" data-act="refresh" title="Оновити дані" ${loading ? "disabled" : ""}>↻<span class="small"> ${loading ? "Оновлюю…" : "Оновити"}</span></button></div>
       <nav class="nav" aria-label="Розділи">${NAV.map(([k, l]) => `<a href="#${k}" class="${cur === k ? "on" : ""}">${l}${k === "messages" && unread ? `<span class="badge">${unread}</span>` : ""}</a>`).join("")}</nav>
       ${D ? `<div class="filters"><label class="row small"><span class="muted">Клас:</span><select class="input" id="clsf"><option value="">усі класи</option>${classes().map(c => `<option ${ui.cls === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
+<script src="theme.js?v=22"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
@@ -858,6 +859,7 @@ body.compact .wordmark { font-size: 22px; }
     <div class="brand">
       <span class="logo wordmark" aria-label="Дослівно">Досл<span class="wm-st">і</span>вно</span>
       <div class="brand-tools">
+        <span data-theme-slot=""></span>
         <button class="chip dict-btn" id="dict-btn" type="button" aria-label="Відкрити тлумачний словник"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5c2.6-.9 4.9-.6 7 .9 2.1-1.5 4.4-1.8 7-.9v11c-2.6-.9-4.9-.6-7 .9-2.1-1.5-4.4-1.8-7-.9z M10 5.4v11"/></svg><span class="lbl">Словник</span></button>
         <button class="chip bell-btn" id="bell-btn" type="button" aria-label="Повідомлення від учителя" hidden><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 14V9a5 5 0 0 1 10 0v5l1.5 1.5h-13z M8.5 17.5h3"/></svg><span class="tab-badge" id="bell-n" hidden></span></button>
         <span class="chip" id="sync-chip"><span class="dot"></span><span id="sync-text">Прогрес у профілі</span></span>
@@ -892,15 +894,15 @@ body.compact .wordmark { font-size: 22px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=21"></script>
-<script src="data-extra.js?v=21"></script>
-<script src="engine.js?v=21"></script>
-<script src="zno-app.js?v=21"></script>
-<script src="nmt-app.js?v=21"></script>
-<script src="fix-app.js?v=21"></script>
-<script src="theory-app.js?v=21"></script>
-<script src="plus-app.js?v=21"></script>
-<script src="exam-app.js?v=21"></script>
+<script src="data.js?v=22"></script>
+<script src="data-extra.js?v=22"></script>
+<script src="engine.js?v=22"></script>
+<script src="zno-app.js?v=22"></script>
+<script src="nmt-app.js?v=22"></script>
+<script src="fix-app.js?v=22"></script>
+<script src="theory-app.js?v=22"></script>
+<script src="plus-app.js?v=22"></script>
+<script src="exam-app.js?v=22"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -950,7 +952,7 @@ body.compact .wordmark { font-size: 22px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "21", THEORY = {}, theoryLoading = {};
+  const VER = "22", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))

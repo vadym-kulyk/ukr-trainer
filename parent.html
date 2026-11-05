@@ -6,6 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Звіт про навчання · Дослівно</title>
+<script src="theme.js?v=22"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
@@ -114,7 +115,7 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.018em; }
     const started = t.filter(x => x.a >= 10).map(x => Object.assign({ acc: x.c / x.a }, x));
     const weak = started.filter(x => x.acc < 0.6).sort((x, y) => x.acc - y.acc).slice(0, 5), strong = started.filter(x => x.acc >= 0.85).sort((x, y) => y.acc - x.acc).slice(0, 5);
     const diag = plus.diag;
-    let h = `<div class="top"><span class="logo wordmark" aria-label="Дослівно">Досл<span class="wm-st">і</span>вно</span><span class="spacer"></span><button class="btn noprint" onclick="window.print()">Друк / PDF</button></div>
+    let h = `<div class="top"><span class="logo wordmark" aria-label="Дослівно">Досл<span class="wm-st">і</span>вно</span><span class="spacer"></span>${window.MGTheme ? MGTheme.btn() : ""}<button class="btn noprint" onclick="window.print()">Друк / PDF</button></div>
       <div class="card"><h1>Звіт про навчання</h1><p><b>${esc(d.name)}</b>, клас ${esc(d.cls)}</p><p class="hint">Українська мова: тренажер, завдання ЗНО й симуляції НМТ. Сформовано ${new Date(d.now).toLocaleString("uk-UA")}.</p>
       <div class="kpis"><div class="kpi"><b>${a} / ${t.length * 100}</b><span>виконано завдань тренажера</span></div><div class="kpi"><b>${pct(a ? c / a : null)}</b><span>правильних відповідей</span></div>
       <div class="kpi"><b>${d.zno.a ? pct(d.zno.c / d.zno.a) : "—"}</b><span>точність у завданнях ЗНО (${d.zno.a})</span></div><div class="kpi"><b>${d.nmt.best || "—"}</b><span>найкращий бал симуляції НМТ (100–200)</span></div>
