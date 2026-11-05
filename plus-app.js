@@ -35,16 +35,27 @@
       if (keys.length > 400) keys.slice(0, keys.length - 400).forEach(k => { delete x.days[k]; });
       badgeCheck();
     }
+    /* Відповіді за день: більше з двох джерел — журнал «Спроби» на сервері (act) і лічильник на пристрої (days).
+       Так враховано й заняття до появи серій, і ще не надіслані відповіді. */
+    function allDays() {
+      const x = plus(), s = host.me(), out = {};
+      if (!x) return out;
+      const a = (s && s.act) || {};
+      for (const k in a) out[k] = a[k] || 0;
+      for (const k in x.days) out[k] = Math.max(out[k] || 0, x.days[k] || 0);
+      return out;
+    }
     function streak() {
-      const x = plus(); if (!x) return 0;
+      if (!plus()) return 0;
+      const d = allDays();
       let n = 0, t = Date.now();
-      if (!x.days[dk(t)]) t -= DAY;            // сьогодні ще не займався — серія не обривається до кінця дня
-      while (x.days[dk(t)]) { n++; t -= DAY; }
+      if (!d[dk(t)]) t -= DAY;            // сьогодні ще не займався — серія не обривається до кінця дня
+      while (d[dk(t)]) { n++; t -= DAY; }
       return n;
     }
     function bestStreak() {
       const x = plus(); if (!x) return 0;
-      const ds = Object.keys(x.days).filter(k => x.days[k] > 0).sort().map(k => dnum(new Date(k + "T12:00:00").getTime()));
+      const all = allDays(), ds = Object.keys(all).filter(k => all[k] > 0).sort().map(k => dnum(new Date(k + "T12:00:00").getTime()));
       let best = 0, run = 0, prev = null;
       ds.forEach(d => { run = prev !== null && d === prev + 1 ? run + 1 : 1; best = Math.max(best, run); prev = d; });
       return best;
@@ -53,10 +64,11 @@
       const x = plus(); if (!x) return 0;
       const now = new Date(), wd = (now.getDay() + 6) % 7; // понеділок = 0
       let sum = 0;
-      for (let i = 0; i <= wd; i++) sum += x.days[dk(now.getTime() - i * DAY)] || 0;
+      const d = allDays();
+      for (let i = 0; i <= wd; i++) sum += d[dk(now.getTime() - i * DAY)] || 0;
       return sum;
     }
-    const total = () => { const x = plus(); return x ? Object.values(x.days).reduce((a, b) => a + b, 0) : 0; };
+    const total = () => plus() ? Object.values(allDays()).reduce((a, b) => a + b, 0) : 0;
 
     /* ── Нагороди ── */
     const BADGES = [
@@ -200,12 +212,12 @@
       const from = new Date(now.getMonth() >= 9 ? now.getFullYear() : now.getFullYear() - 1, 9, 1, 12);
       const start = new Date(from.getTime() - ((from.getDay() + 6) % 7) * DAY);
       const weeks = Math.floor((now.getTime() - start.getTime()) / (7 * DAY)) + 1;
-      let cells = "", months = "", act = 0, lastM = -1;
+      let cells = "", months = "", act = 0, lastM = -1; const all = allDays();
       for (let w = 0; w < weeks; w++) {
         const wk = new Date(start.getTime() + w * 7 * DAY + 6 * DAY), m = wk.getMonth();
         months += `<span>${m !== lastM ? MON[m] : ""}</span>`; lastM = m;
         for (let d = 0; d < 7; d++) {
-          const t = start.getTime() + (w * 7 + d) * DAY, n = x.days[dk(t)] || 0;
+          const t = start.getTime() + (w * 7 + d) * DAY, n = all[dk(t)] || 0;
           const out = t < from.getTime() || t > now.getTime();
           if (n && !out) act++;
           const lv = out ? "f" : n >= 60 ? 4 : n >= 30 ? 3 : n >= 10 ? 2 : n ? 1 : 0;

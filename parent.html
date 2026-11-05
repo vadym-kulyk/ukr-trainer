@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Звіт про навчання · Дослівно</title>
-<script src="theme.js?v=24"></script>
+<script src="theme.js?v=25"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap">
@@ -119,7 +119,7 @@ h1, h2, h3, h4 { font-weight: 700; letter-spacing: -0.018em; }
       <div class="card"><h1>Звіт про навчання</h1><p><b>${esc(d.name)}</b>, клас ${esc(d.cls)}</p><p class="hint">Українська мова: тренажер, завдання ЗНО й симуляції НМТ. Сформовано ${new Date(d.now).toLocaleString("uk-UA")}.</p>
       <div class="kpis"><div class="kpi"><b>${a} / ${t.length * 100}</b><span>виконано завдань тренажера</span></div><div class="kpi"><b>${pct(a ? c / a : null)}</b><span>правильних відповідей</span></div>
       <div class="kpi"><b>${d.zno.a ? pct(d.zno.c / d.zno.a) : "—"}</b><span>точність у завданнях ЗНО (${d.zno.a})</span></div><div class="kpi"><b>${d.nmt.best || "—"}</b><span>найкращий бал симуляції НМТ (100–200)</span></div>
-      <div class="kpi"><b>${streak(plus.days)}</b><span>днів поспіль із заняттями</span></div><div class="kpi"><b>${act.mins != null ? (act.mins >= 60 ? (act.mins / 60).toFixed(1).replace(".", ",") + " год" : act.mins + " хв") : "—"}</b><span>час занять (орієнтовно)</span></div>
+      <div class="kpi"><b>${streak((() => { const o = Object.assign({}, act.days || {}); for (const k in plus.days || {}) o[k] = Math.max(o[k] || 0, plus.days[k] || 0); return o; })())}</b><span>днів поспіль із заняттями</span></div><div class="kpi"><b>${act.mins != null ? (act.mins >= 60 ? (act.mins / 60).toFixed(1).replace(".", ",") + " год" : act.mins + " хв") : "—"}</b><span>час занять (орієнтовно)</span></div>
       <div class="kpi"><b>${w0.n}</b><span>відповідей цього тижня (минулого: ${w1.n})</span></div><div class="kpi"><b>${d.fix ? d.fix.done + " / " + (d.fix.done + d.fix.open) : "—"}</b><span>виправлено помилок</span></div></div></div>
       <div class="card"><h2>Активність за 30 днів</h2>${chart(act.days)}<p class="hint">Кількість відповідей щодня.</p></div>`;
     if (weak.length || strong.length) h += `<div class="card"><h2>Що вдається, а над чим попрацювати</h2>

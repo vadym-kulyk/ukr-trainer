@@ -316,8 +316,10 @@
       const p = s.plus || {}, th = p.th || {}, diag = p.diag;
       let out = dynamicsCard([s], "Динаміка: тиждень до тижня");
       const thRows = T.map(t => ({ t, x: th[t.id] })).filter(r => r.x && r.x[0]);
-      const st = streakOf(p.days), goal = p.goal && p.goal.w;
-      const wk = (() => { let n = 0; const ws = weekStart(D().now); for (let i = 0; i < 7; i++) n += (p.days || {})[dk(ws + i * DAY)] || 0; return n; })();
+      /* Дні з журналу (усі заняття) разом із лічильником пристрою учня. */
+      const days = Object.assign({}, (s.act && s.act.days) || {}); for (const k in p.days || {}) days[k] = Math.max(days[k] || 0, p.days[k] || 0);
+      const st = streakOf(days), goal = p.goal && p.goal.w;
+      const wk = (() => { let n = 0; const ws = weekStart(D().now); for (let i = 0; i < 7; i++) n += days[dk(ws + i * DAY)] || 0; return n; })();
       out += `<div class="card"><h3>Тренування, мотивація, діагностика</h3><div class="kpis">${h.kpi(st, "днів поспіль")}${h.kpi(goal ? wk + " / " + goal : "—", "ціль тижня")}${h.kpi(p.badges ? Object.keys(p.badges).length : 0, "нагород")}
         ${h.kpi(diag && diag.res ? Object.values(diag.res).filter(v => v === "1").length + " / " + Object.keys(diag.res).length : "—", "діагностика", diag && diag.done ? "пройдено " + h.fmtDate(diag.at) : diag ? "не завершено" : "не проходив")}
         ${h.kpi(p.wu ? p.wu.n : 0, "завдань у розминці", p.wu && p.wu.done ? "днів розминки: " + Object.keys(p.wu.done).length : "")}${h.kpi(s.act && s.act.xs ? (s.act.xs["тренування теорії"] || 0) : 0, "відповідей у тренуванні теорії")}</div>

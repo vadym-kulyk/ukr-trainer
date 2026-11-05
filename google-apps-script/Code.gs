@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 13;
+const SERVICE_VERSION = 14;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -645,7 +645,7 @@ function login_(d) {
   ps.getRange(row, 7).setValue(new Date());
   const rs = sheet_();
   const stored = readStored_(rs, findRow_(rs, key));
-  return { ok: true, key, token: token_(key), name: String(vals[1]), cls: String(vals[2]), topics: topicsOut_(stored), zno: znoOut_(key), nmt: readNmt_(key), fix: stored._fix || {}, plus: readPlus_(key), v: SERVICE_VERSION };
+  return { ok: true, key, token: token_(key), name: String(vals[1]), cls: String(vals[2]), topics: topicsOut_(stored), zno: znoOut_(key), nmt: readNmt_(key), fix: stored._fix || {}, plus: readPlus_(key), act: actDays_(String(vals[1]) + ' (' + String(vals[2]) + ')'), v: SERVICE_VERSION };
 }
 
 /** Перевіряє токен і повертає профіль учня або null. */
@@ -730,7 +730,7 @@ function doPost(e) {
       if (d.action === 'load') {
         const sh = sheet_();
         const stored = readStored_(sh, findRow_(sh, p.key));
-        return out_(Object.assign({ ok: true, topics: topicsOut_(stored), zno: znoOut_(p.key), nmt: readNmt_(p.key), fix: stored._fix || {}, plus: readPlus_(p.key), v: SERVICE_VERSION }, studentExtras_(p.key, p.cls)));
+        return out_(Object.assign({ ok: true, topics: topicsOut_(stored), zno: znoOut_(p.key), nmt: readNmt_(p.key), fix: stored._fix || {}, plus: readPlus_(p.key), act: actDays_(p.name + ' (' + p.cls + ')'), v: SERVICE_VERSION }, studentExtras_(p.key, p.cls)));
       }
       return out_(Object.assign(save_(d, p), studentExtras_(p.key, p.cls, d.exv)));
     }
@@ -1176,11 +1176,13 @@ function logAgg_() {
   }
 
   if (changed) {
-    const cut = dayOf(Date.now() - AGG_DAYS * 86400000);
+    const cut = dayOf(Date.now() - AGG_DAYS * 86400000), cutYear = dayOf(Date.now() - 400 * 86400000);
     Object.keys(agg.days).forEach(dk => { if (dk < cut) delete agg.days[dk]; });
     Object.keys(agg.st).forEach(nm => {
       const x = agg.st[nm];
-      [x.days, x.dn].forEach(dd => Object.keys(dd).forEach(dk => { if (dk < cut) delete dd[dk]; }));
+      // Дні занять учня тримаємо цілий навчальний рік (календар на сайті), решту — AGG_DAYS.
+      Object.keys(x.days).forEach(dk => { if (dk < cutYear) delete x.days[dk]; });
+      Object.keys(x.dn).forEach(dk => { if (dk < cut) delete x.dn[dk]; });
       Object.keys(x.tp).forEach(id => { const tp = x.tp[id]; Object.keys(tp).forEach(dk => { if (dk < cut) delete tp[dk]; }); if (!Object.keys(tp).length) delete x.tp[id]; });
     });
     // Два вікна панелі можуть рахувати одночасно: зберігає те, що першим отримало блокування.
@@ -1252,6 +1254,11 @@ function savePlus_(key, incoming) {
 }
 
 /** Короткий підсумок для адмін-панелі: без збережених відповідей. */
+/** Скільки відповідей учень дав щодня — з журналу «Спроби» (усі заняття, навіть до появи серій на сайті). */
+function actDays_(display) {
+  try { const x = logAgg_().agg.st[display]; return x ? x.days : {}; } catch (e) { return {}; }
+}
+
 function plusSummary_(p) {
   const out = {};
   if (p.th) { out.th = {}; Object.keys(p.th).forEach(id => { const m = (p.th[id] || {}).m || {}, v = Object.keys(m).map(k => m[k]); out.th[id] = [v.length, v.filter(x => x === '1').length]; }); }

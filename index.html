@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=24"></script>
+<script src="theme.js?v=25"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1026,15 +1026,15 @@ body.compact .parse-key { display: none; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=24"></script>
-<script src="data-extra.js?v=24"></script>
-<script src="engine.js?v=24"></script>
-<script src="zno-app.js?v=24"></script>
-<script src="nmt-app.js?v=24"></script>
-<script src="fix-app.js?v=24"></script>
-<script src="theory-app.js?v=24"></script>
-<script src="plus-app.js?v=24"></script>
-<script src="exam-app.js?v=24"></script>
+<script src="data.js?v=25"></script>
+<script src="data-extra.js?v=25"></script>
+<script src="engine.js?v=25"></script>
+<script src="zno-app.js?v=25"></script>
+<script src="nmt-app.js?v=25"></script>
+<script src="fix-app.js?v=25"></script>
+<script src="theory-app.js?v=25"></script>
+<script src="plus-app.js?v=25"></script>
+<script src="exam-app.js?v=25"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1084,7 +1084,7 @@ body.compact .parse-key { display: none; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "24", THEORY = {}, theoryLoading = {};
+  const VER = "25", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1296,6 +1296,7 @@ body.compact .parse-key { display: none; }
     NM.merge(rec, d.nmt);
     FX.merge(rec, d.fix);
     if (d.plus) rec.plus = mergePlus(rec.plus, d.plus);
+    if (d.act) rec.act = d.act;
     applyExtras(rec, d);
     adoptLegacy(rec, d.name);
     pulledFor = d.key;
@@ -1403,7 +1404,7 @@ body.compact .parse-key { display: none; }
     if (!s || !s.token) return;
     const key = store.current;
     const d = await api({ action: "load", key, token: s.token });
-    if (d && d.ok) { serverV = Number(d.v) || serverV; mergeTopics(s, d.topics); Z.merge(s, d.zno); NM.merge(s, d.nmt); FX.merge(s, d.fix); if (d.plus) s.plus = mergePlus(s.plus, d.plus); applyExtras(s, d); saveLocal(); setTimeout(maybeShowImportant, 400); pulledFor = key; render(); scheduleSync(true); }
+    if (d && d.ok) { serverV = Number(d.v) || serverV; mergeTopics(s, d.topics); Z.merge(s, d.zno); NM.merge(s, d.nmt); FX.merge(s, d.fix); if (d.plus) s.plus = mergePlus(s.plus, d.plus); if (d.act) s.act = d.act; applyExtras(s, d); saveLocal(); setTimeout(maybeShowImportant, 400); pulledFor = key; render(); scheduleSync(true); }
     else if (d && d.error === "auth") { delete s.token; saveLocal(); renderProfile(); render(); }
     else { setSync("error"); pulledFor = key; }
   }
