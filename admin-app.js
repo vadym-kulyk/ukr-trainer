@@ -229,7 +229,10 @@
   }
 
   /* ───── Тексти завдань ───── */
-  function trainerTasks(id) { return taskCache[id] || (taskCache[id] = E.buildTasks(T.find(t => t.id === id))); }
+  function trainerTasks(id, at) {
+    const tp = T.find(t => t.id === id), k = id + "#" + (at ? E.patchKey(tp, at) : "now");
+    return taskCache[k] || (taskCache[k] = at && E.patchKey(tp, at) === E.patchKey(tp) ? trainerTasks(id) : E.buildTasks(tp, at));
+  }
   function trainerTaskHtml(task) {
     let h = `<div class="q">${task.q}</div>${task.big ? `<div class="big">${task.big}</div>` : ""}`;
     if (task.t === "one") h += "<ul>" + task.opts.map((o, k) => `<li class="${k === task.a ? "ok" : ""}">${o}${k === task.a ? " ✓" : ""}</li>`).join("") + "</ul>";

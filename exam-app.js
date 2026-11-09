@@ -11,7 +11,7 @@
     const list = () => { const s = host.me(); return s && s.inbox && s.inbox.tests ? s.inbox.tests : []; };
     const testOf = id => list().find(t => t.id === id);
     function local(id) { const s = host.me(); s.ctl = s.ctl || {}; return s.ctl[id] || (s.ctl[id] = { ans: {}, cur: 0 }); }
-    const taskOf = (it, i) => { const base = host.tasksOf(it[0])[it[1]]; return base ? Object.assign({}, base, { n: i }) : null; };
+    const taskOf = (it, i, t) => { const base = host.tasksOf(it[0], t && t.at)[it[1]]; return base ? Object.assign({}, base, { n: i }) : null; };
     /* Тривалість = хвилини роботи + додаткові хвилини, які вчитель дав саме цьому учневі. */
     const total = t => (Number(t.min) || 0) + (Number(t.res && t.res.extra) || 0);
     const left = (t, st) => st.started ? st.started + total(t) * 60000 - Date.now() : total(t) * 60000;
@@ -63,7 +63,7 @@
       if (!st.started && r && r.started) st.started = r.started;
       if (left(t, st) <= 0) { setTimeout(() => timeUp(t), 0); return top + '<main class="wrap"><p class="empty">Час вийшов. Здаю роботу…</p></main>'; }
       ensureTick(t);
-      const i = Math.min(st.cur || 0, t.items.length - 1), task = taskOf(t.items[i], i);
+      const i = Math.min(st.cur || 0, t.items.length - 1), task = taskOf(t.items[i], i, t);
       if (!p || p.i !== i || p.id !== t.id) { p = host.trainerNewPend(task, "ctl" + t.id); p.i = i; p.id = t.id; const a = st.ans[i]; if (a != null) restore(task, a); }
       const answered = Object.keys(st.ans).length;
       let h = `<main class="wrap" style="padding-top:0"><section class="tasks"><div class="tprog"><div class="tprog-top"><span>Відповіли на <b class="mono">${answered}</b> з ${t.items.length}</span></div>
@@ -89,7 +89,7 @@
       if (!t.show || !r.okStr) return h + '<p class="hint">Правильні відповіді вчитель покаже згодом.</p>';
       const st = local(t.id);
       h += t.items.map((it, i) => {
-        const task = taskOf(it, i), resp = st.ans[i], ok = r.okStr[i] === "1";
+        const task = taskOf(it, i, t), resp = st.ans[i], ok = r.okStr[i] === "1";
         return `<article class="task"><div class="task-head"><span class="mono">Завдання ${i + 1}</span><span class="kind">${ok ? "✓ правильно" : "✗ помилка"}</span></div><h3 class="task-q">${task.q}</h3>${task.big ? `<div class="big">${task.big}</div>` : ""}
           ${resp != null ? host.trainerBody(task, true, resp, host.trainerNewPend(task, "rv")) : '<p class="hint">Відповіді немає.</p>'}<div class="fb ${ok ? "good" : "bad"}">${!ok ? host.correctHtml(task) : ""}${task.note ? `<span>${task.note}</span>` : ""}</div></article>`;
       }).join("");
@@ -132,7 +132,7 @@
     async function submit(t, auto) {
       if (busy) return;
       const st = local(t.id), s = host.me();
-      const ok = t.items.map((it, i) => { const task = taskOf(it, i), a = st.ans[i]; return a != null && E.check(task, a) ? "1" : "0"; }).join("");
+      const ok = t.items.map((it, i) => { const task = taskOf(it, i, t), a = st.ans[i]; return a != null && E.check(task, a) ? "1" : "0"; }).join("");
       const fo = st.mark ? host.focusSince(st.mark) : {};
       busy = true; st.confirm = false; host.render();
       const d = await host.api({ action: "test_submit", key: host.currentKey(), token: s.token, id: t.id, ok, ans: t.items.map((_, i) => st.ans[i] == null ? null : st.ans[i]), ex: fo.ex || 0, away: fo.away || 0 });
@@ -156,7 +156,7 @@
       if (d.ctl === "start") { start(t); return true; }
       if (d.ctl === "go") { const i = +d.i; if (i >= 0 && i < t.items.length) { st.cur = i; p = null; host.saveLocal(); host.render(); host.scrollTask(); } return true; }
       if (d.ctl === "save") {
-        const i = st.cur || 0, task = taskOf(t.items[i], i);
+        const i = st.cur || 0, task = taskOf(t.items[i], i, t);
         st.ans[i] = host.trainerResp(task, p);
         const nx = t.items.findIndex((_, k) => k > i && st.ans[k] == null);
         if (nx >= 0) { st.cur = nx; p = null; }

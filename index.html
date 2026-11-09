@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=28"></script>
+<script src="theme.js?v=29"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1028,15 +1028,15 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=28"></script>
-<script src="data-extra.js?v=28"></script>
-<script src="engine.js?v=28"></script>
-<script src="zno-app.js?v=28"></script>
-<script src="nmt-app.js?v=28"></script>
-<script src="fix-app.js?v=28"></script>
-<script src="theory-app.js?v=28"></script>
-<script src="plus-app.js?v=28"></script>
-<script src="exam-app.js?v=28"></script>
+<script src="data.js?v=29"></script>
+<script src="data-extra.js?v=29"></script>
+<script src="engine.js?v=29"></script>
+<script src="zno-app.js?v=29"></script>
+<script src="nmt-app.js?v=29"></script>
+<script src="fix-app.js?v=29"></script>
+<script src="theory-app.js?v=29"></script>
+<script src="plus-app.js?v=29"></script>
+<script src="exam-app.js?v=29"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1064,7 +1064,8 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
     const n = focusMark(), away = Math.max(0, n.away - m.away), dur = Math.max(0, n.t - m.t);
     return { sec: Math.min(1800, Math.round((dur - away) / 1000)), away: Math.round(away / 1000), ex: Math.max(0, n.exits - m.exits) };
   }
-  const tasksOf = id => TASKS[id] || (TASKS[id] = E.buildTasks(T.find(t => t.id === id)));
+  /* at — дата створення моніторингової роботи: для старих робіт завдання такі, якими їх бачили учні. */
+  const tasksOf = (id, at) => { const tp = T.find(t => t.id === id), k = id + "#" + (at ? E.patchKey(tp, at) : "now"); return TASKS[k] || (TASKS[k] = at && E.patchKey(tp, at) === E.patchKey(tp) ? tasksOf(id) : E.buildTasks(tp, at)); };
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
   /* ───── Локальне сховище ───── */
@@ -1086,7 +1087,7 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "28", THEORY = {}, theoryLoading = {};
+  const VER = "29", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1151,7 +1152,7 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
   const PL = window.MGPlus({
     esc, T, E, S, get ui() { return ui; }, me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
     saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), render: () => render(), toast: m => toast(m), gateHtml: () => gateHtml(),
-    scrollTask: () => scrollTask(), tasksOf: id => tasksOf(id), topicStats: id => topicStats(id), setHome: h => { store.home = h; saveLocal(); },
+    scrollTask: () => scrollTask(), tasksOf: (id, at) => tasksOf(id, at), topicStats: id => topicStats(id), setHome: h => { store.home = h; saveLocal(); },
     fixDone: () => { const x = FX.payload(); return x && x.sum ? x.sum.done : 0; }, typeName: t => TYPE[t],
     focusMark: () => focusMark(), focusSince: m => focusSince(m),
     correctHtml: task => correctHtml(task), plain: h => plain(h), answerText: (task, resp) => answerText(task, resp), rightText: task => rightText(task),
@@ -1164,7 +1165,7 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
   /* Моніторингові роботи від учителя (exam-app.js). */
   const EX = window.MGExam({
     esc, T, E, get ui() { return ui; }, me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current,
-    saveLocal: () => saveLocal(), render: () => render(), toast: m => toast(m), scrollTask: () => scrollTask(), tasksOf: id => tasksOf(id),
+    saveLocal: () => saveLocal(), render: () => render(), toast: m => toast(m), scrollTask: () => scrollTask(), tasksOf: (id, at) => tasksOf(id, at),
     api: body => api(body), applyExtras: (s, d) => { if (applyExtras(s, d)) updateBell(); }, typeName: t => TYPE[t],
     focusMark: () => focusMark(), focusSince: m => focusSince(m), correctHtml: task => correctHtml(task),
     trainerNewPend: (task, topic) => newPend(task, topic),

@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 16;
+const SERVICE_VERSION = 17;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -941,6 +941,7 @@ function admin_(d) {
     case 'admin_test_reset': return adminTestReset_(d);
     case 'admin_test_time': return adminTestTime_(d);
     case 'admin_test_add': return adminTestAdd_(d);
+    case 'admin_test_accept': return adminTestAccept_(d);
     case 'admin_parent_link': return adminParentLink_(d);
     case 'admin_msg_send': return adminMsgSend_(d);
     case 'admin_msg_delete': return deleteById_(simpleSheet_(MSG_SHEET, MSG_HEADER), d.id);
@@ -1279,9 +1280,9 @@ function plusSummary_(p) {
    Учитель збирає набір завдань тренажера (тема + номер завдання), задає час і чи показувати відповіді після здачі.
    Одна спроба: рядок результату створюється під час початку й заповнюється під час здачі. */
 const TEST_SHEET = 'Моніторингові роботи';
-const TEST_HEADER = ['ID', 'Час', 'Назва', 'Кому', 'Отримувачі (код)', 'Завдання (JSON)', 'Хвилин', 'Показувати відповіді', 'Термін', 'Примітка'];
+const TEST_HEADER = ['ID', 'Час', 'Назва', 'Кому', 'Отримувачі (код)', 'Завдання (JSON)', 'Хвилин', 'Показувати відповіді', 'Термін', 'Примітка', 'Зараховано також (JSON)'];
 const TRES_SHEET = 'Результати моніторингових робіт';
-const TRES_HEADER = ['ID роботи', 'Ключ', 'Учень', 'Почато', 'Здано', 'Балів', 'З', '%', 'Оцінка (12)', 'Виходів зі сторінки', 'Поза сторінкою, с', 'Правильність (1/0)', 'Запізнення', 'Відповіді (JSON)', 'Додатковий час, хв'];
+const TRES_HEADER = ['ID роботи', 'Ключ', 'Учень', 'Почато', 'Здано', 'Балів', 'З', '%', 'Оцінка (12)', 'Виходів зі сторінки', 'Поза сторінкою, с', 'Правильність (1/0)', 'Запізнення', 'Відповіді (JSON)', 'Додатковий час, хв', 'Правильність до зарахування'];
 
 function adminTestSave_(d) {
   const code = recipients_(d.to), title = txt_(d.title, 120).trim();
@@ -1332,9 +1333,11 @@ function testSubmit_(d, p) {
   const v = sh.getRange(row, 4, 1, 2).getValues()[0], extra = Number(sh.getRange(row, 15).getValue()) || 0;
   if (v[1]) return { ok: false, error: 'done' };
   const n = JSON.parse(String(t[5] || '[]')).length;
-  const okStr = String(d.ok || '').replace(/[^01]/g, '').slice(0, n).padEnd(n, '0');
+  const orig = String(d.ok || '').replace(/[^01]/g, '').slice(0, n).padEnd(n, '0');
+  const okStr = acceptOk_(orig, Array.isArray(d.ans) ? d.ans : [], accOf_(t));
   const score = okStr.split('').filter(x => x === '1').length, pct = n ? score / n : 0;
   const grade = Math.max(1, Math.round(pct * 12));
+  sh.getRange(row, 16).setValue("'" + orig);
   const started = iso_(v[0]) || Date.now(), late = Date.now() - started > (Number(t[6]) + extra + 2) * 60000;
   sh.getRange(row, 5, 1, 10).setValues([[new Date(), score, n, Math.round(pct * 100), grade, num_(d.ex), num_(d.away), "'" + okStr, late ? 'так' : '', txt_(JSON.stringify(d.ans || []), 20000)]]);
   extrasDrop_();
@@ -1363,6 +1366,48 @@ function adminTestTime_(d) {
   }
   return { ok: false, error: 'not_found' };
 }
+/* ───── Зарахування інших відповідей ─────
+   «Зараховано також» — {номер завдання: [відповідь у JSON, …]}. Зарахування лише додає бали:
+   правильність, обчислена під час здачі, зберігається окремо («Правильність до зарахування»). */
+function accOf_(t) { try { const a = JSON.parse(String(t[10] || '{}')); return a && typeof a === 'object' ? a : {}; } catch (e) { return {}; } }
+function acceptOk_(orig, ans, acc) {
+  return orig.split('').map((c, i) => c === '1' || ((acc[i] || []).indexOf(JSON.stringify(ans[i] == null ? null : ans[i])) >= 0 && ans[i] != null) ? '1' : '0').join('');
+}
+function adminTestAccept_(d) {
+  const tsh = simpleSheet_(TEST_SHEET, TEST_HEADER), trows = rows_(tsh, TEST_HEADER.length);
+  let ti = -1; for (let i = 0; i < trows.length; i++) if (String(trows[i][0]) === String(d.id)) { ti = i; break; }
+  if (ti < 0) return { ok: false, error: 'not_found' };
+  const n = JSON.parse(String(trows[ti][5] || '[]')).length, q = Math.floor(Number(d.q)), a = String(d.a || '').slice(0, 2000);
+  if (!(q >= 0 && q < n) || !a) return { ok: false, error: 'bad' };
+  const acc = accOf_(trows[ti]), list = acc[q] || [];
+  const k = list.indexOf(a);
+  if (d.on) { if (k < 0) list.push(a); } else if (k >= 0) list.splice(k, 1);
+  if (list.length) acc[q] = list; else delete acc[q];
+  tsh.getRange(ti + 2, 11).setValue(JSON.stringify(acc));
+  // Перераховуємо всі здані роботи.
+  const sh = simpleSheet_(TRES_SHEET, TRES_HEADER), last = sh.getLastRow();
+  let changed = 0;
+  if (last >= 2) {
+    const vals = sh.getRange(2, 1, last - 1, 16).getValues();
+    vals.forEach((r, i) => {
+      if (String(r[0]) !== String(d.id) || !r[4]) return;
+      const cur = String(r[11] || '').replace(/^'/, '').padEnd(n, '0').slice(0, n);
+      const orig = String(r[15] || '').replace(/^'/, '') || cur;
+      let ans = []; try { ans = JSON.parse(String(r[13] || '[]')); } catch (e) {}
+      const ok = acceptOk_(orig.padEnd(n, '0').slice(0, n), ans, acc);
+      const score = ok.split('').filter(x => x === '1').length, pct = n ? score / n : 0;
+      if (ok !== cur || !r[15]) {
+        sh.getRange(i + 2, 6, 1, 4).setValues([[score, n, Math.round(pct * 100), Math.max(1, Math.round(pct * 12))]]);
+        sh.getRange(i + 2, 12).setValue("'" + ok);
+        sh.getRange(i + 2, 16).setValue("'" + orig);
+        if (ok !== cur) changed++;
+      }
+    });
+  }
+  extrasDrop_();
+  return { ok: true, acc, changed };
+}
+
 /** Учитель додає учнів або класи до вже створеної роботи. Отримувачі зберігаються як «class:…;keys:…». */
 function adminTestAdd_(d) {
   const sh = simpleSheet_(TEST_SHEET, TEST_HEADER), rows = rows_(sh, 5);
@@ -1403,10 +1448,10 @@ function adminTestReset_(d) {
 function testsForAdmin_() {
   const tests = rows_(simpleSheet_(TEST_SHEET, TEST_HEADER), TEST_HEADER.length).filter(r => r[0]).map(r => ({
     id: String(r[0]), at: iso_(r[1]), title: String(r[2]), toLabel: String(r[3]), code: String(r[4]), items: JSON.parse(String(r[5] || '[]')),
-    min: Number(r[6]) || 0, show: !!r[7], due: iso_(r[8]), note: String(r[9] || '') }));
+    min: Number(r[6]) || 0, show: !!r[7], due: iso_(r[8]), note: String(r[9] || ''), acc: accOf_(r) }));
   const results = rows_(simpleSheet_(TRES_SHEET, TRES_HEADER), TRES_HEADER.length).filter(r => r[0]).map(r => ({
     id: String(r[0]), key: String(r[1]), name: String(r[2]), started: iso_(r[3]), done: iso_(r[4]), score: Number(r[5]) || 0, max: Number(r[6]) || 0,
-    grade: Number(r[8]) || 0, ex: Number(r[9]) || 0, away: Number(r[10]) || 0, okStr: String(r[11] || '').replace(/^'/, ''), late: String(r[12]) === 'так', extra: Number(r[14]) || 0 }));
+    grade: Number(r[8]) || 0, ex: Number(r[9]) || 0, away: Number(r[10]) || 0, okStr: String(r[11] || '').replace(/^'/, ''), late: String(r[12]) === 'так', extra: Number(r[14]) || 0, ans: r[4] ? String(r[13] || '') : '' }));
   return { tests, results };
 }
 

@@ -394,7 +394,25 @@
     return gens;
   }
 
-  function buildTasks(topic) {
+  /* Виправлення банку без зміни інших завдань: patches замінюють текст окремих речень (категорію не чіпаємо,
+     тому випадковий порядок той самий). at — коли створено моніторингову роботу: старі роботи лишаються такими,
+     якими їх бачили учні; тренажер і нові роботи — з виправленням. */
+  function activePatches(topic, at) { return (topic.patches || []).filter(p => !at || at >= p.at); }
+  function patchKey(topic, at) { return topic ? activePatches(topic, at).length : 0; }
+  function patched(topic, at) {
+    const ps = activePatches(topic, at);
+    if (!ps.length || !topic.items) return topic;
+    const items = topic.items.map(it => {
+      const p = ps.find(x => x.from === it[1]);
+      if (!p) return it;
+      const out = it.slice(); out[1] = p.to; if (p.note != null) out[3] = p.note;
+      return out;
+    });
+    return Object.assign({}, topic, { items });
+  }
+
+  function buildTasks(topic, at) {
+    topic = patched(topic, at);
     const r = rngFrom("mg-ukr-" + topic.id + "-v1");
     const gens = gensFor(topic);
     const fixed = (topic.fixed || []).map((f, i) => fixedTask(r, f, i)).filter(Boolean);
@@ -471,5 +489,5 @@
     return out.map((t, i) => Object.assign(t, { n: task.n, sim: i + 1 }));
   }
 
-  root.MGEngine = { buildTasks, check, rngFrom, shuffle, TOTAL, similar, reshuffle };
+  root.MGEngine = { buildTasks, patchKey, check, rngFrom, shuffle, TOTAL, similar, reshuffle };
 })(typeof window !== "undefined" ? window : this);

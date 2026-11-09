@@ -306,6 +306,38 @@
         <div class="picker">${list.map(s => `<label class="check"><input type="checkbox" data-ctladdkey="${esc(s.key)}" ${add.keys.has(s.key) || add.classes.has(s.cls) ? "checked" : ""} ${add.classes.has(s.cls) ? "disabled" : ""}> ${esc(s.name)} <span class="muted">${esc(s.cls)}</span></label>`).join("") || '<span class="hint">Нікого не знайдено.</span>'}</div>
         <div class="row"><button class="btn primary" data-act="ctl-add-save" ${add.busy || !n ? "disabled" : ""}>${add.busy ? "Додаю…" : "Додати" + (n ? " (" + n + ")" : "")}</button></div></div>`;
     }
+    /* Відповіді учнів на одне завдання: що саме обирали й скільки разів. Будь-яку неправильну відповідь
+       учитель може зарахувати — бали всіх, хто її дав (і дасть пізніше), перераховуються. */
+    const openQ = { id: "", i: -1 };
+    function ansText(task, a) {
+      const P = x => String(x == null ? "" : x).replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+      if (a == null) return "без відповіді";
+      if (task.t === "one") return P(task.opts[a]);
+      if (task.t === "multi") return a.map(k => P(task.opts[k])).join("; ") || "нічого не позначено";
+      if (task.t === "sort") {
+        const bad = task.items.map((it, k) => a[k] === it.c ? "" : P(it.html) + " → " + (a[k] == null ? "?" : P(task.cats[a[k]])) + " (за ключем: " + P(task.cats[it.c]) + ")").filter(Boolean);
+        return bad.length ? bad.join("; ") : "усе як у ключі";
+      }
+      if (task.t === "match") return task.left.map((l, k) => P(l) + " — " + (a[k] == null ? "?" : P(task.right[a[k]] && task.right[a[k]].html))).join("; ");
+      if (task.t === "order") return a.map(k => P(task.items[k])).join(" ");
+      return JSON.stringify(a);
+    }
+    function answersHtml(t, i, task, done) {
+      const acc = (t.acc || {})[i] || [], groups = {};
+      done.forEach(x => {
+        let ans = []; try { ans = JSON.parse(x.r.ans || "[]"); } catch (e) {}
+        const a = ans[i] == null ? null : ans[i], k = JSON.stringify(a);
+        (groups[k] || (groups[k] = { a, k, names: [] })).names.push(x.s.name);
+      });
+      const list = Object.values(groups).map(g => ({ ...g, right: g.a != null && E.check(task, g.a), acc: acc.includes(g.k) }))
+        .sort((a, b) => (b.right - a.right) || (b.acc - a.acc) || (b.names.length - a.names.length));
+      if (!list.length) return "";
+      return `<div class="ans-list"><b>Відповіді учнів</b>${list.map(g => `<div class="ans-row">
+        <span class="tag ${g.right ? "green" : g.acc ? "violet" : "red"}">${g.right ? "правильно" : g.acc ? "зараховано" : "неправильно"}</span>
+        <span class="ans-txt">${esc(ansText(task, g.a))}</span>
+        <span class="muted" title="${esc(g.names.join(", "))}">${g.names.length} уч.</span>
+        ${g.right || g.a == null ? "" : `<button class="btn sm noprint" data-ctlacc="${esc(t.id)}|${i}|${g.acc ? 0 : 1}" data-a="${esc(g.k)}">${g.acc ? "Скасувати зарахування" : "Зарахувати"}</button>`}</div>`).join("")}</div>`;
+    }
     function testPage(id) {
       const t = (D().tests || []).find(x => x.id === id);
       if (!t) return `<div class="card"><p>Моніторингову роботу не знайдено.</p><a href="#tests">← До моніторингових робіт</a></div>`;
@@ -331,7 +363,7 @@
       // Складність кожного завдання.
       const items = t.items.map((it, i) => { const okN = done.filter(x => x.r.okStr[i] === "1").length; return { it, i, okN, acc: done.length ? okN / done.length : null }; });
       out += `<div class="card"><h3>Завдання моніторингової роботи</h3><p class="hint">Частка учнів, які розв’язали завдання правильно. Розгорніть, щоб побачити текст і відповідь.</p>
-        ${items.slice().sort((a, b) => (a.acc ?? 2) - (b.acc ?? 2)).map(x => { const task = h.trainerTasks(x.it[0])[x.it[1]]; return `<details class="more"><summary><b>№${x.i + 1}</b> · ${esc(h.topicTitle(x.it[0]))} · завдання ${x.it[1] + 1} — ${x.acc == null ? "ще немає відповідей" : h.pctTxt(x.acc) + " правильно"}</summary>${task ? h.trainerTaskHtml(task) : ""}</details>`; }).join("")}</div>`;
+        ${items.slice().sort((a, b) => (a.acc ?? 2) - (b.acc ?? 2)).map(x => { const task = h.trainerTasks(x.it[0], t.at)[x.it[1]], nAcc = ((t.acc || {})[x.i] || []).length; return `<details class="more" ${openQ.id === t.id && openQ.i === x.i ? "open" : ""}><summary><b>№${x.i + 1}</b> · ${esc(h.topicTitle(x.it[0]))} · завдання ${x.it[1] + 1} — ${x.acc == null ? "ще немає відповідей" : h.pctTxt(x.acc) + " правильно"}${nAcc ? ' <span class="tag violet">зараховано інші відповіді</span>' : ""}</summary>${task ? h.trainerTaskHtml(task) + answersHtml(t, x.i, task, done) : ""}</details>`; }).join("")}</div>`;
       return out + "</div>";
     }
 
@@ -413,6 +445,15 @@
         add.busy = false;
         if (r && r.ok) { add.id = ""; await h.refreshQuiet(); h.toast("Учнів додано до роботи"); }
         else { h.render.keepScroll = true; h.render(); h.toast(r && r.error === "nothing" ? "Ці учні вже мають роботу" : "Не вдалося додати. Оновіть Code.gs до версії 16."); }
+        return true;
+      }
+      if (d.ctlacc) {
+        const [id, q, on] = d.ctlacc.split("|");
+        if (+on && !confirm("Зарахувати цю відповідь як правильну? Бали всіх учнів, які її дали, буде перераховано.")) return true;
+        b.disabled = true; openQ.id = id; openQ.i = +q;
+        const r = await h.api({ action: "admin_test_accept", id, q: +q, a: d.a, on: !!+on });
+        if (r && r.ok) { await h.refreshQuiet(); h.toast(+on ? "Зараховано. Перераховано робіт: " + r.changed : "Зарахування скасовано. Перераховано робіт: " + r.changed); }
+        else { b.disabled = false; h.toast("Не вдалося. Оновіть Code.gs до версії 17."); }
         return true;
       }
       if (d.ctltime) {
