@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 15;
+const SERVICE_VERSION = 16;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -819,6 +819,7 @@ const iso_ = v => v instanceof Date ? v.getTime() : (Number(v) || 0);
 /** Чи адресовано повідомлення (призначення) цьому учневі. code: all | class:7-А | keys:k1,k2 */
 function addressed_(code, key, cls) {
   code = String(code || '');
+  if (code.indexOf(';') >= 0) return code.split(';').some(c => addressed_(c, key, cls)); // «клас + окремі учні»
   if (code === 'all') return true;
   if (code.indexOf('class:') === 0) return code.slice(6).split(',').some(c => c.trim().toUpperCase() === String(cls || '').toUpperCase());
   if (code.indexOf('keys:') === 0) return code.slice(5).split(',').indexOf(key) >= 0;
@@ -939,6 +940,7 @@ function admin_(d) {
     case 'admin_test_delete': return deleteById_(simpleSheet_(TEST_SHEET, TEST_HEADER), d.id);
     case 'admin_test_reset': return adminTestReset_(d);
     case 'admin_test_time': return adminTestTime_(d);
+    case 'admin_test_add': return adminTestAdd_(d);
     case 'admin_parent_link': return adminParentLink_(d);
     case 'admin_msg_send': return adminMsgSend_(d);
     case 'admin_msg_delete': return deleteById_(simpleSheet_(MSG_SHEET, MSG_HEADER), d.id);
@@ -1358,6 +1360,29 @@ function adminTestTime_(d) {
     cell.setValue(min);
     extrasDrop_();
     return { ok: true, min };
+  }
+  return { ok: false, error: 'not_found' };
+}
+/** Учитель додає учнів або класи до вже створеної роботи. Отримувачі зберігаються як «class:…;keys:…». */
+function adminTestAdd_(d) {
+  const sh = simpleSheet_(TEST_SHEET, TEST_HEADER), rows = rows_(sh, 5);
+  for (let i = 0; i < rows.length; i++) if (String(rows[i][0]) === String(d.id)) {
+    const code = String(rows[i][4] || '');
+    if (code === 'all') return { ok: true, code };
+    const cls = [], keys = [];
+    code.split(';').forEach(c => {
+      if (c.indexOf('class:') === 0) c.slice(6).split(',').forEach(x => { x = x.trim().toUpperCase(); if (x && cls.indexOf(x) < 0) cls.push(x); });
+      if (c.indexOf('keys:') === 0) c.slice(5).split(',').forEach(x => { if (x && keys.indexOf(x) < 0) keys.push(x); });
+    });
+    const n0 = cls.length + keys.length;
+    (Array.isArray(d.classes) ? d.classes : []).map(c => txt_(c, 12).toUpperCase().replace(/[,;]/g, '')).filter(Boolean).forEach(c => { if (cls.indexOf(c) < 0) cls.push(c); });
+    (Array.isArray(d.keys) ? d.keys : []).map(k => txt_(k, 100).replace(/[,;]/g, '')).filter(Boolean).forEach(k => { if (keys.indexOf(k) < 0) keys.push(k); });
+    if (cls.length + keys.length === n0) return { ok: false, error: 'nothing' };
+    const next = [cls.length ? 'class:' + cls.join(',') : '', keys.length ? 'keys:' + keys.slice(0, 1000).join(',') : ''].filter(Boolean).join(';');
+    sh.getRange(i + 2, 5).setValue(next);
+    if (d.toLabel) sh.getRange(i + 2, 4).setValue(txt_(d.toLabel, 200));
+    extrasDrop_();
+    return { ok: true, code: next };
   }
   return { ok: false, error: 'not_found' };
 }

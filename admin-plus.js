@@ -5,6 +5,7 @@
 
   window.MGAdminPlus = function (h) {
     const { esc, T, SECS, E, N, DAY } = h;
+    const add = { id: "", q: "", keys: new Set(), classes: new Set(), busy: false };
     const ctl = { open: false, id: "", title: "", topics: new Set(), per: 2, min: 30, show: true, due: "", note: "", type: "class", classes: new Set(), keys: new Set(), q: "", iq: "", busy: false };
     let live = null, liveTimer = null, liveBusy = false, parentLinks = {};
 
@@ -289,6 +290,22 @@
       const end = r.started + ((Number(t.min) || 0) + (Number(r.extra) || 0)) * 60000, left = Math.round((end - Date.now()) / 60000);
       return `<span class="tag ${left < 0 ? "red" : "violet"}">${left >= 0 ? "пише · залишилось " + left + " хв" : "час вийшов, не здав"}</span>${r.extra ? ` <span class="tag green">+${r.extra} хв</span>` : ""}`;
     }
+    /* Додати учнів до вже створеної роботи: окремих учнів або цілий клас. */
+    function addPanel(t) {
+      const out0 = h.all().filter(s => !h.addressed(t.code, s));
+      const cls = [...new Set(out0.map(s => s.cls))].filter(Boolean).sort((a, b) => a.localeCompare(b, "uk"));
+      const q = add.q.toLowerCase(), list = out0.filter(s => !q || (s.name + " " + s.cls).toLowerCase().includes(q)).sort((a, b) => a.cls.localeCompare(b.cls, "uk") || a.name.localeCompare(b.name, "uk"));
+      const n = add.keys.size + out0.filter(s => add.classes.has(s.cls) && !add.keys.has(s.key)).length;
+      const late = t.due && t.due < Date.now();
+      if (!out0.length) return `<div class="card noprint"><div class="row"><h3>Додати учнів</h3><span class="spacer"></span><button class="btn sm" data-act="ctl-add-cancel">Закрити</button></div><p class="empty">Усі учні вже мають цю роботу.</p></div>`;
+      return `<div class="card noprint add-panel"><div class="row"><h3>Додати учнів</h3><span class="spacer"></span><button class="btn sm" data-act="ctl-add-cancel">Закрити</button></div>
+        <p class="hint">Тут лише ті, кому робота ще не призначена. Нові учні одразу побачать її на головній сторінці тренажера з тими самими завданнями й часом.</p>
+        ${late ? `<p class="hint err">Термін роботи минув (${h.fmtDT(t.due)}) — додані учні не зможуть її почати. Створіть нову роботу з новим терміном.</p>` : ""}
+        ${cls.length ? `<div class="field"><span>Увесь клас (разом із тими, хто приєднається пізніше)</span><div class="chips">${cls.map(c => `<button type="button" class="${add.classes.has(c) ? "on" : ""}" data-ctladdcls="${esc(c)}">${esc(c)}</button>`).join("")}</div></div>` : ""}
+        <div class="field"><span>Окремі учні</span><input class="input" id="kaddq" placeholder="Пошук учня або класу" value="${esc(add.q)}"></div>
+        <div class="picker">${list.map(s => `<label class="check"><input type="checkbox" data-ctladdkey="${esc(s.key)}" ${add.keys.has(s.key) || add.classes.has(s.cls) ? "checked" : ""} ${add.classes.has(s.cls) ? "disabled" : ""}> ${esc(s.name)} <span class="muted">${esc(s.cls)}</span></label>`).join("") || '<span class="hint">Нікого не знайдено.</span>'}</div>
+        <div class="row"><button class="btn primary" data-act="ctl-add-save" ${add.busy || !n ? "disabled" : ""}>${add.busy ? "Додаю…" : "Додати" + (n ? " (" + n + ")" : "")}</button></div></div>`;
+    }
     function testPage(id) {
       const t = (D().tests || []).find(x => x.id === id);
       if (!t) return `<div class="card"><p>Моніторингову роботу не знайдено.</p><a href="#tests">← До моніторингових робіт</a></div>`;
@@ -298,9 +315,10 @@
       const avg = done.length ? done.reduce((a, x) => a + x.r.score / (x.r.max || 1), 0) / done.length : null;
       const avgG = done.length ? done.reduce((a, x) => a + x.r.grade, 0) / done.length : null;
       const avgT = done.length ? done.reduce((a, x) => a + (x.r.done - x.r.started), 0) / done.length / 60000 : null;
-      let out = `<div class="stack"><div class="crumbs"><a href="#tests">← Моніторингові роботи</a></div><div class="card"><div class="row"><h2>${esc(t.title)}</h2><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span><span class="spacer"></span><span class="ctl-time noprint" role="group" aria-label="Час на роботу для всіх"><button class="btn sm" data-ctltime="${esc(t.id)}||-5" ${t.min <= 5 ? "disabled" : ""} title="Зменшити час для всіх на 5 хв">−5 хв</button><button class="btn sm" data-ctltime="${esc(t.id)}||5" title="Додати 5 хв усім учням">+5 хв усім</button><button class="btn sm" data-ctltime="${esc(t.id)}||10" title="Додати 10 хв усім учням">+10 хв усім</button></span><button class="btn sm noprint" data-act="ctl-csv" data-id="${esc(t.id)}">⬇ CSV</button><button class="btn sm noprint" data-act="print">Друк</button></div>
+      let out = `<div class="stack"><div class="crumbs"><a href="#tests">← Моніторингові роботи</a></div><div class="card"><div class="row"><h2>${esc(t.title)}</h2><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span><span class="spacer"></span><span class="ctl-time noprint" role="group" aria-label="Час на роботу для всіх"><button class="btn sm" data-ctltime="${esc(t.id)}||-5" ${t.min <= 5 ? "disabled" : ""} title="Зменшити час для всіх на 5 хв">−5 хв</button><button class="btn sm" data-ctltime="${esc(t.id)}||5" title="Додати 5 хв усім учням">+5 хв усім</button><button class="btn sm" data-ctltime="${esc(t.id)}||10" title="Додати 10 хв усім учням">+10 хв усім</button></span>${t.code !== "all" ? `<button class="btn sm noprint" data-act="ctl-add" data-id="${esc(t.id)}">+ Додати учнів</button>` : ""}<button class="btn sm noprint" data-act="ctl-csv" data-id="${esc(t.id)}">⬇ CSV</button><button class="btn sm noprint" data-act="print">Друк</button></div>
         <p class="hint">Додатковий час одразу бачать учні, які зараз пишуть роботу: їхній таймер оновлюється протягом хвилини. Окремому учневі час можна додати в таблиці нижче.</p>
         <div class="kpis">${h.kpi(done.length + " з " + rec.length, "здали")}${h.kpi(h.pctTxt(avg), "середній результат")}${h.kpi(avgG == null ? "—" : avgG.toFixed(1).replace(".", ","), "середня оцінка")}${h.kpi(avgT == null ? "—" : Math.round(avgT) + " хв", "середній час")}</div></div>`;
+      if (add.id === t.id) out += addPanel(t);
       out += `<div class="card"><h3>Результати</h3>${h.table("ctl-" + t.id, [
         { k: "n", t: "Учень", v: x => x.s.name, h: x => h.nameLink(x.s) }, { k: "c", t: "Клас", v: x => x.s.cls },
         { k: "st", t: "Стан", v: x => x.r ? (x.r.done ? 2 : 1) : 0, h: x => x.r ? (x.r.done ? `<span class="tag green">здано</span>${x.r.late ? ' <span class="tag red">запізнення</span>' : ""}` : ctlRunTag(t, x.r)) : '<span class="tag">не починав</span>' },
@@ -381,6 +399,22 @@
         return true;
       }
       if (d.ctldel) { if (!confirm("Видалити моніторингову роботу? Учні більше її не бачитимуть (результати лишаться в таблиці).")) return true; await h.api({ action: "admin_test_delete", id: d.ctldel }); await h.refreshQuiet(); h.toast("Видалено"); return true; }
+      if (d.act === "ctl-add") { Object.assign(add, { id: d.id, q: "", keys: new Set(), classes: new Set(), busy: false }); h.render.keepScroll = true; h.render(); return true; }
+      if (d.act === "ctl-add-cancel") { add.id = ""; h.render.keepScroll = true; h.render(); return true; }
+      if (d.ctladdcls) { add.classes.has(d.ctladdcls) ? add.classes.delete(d.ctladdcls) : add.classes.add(d.ctladdcls); h.render.keepScroll = true; h.render(); return true; }
+      if (d.act === "ctl-add-save") {
+        const t = (D().tests || []).find(x => x.id === add.id); if (!t) return true;
+        const keys = [...add.keys].filter(k => { const s = h.all().find(x => x.key === k); return !s || !add.classes.has(s.cls); });
+        const names = h.all().filter(s => keys.includes(s.key)).map(s => s.name);
+        const extra = [...[...add.classes].map(c => "клас " + c), ...names];
+        const label = (t.toLabel + " + " + (extra.length > 3 ? extra.slice(0, 3).join(", ") + " та ще " + (extra.length - 3) : extra.join(", "))).slice(0, 200);
+        add.busy = true; h.render.keepScroll = true; h.render();
+        const r = await h.api({ action: "admin_test_add", id: add.id, keys, classes: [...add.classes], toLabel: label });
+        add.busy = false;
+        if (r && r.ok) { add.id = ""; await h.refreshQuiet(); h.toast("Учнів додано до роботи"); }
+        else { h.render.keepScroll = true; h.render(); h.toast(r && r.error === "nothing" ? "Ці учні вже мають роботу" : "Не вдалося додати. Оновіть Code.gs до версії 16."); }
+        return true;
+      }
       if (d.ctltime) {
         const [id, key, add] = d.ctltime.split("|");
         b.disabled = true;
@@ -417,9 +451,11 @@
       if (el.id === "knote") { ctl.note = el.value; return true; }
       if (el.id === "kmin") { ctl.min = Math.max(1, Math.min(240, +el.value || 30)); return true; }
       if (el.id === "kiq") { ctl.iq = el.value; h.rerenderKeepFocus("kiq"); return true; }
+      if (el.id === "kaddq") { add.q = el.value; h.rerenderKeepFocus("kaddq"); return true; }
       return false;
     }
     function onChange(el) {
+      if (el.dataset.ctladdkey) { if (el.checked) add.keys.add(el.dataset.ctladdkey); else add.keys.delete(el.dataset.ctladdkey); h.render.keepScroll = true; h.render(); return true; }
       if (el.dataset.ctltopic) { if (el.checked) ctl.topics.add(el.dataset.ctltopic); else ctl.topics.delete(el.dataset.ctltopic); h.render.keepScroll = true; h.render(); return true; }
       if (el.id === "kper") { ctl.per = +el.value; h.render.keepScroll = true; h.render(); return true; }
       if (el.id === "kdue") { ctl.due = el.value; return true; }

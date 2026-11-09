@@ -269,6 +269,8 @@
 
   /* ───── Адресати ───── */
   function addressed(code, s) {
+    code = String(code || "");
+    if (code.indexOf(";") >= 0) return code.split(";").some(c => addressed(c, s));
     if (code === "all") return true;
     if (code.indexOf("class:") === 0) return code.slice(6).split(",").some(c => c.trim().toUpperCase() === String(s.cls).toUpperCase());
     if (code.indexOf("keys:") === 0) return code.slice(5).split(",").indexOf(s.key) >= 0;
