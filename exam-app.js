@@ -6,13 +6,31 @@
 
   window.MGExam = function (host) {
     const { esc, E, T } = host;
-    let p = null, tick = null, busy = false;
+    let p = null, tick = null, busy = false, lastPoll = 0, polling = false;
 
     const list = () => { const s = host.me(); return s && s.inbox && s.inbox.tests ? s.inbox.tests : []; };
     const testOf = id => list().find(t => t.id === id);
     function local(id) { const s = host.me(); s.ctl = s.ctl || {}; return s.ctl[id] || (s.ctl[id] = { ans: {}, cur: 0 }); }
     const taskOf = (it, i) => { const base = host.tasksOf(it[0])[it[1]]; return base ? Object.assign({}, base, { n: i }) : null; };
-    const left = (t, st) => st.started ? st.started + t.min * 60000 - Date.now() : t.min * 60000;
+    /* Тривалість = хвилини роботи + додаткові хвилини, які вчитель дав саме цьому учневі. */
+    const total = t => (Number(t.min) || 0) + (Number(t.res && t.res.extra) || 0);
+    const left = (t, st) => st.started ? st.started + total(t) * 60000 - Date.now() : total(t) * 60000;
+    /* Під час роботи раз на хвилину питаємо сервер, чи вчитель не додав часу. */
+    async function pollTime(t) {
+      if (polling || Date.now() - lastPoll < 60000) return;
+      polling = true; lastPoll = Date.now();
+      try {
+        const s = host.me(), d = await host.api({ action: "test_time", key: host.currentKey(), token: s.token, id: t.id });
+        if (d && d.ok) {
+          const before = total(t);
+          t.min = d.min; t.res = Object.assign(t.res || {}, { extra: d.extra });
+          if (d.started && !(t.res && t.res.started)) t.res.started = d.started;
+          const diff = total(t) - before;
+          if (diff) { host.saveLocal(); host.toast(diff > 0 ? "Учитель додав " + diff + " хв" : "Час роботи змінено: " + diff + " хв"); }
+        }
+      } catch (e) { /* без інтернету таймер іде за останніми відомими даними */ }
+      polling = false;
+    }
     const mmss = ms => { ms = Math.max(0, ms); const m = Math.floor(ms / 60000), s = Math.floor(ms % 60000 / 1000); return m + ":" + String(s).padStart(2, "0"); };
 
     /* ── Картка на головній ── */
@@ -26,7 +44,7 @@
         if (r && r.done) { state = `<span class="pill green">здано: ${r.score}/${r.max} · оцінка ${r.grade}</span>`; btn = t.show ? `<button class="btn small" data-ctl="open" data-id="${esc(t.id)}">Переглянути</button>` : ""; }
         else if (r && r.started || st.started) { const l = left(t, Object.assign({}, st, { started: (r && r.started) || st.started })); state = `<span class="pill red">триває · ${l > 0 ? "залишилось " + mmss(l) : "час вийшов"}</span>`; btn = `<button class="btn small primary" data-ctl="open" data-id="${esc(t.id)}">Продовжити</button>`; }
         else if (closed) { state = '<span class="pill">термін минув</span>'; btn = ""; }
-        else { state = `<span class="pill">${t.items.length} завд. · ${t.min} хв</span>`; btn = `<button class="btn small primary" data-ctl="open" data-id="${esc(t.id)}">Почати</button>`; }
+        else { state = `<span class="pill">${t.items.length} завд. · ${total(t)} хв</span>`; btn = `<button class="btn small primary" data-ctl="open" data-id="${esc(t.id)}">Почати</button>`; }
         return `<div class="asg-one"><div class="asg-head"><b>${esc(t.title)}</b>${state}${t.due ? `<span class="pill">до ${new Date(t.due).toLocaleDateString("uk-UA")}</span>` : ""}</div>${t.note ? `<p class="hint" style="margin:0">${esc(t.note)}</p>` : ""}<div>${btn}</div></div>`;
       }).join("") + "</section>";
     }
@@ -39,11 +57,11 @@
       const st = local(t.id), r = t.res;
       if (r && r.done) return top + `<main class="wrap">${resultHtml(t)}</main>`;
       if (!st.started && !(r && r.started)) return top + `<main class="wrap"><section class="card pl-card"><h2>${esc(t.title)}</h2>
-        <ul class="fc-facts"><li><b>${t.items.length}</b> завдань, <b>${t.min}</b> хвилин</li><li>Спроба <b>одна</b>. Після початку таймер не зупиняється, навіть якщо закрити сторінку.</li>
+        <ul class="fc-facts"><li><b>${t.items.length}</b> завдань, <b>${total(t)}</b> хвилин</li><li>Спроба <b>одна</b>. Після початку таймер не зупиняється, навіть якщо закрити сторінку.</li>
         <li>Відповіді можна змінювати до здачі. Коли час вийде, роботу буде здано автоматично.</li><li>Виходи зі сторінки вчитель бачить.</li>${t.show ? "<li>Після здачі ви побачите правильні відповіді.</li>" : ""}</ul>
         ${t.note ? `<p class="hint">${esc(t.note)}</p>` : ""}<div class="task-nav"><button class="btn primary" data-ctl="start" ${busy ? "disabled" : ""}>${busy ? "Починаю…" : "Почати моніторингову роботу"}</button></div></section></main>`;
       if (!st.started && r && r.started) st.started = r.started;
-      if (left(t, st) <= 0) { setTimeout(() => submit(t, true), 0); return top + '<main class="wrap"><p class="empty">Час вийшов. Здаю роботу…</p></main>'; }
+      if (left(t, st) <= 0) { setTimeout(() => timeUp(t), 0); return top + '<main class="wrap"><p class="empty">Час вийшов. Здаю роботу…</p></main>'; }
       ensureTick(t);
       const i = Math.min(st.cur || 0, t.items.length - 1), task = taskOf(t.items[i], i);
       if (!p || p.i !== i || p.id !== t.id) { p = host.trainerNewPend(task, "ctl" + t.id); p.i = i; p.id = t.id; const a = st.ans[i]; if (a != null) restore(task, a); }
@@ -83,9 +101,10 @@
       tick = setInterval(() => {
         const cur = testOf(host.ui.ctl);
         if (host.ui.view !== "ctl" || !cur || !runOn(cur)) { clearInterval(tick); tick = null; return; }
+        pollTime(cur);
         const l = left(cur, local(cur.id)), el = document.getElementById("ctl-timer");
         if (el) { el.textContent = mmss(l); el.classList.toggle("warn", l < 120000); }
-        if (l <= 0) { clearInterval(tick); tick = null; submit(cur, true); }
+        if (l <= 0) { clearInterval(tick); tick = null; timeUp(cur); }
       }, 1000);
     }
 
@@ -98,6 +117,18 @@
       const st = local(t.id); st.started = d.started; st.mark = host.focusMark(); st.cur = 0;
       host.saveLocal(); host.render(); window.scrollTo(0, 0);
     }
+    /* Час вийшов: спершу перевіряємо, чи вчитель не додав хвилин, і лише тоді здаємо. */
+    let checking = false;
+    async function timeUp(t) {
+      if (checking) return;
+      checking = true; lastPoll = 0;
+      await pollTime(t);
+      checking = false;
+      const cur = testOf(t.id) || t;
+      if (left(cur, local(cur.id)) > 0) { host.render(); ensureTick(cur); return; }
+      submit(cur, true);
+    }
+
     async function submit(t, auto) {
       if (busy) return;
       const st = local(t.id), s = host.me();

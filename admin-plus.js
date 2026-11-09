@@ -223,7 +223,7 @@
         <label class="row small"><span class="muted">за</span><select class="input" id="lvmin" style="width:auto">${[20, 45, 90].map(m => `<option value="${m}" ${LV.min === m ? "selected" : ""}>${m} хв</option>`).join("")}</select></label>
         <span class="hint">оновлено ${h.fmtDT(now)} · кожні 20 с</span><button class="btn sm" data-act="live-now" aria-label="Оновити">↻</button></div>
         <div class="kpis">${h.kpi(onNow + " / " + students.length, "учнів онлайн", "відповідали за 2 хв")}${h.kpi(attn, "потребують уваги")}${h.kpi(running.length, "пишуть моніторингову")}</div></div>`;
-      if (running.length) out += `<div class="card"><h3>Пишуть моніторингову роботу</h3><div class="chips">${running.map(r => { const t = live.tests.find(z => z.id === r.id); const left = t ? Math.round((r.started + t.min * 60000 - now) / 60000) : null; return `<span class="tag ${left != null && left < 0 ? "red" : "violet"}">${esc(r.name)} · ${esc(t ? t.title : "")} · ${left == null ? "" : left >= 0 ? "залишилось " + left + " хв" : "час вийшов"}</span>`; }).join("")}</div></div>`;
+      if (running.length) out += `<div class="card"><h3>Пишуть моніторингову роботу</h3><div class="chips">${running.map(r => { const t = live.tests.find(z => z.id === r.id); const left = t ? Math.round((r.started + (t.min + (r.extra || 0)) * 60000 - now) / 60000) : null; return `<span class="tag ${left != null && left < 0 ? "red" : "violet"}">${esc(r.name)} · ${esc(t ? t.title : "")} · ${left == null ? "" : left >= 0 ? "залишилось " + left + " хв" : "час вийшов"}</span>`; }).join("")}</div></div>`;
       if (!g) return out + `<div class="card"><p class="empty">За останні ${LV.min} хвилин ніхто не відповідав.</p></div></div>`;
       out += `<div class="card"><div class="chips lg-groups" role="tablist">${M.groups.map(x => `<button class="${x === g ? "on" : ""}" data-lggrp="${esc(x.key)}">${esc(x.title)}${x.side ? ` · ${esc(x.side)}` : ""} <span class="lg-cnt">${Object.keys(x.rows).length}</span></button>`).join("")}</div>`;
       const ns = Object.keys(g.cols).map(Number).sort((a, b) => a - b);
@@ -260,7 +260,7 @@
         const avg = done.length ? done.reduce((a, r) => a + r.score / (r.max || 1), 0) / done.length : null;
         out += `<div class="card"><div class="row"><h3><a href="#test/${encodeURIComponent(t.id)}">${esc(t.title)}</a></h3><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span>${t.due ? `<span class="tag ${t.due < D().now ? "red" : ""}">до ${h.fmtDate(t.due)}</span>` : ""}<span class="spacer"></span>
           <a class="btn sm" href="#test/${encodeURIComponent(t.id)}">Результати</a><button class="btn sm danger" data-ctldel="${esc(t.id)}">Видалити</button></div>
-          <div class="kpis">${h.kpi(done.length + " з " + rec.length, "здали")}${h.kpi(h.pctTxt(avg), "середній результат")}${h.kpi(res.filter(r => !r.done).length, "почали, але не здали")}</div></div>`;
+        <div class="kpis">${h.kpi(done.length + " з " + rec.length, "здали")}${h.kpi(h.pctTxt(avg), "середній результат")}${h.kpi(res.filter(r => !r.done).length, "почали, але не здали")}</div></div>`;
       });
       return out + "</div>";
     }
@@ -284,6 +284,11 @@
         <p class="hint">Разом: <b>${n}</b> завдань. Завдання вибираються випадково з тем і однакові для всіх учнів. Оцінка — за 12-бальною шкалою пропорційно до правильних відповідей.</p>
         <div class="row"><button class="btn primary" data-act="ctl-save" ${ctl.busy ? "disabled" : ""}>${ctl.busy ? "Зберігаю…" : "Зберегти й надіслати"}</button><button class="btn" data-act="ctl-cancel">Скасувати</button></div></div>`;
     }
+    /* Учень пише роботу: скільки лишилося з урахуванням його додаткових хвилин. */
+    function ctlRunTag(t, r) {
+      const end = r.started + ((Number(t.min) || 0) + (Number(r.extra) || 0)) * 60000, left = Math.round((end - Date.now()) / 60000);
+      return `<span class="tag ${left < 0 ? "red" : "violet"}">${left >= 0 ? "пише · залишилось " + left + " хв" : "час вийшов, не здав"}</span>${r.extra ? ` <span class="tag green">+${r.extra} хв</span>` : ""}`;
+    }
     function testPage(id) {
       const t = (D().tests || []).find(x => x.id === id);
       if (!t) return `<div class="card"><p>Моніторингову роботу не знайдено.</p><a href="#tests">← До моніторингових робіт</a></div>`;
@@ -293,17 +298,18 @@
       const avg = done.length ? done.reduce((a, x) => a + x.r.score / (x.r.max || 1), 0) / done.length : null;
       const avgG = done.length ? done.reduce((a, x) => a + x.r.grade, 0) / done.length : null;
       const avgT = done.length ? done.reduce((a, x) => a + (x.r.done - x.r.started), 0) / done.length / 60000 : null;
-      let out = `<div class="stack"><div class="crumbs"><a href="#tests">← Моніторингові роботи</a></div><div class="card"><div class="row"><h2>${esc(t.title)}</h2><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span><span class="spacer"></span><button class="btn sm noprint" data-act="ctl-csv" data-id="${esc(t.id)}">⬇ CSV</button><button class="btn sm noprint" data-act="print">Друк</button></div>
+      let out = `<div class="stack"><div class="crumbs"><a href="#tests">← Моніторингові роботи</a></div><div class="card"><div class="row"><h2>${esc(t.title)}</h2><span class="tag">${esc(t.toLabel)}</span><span class="tag violet">${t.items.length} завд. · ${t.min} хв</span><span class="spacer"></span><span class="ctl-time noprint" role="group" aria-label="Час на роботу для всіх"><button class="btn sm" data-ctltime="${esc(t.id)}||-5" ${t.min <= 5 ? "disabled" : ""} title="Зменшити час для всіх на 5 хв">−5 хв</button><button class="btn sm" data-ctltime="${esc(t.id)}||5" title="Додати 5 хв усім учням">+5 хв усім</button><button class="btn sm" data-ctltime="${esc(t.id)}||10" title="Додати 10 хв усім учням">+10 хв усім</button></span><button class="btn sm noprint" data-act="ctl-csv" data-id="${esc(t.id)}">⬇ CSV</button><button class="btn sm noprint" data-act="print">Друк</button></div>
+        <p class="hint">Додатковий час одразу бачать учні, які зараз пишуть роботу: їхній таймер оновлюється протягом хвилини. Окремому учневі час можна додати в таблиці нижче.</p>
         <div class="kpis">${h.kpi(done.length + " з " + rec.length, "здали")}${h.kpi(h.pctTxt(avg), "середній результат")}${h.kpi(avgG == null ? "—" : avgG.toFixed(1).replace(".", ","), "середня оцінка")}${h.kpi(avgT == null ? "—" : Math.round(avgT) + " хв", "середній час")}</div></div>`;
       out += `<div class="card"><h3>Результати</h3>${h.table("ctl-" + t.id, [
         { k: "n", t: "Учень", v: x => x.s.name, h: x => h.nameLink(x.s) }, { k: "c", t: "Клас", v: x => x.s.cls },
-        { k: "st", t: "Стан", v: x => x.r ? (x.r.done ? 2 : 1) : 0, h: x => x.r ? (x.r.done ? `<span class="tag green">здано</span>${x.r.late ? ' <span class="tag red">запізнення</span>' : ""}` : '<span class="tag red">почав, не здав</span>') : '<span class="tag">не починав</span>' },
+        { k: "st", t: "Стан", v: x => x.r ? (x.r.done ? 2 : 1) : 0, h: x => x.r ? (x.r.done ? `<span class="tag green">здано</span>${x.r.late ? ' <span class="tag red">запізнення</span>' : ""}` : ctlRunTag(t, x.r)) : '<span class="tag">не починав</span>' },
         { k: "sc", t: "Бали", num: 1, v: x => x.r && x.r.done ? x.r.score : null, h: x => x.r && x.r.done ? x.r.score + "/" + x.r.max : "—" },
         { k: "p", t: "%", v: x => x.r && x.r.done ? x.r.score / (x.r.max || 1) : null, h: x => x.r && x.r.done ? h.cellBar(x.r.score / (x.r.max || 1)) : "—" },
         { k: "g", t: "Оцінка", num: 1, v: x => x.r && x.r.done ? x.r.grade : null, h: x => x.r && x.r.done ? "<b>" + x.r.grade + "</b>" : "—" },
         { k: "tm", t: "Час", num: 1, v: x => x.r && x.r.done ? x.r.done - x.r.started : null, h: x => x.r && x.r.done ? Math.round((x.r.done - x.r.started) / 60000) + " хв" : "—" },
         { k: "ex", t: "Виходів", num: 1, v: x => x.r ? x.r.ex : null, h: x => x.r && x.r.done ? (x.r.ex ? `<span class="${x.r.ex >= 3 ? "err" : ""}">${x.r.ex}</span>` : "0") : "—" },
-        { k: "a", t: "", v: null, h: x => x.r ? `<button class="btn sm" data-ctlreset="${esc(t.id)}|${esc(x.s.key)}" title="Дозволити пройти ще раз">Скинути спробу</button>` : "" }], rows, { sort: { k: "p", d: -1 } })}</div>`;
+        { k: "a", t: "", v: null, h: x => x.r ? `<span class="row" style="gap:4px;flex-wrap:nowrap">${!x.r.done ? `<button class="btn sm" data-ctltime="${esc(t.id)}|${esc(x.s.key)}|5" title="Додати цьому учневі 5 хв">+5 хв</button><button class="btn sm" data-ctltime="${esc(t.id)}|${esc(x.s.key)}|10" title="Додати цьому учневі 10 хв">+10 хв</button>` : ""}<button class="btn sm" data-ctlreset="${esc(t.id)}|${esc(x.s.key)}" title="Дозволити пройти ще раз">Скинути спробу</button></span>` : "" }], rows, { sort: { k: "p", d: -1 } })}</div>`;
       // Складність кожного завдання.
       const items = t.items.map((it, i) => { const okN = done.filter(x => x.r.okStr[i] === "1").length; return { it, i, okN, acc: done.length ? okN / done.length : null }; });
       out += `<div class="card"><h3>Завдання моніторингової роботи</h3><p class="hint">Частка учнів, які розв’язали завдання правильно. Розгорніть, щоб побачити текст і відповідь.</p>
@@ -375,6 +381,14 @@
         return true;
       }
       if (d.ctldel) { if (!confirm("Видалити моніторингову роботу? Учні більше її не бачитимуть (результати лишаться в таблиці).")) return true; await h.api({ action: "admin_test_delete", id: d.ctldel }); await h.refreshQuiet(); h.toast("Видалено"); return true; }
+      if (d.ctltime) {
+        const [id, key, add] = d.ctltime.split("|");
+        b.disabled = true;
+        const r = await h.api({ action: "admin_test_time", id, key, add: +add });
+        if (r && r.ok) { await h.refreshQuiet(); h.toast(key ? (+add > 0 ? "Учневі додано " + add + " хв (разом +" + r.extra + " хв)" : "Час учня змінено") : "Тепер на роботу " + r.min + " хв"); }
+        else { b.disabled = false; h.toast(r && r.error === "not_started" ? "Учень ще не почав роботу" : "Не вдалося змінити час. Оновіть Code.gs до версії 15."); }
+        return true;
+      }
       if (d.ctlreset) {
         const [id, key] = [d.ctlreset.slice(0, d.ctlreset.indexOf("|")), d.ctlreset.slice(d.ctlreset.indexOf("|") + 1)];
         if (!confirm("Скинути спробу? Учень зможе пройти моніторингову роботу ще раз, поточний результат буде видалено.")) return true;

@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 14;
+const SERVICE_VERSION = 15;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -720,11 +720,12 @@ function doPost(e) {
       if (res.ok) Object.assign(res, studentExtras_(res.key, res.cls));
       return out_(res);
     }
-    if (d.action === 'load' || d.action === 'save' || d.action === 'reply' || d.action === 'test_start' || d.action === 'test_submit') {
+    if (d.action === 'load' || d.action === 'save' || d.action === 'reply' || d.action === 'test_start' || d.action === 'test_submit' || d.action === 'test_time') {
       const p = auth_(d);
       if (!p) return out_({ ok: false, error: 'auth' });
       if (d.action === 'test_start') return out_(Object.assign(testStart_(d, p), studentExtras_(p.key, p.cls)));
       if (d.action === 'test_submit') return out_(Object.assign(testSubmit_(d, p), studentExtras_(p.key, p.cls)));
+      if (d.action === 'test_time') return out_(testTime_(d, p));
       if (d.action === 'reply') return out_(Object.assign(studentReply_(d, p), studentExtras_(p.key, p.cls)));
       if (Array.isArray(d.read) && d.read.length) markRead_(p.key, d.read);
       if (d.action === 'load') {
@@ -802,6 +803,9 @@ function simpleSheet_(name, header) {
     sh.appendRow(header);
     sh.setFrozenRows(1);
     sh.getRange(1, 1, 1, header.length).setFontWeight('bold');
+  } else if (sh.getLastColumn() < header.length) {
+    // Нові стовпці (напр. «Додатковий час»): дописуємо заголовки, дані не чіпаємо.
+    sh.getRange(1, 1, 1, header.length).setValues([header]).setFontWeight('bold');
   }
   return sh;
 }
@@ -858,7 +862,7 @@ function extrasData_() {
   const c = rows_(simpleSheet_(TEST_SHEET, TEST_HEADER), TEST_HEADER.length).filter(r => r[0])
     .map(r => [String(r[0]), iso_(r[1]), String(r[2] || ''), String(r[4] || ''), String(r[5] || '[]'), Number(r[6]) || 0, r[7] ? 1 : 0, iso_(r[8]), String(r[9] || '')]);
   const cr = rows_(simpleSheet_(TRES_SHEET, TRES_HEADER), TRES_HEADER.length).filter(r => r[0])
-    .map(r => [String(r[0]), String(r[1]), iso_(r[3]), iso_(r[4]), Number(r[5]) || 0, Number(r[6]) || 0, Number(r[8]) || 0, String(r[11] || '').replace(/^'/, ''), String(r[12] || '')]);
+    .map(r => [String(r[0]), String(r[1]), iso_(r[3]), iso_(r[4]), Number(r[5]) || 0, Number(r[6]) || 0, Number(r[8]) || 0, String(r[11] || '').replace(/^'/, ''), String(r[12] || ''), Number(r[14]) || 0]);
   const o = { m, r: rp, a, c, cr };
   o.h = hash_(JSON.stringify(o)).replace(/[^A-Za-z0-9]/g, '').slice(0, 12);
   cachePutBig_(EX_KEY, JSON.stringify(o), EX_TTL);
@@ -881,7 +885,7 @@ function studentExtras_(key, cls, exv) {
   const tests = (x.c || []).filter(r => addressed_(r[3], key, cls)).map(r => {
     const res = mine[r[0]], show = !!r[6] && res && res[3];
     return { id: r[0], at: r[1], title: r[2], items: JSON.parse(r[4] || '[]'), min: r[5], show: !!r[6], due: r[7], note: r[8],
-      res: res ? { started: res[2], done: res[3], score: res[4], max: res[5], grade: res[6], okStr: show ? res[7] : '', late: res[8] === 'так' } : null };
+      res: res ? { started: res[2], done: res[3], score: res[4], max: res[5], grade: res[6], okStr: show ? res[7] : '', late: res[8] === 'так', extra: res[9] || 0 } : null };
   });
   return { msgs, replies, assign, tests, exv: x.h };
 }
@@ -934,6 +938,7 @@ function admin_(d) {
     case 'admin_test_save': return adminTestSave_(d);
     case 'admin_test_delete': return deleteById_(simpleSheet_(TEST_SHEET, TEST_HEADER), d.id);
     case 'admin_test_reset': return adminTestReset_(d);
+    case 'admin_test_time': return adminTestTime_(d);
     case 'admin_parent_link': return adminParentLink_(d);
     case 'admin_msg_send': return adminMsgSend_(d);
     case 'admin_msg_delete': return deleteById_(simpleSheet_(MSG_SHEET, MSG_HEADER), d.id);
@@ -1274,7 +1279,7 @@ function plusSummary_(p) {
 const TEST_SHEET = 'Моніторингові роботи';
 const TEST_HEADER = ['ID', 'Час', 'Назва', 'Кому', 'Отримувачі (код)', 'Завдання (JSON)', 'Хвилин', 'Показувати відповіді', 'Термін', 'Примітка'];
 const TRES_SHEET = 'Результати моніторингових робіт';
-const TRES_HEADER = ['ID роботи', 'Ключ', 'Учень', 'Почато', 'Здано', 'Балів', 'З', '%', 'Оцінка (12)', 'Виходів зі сторінки', 'Поза сторінкою, с', 'Правильність (1/0)', 'Запізнення', 'Відповіді (JSON)'];
+const TRES_HEADER = ['ID роботи', 'Ключ', 'Учень', 'Почато', 'Здано', 'Балів', 'З', '%', 'Оцінка (12)', 'Виходів зі сторінки', 'Поза сторінкою, с', 'Правильність (1/0)', 'Запізнення', 'Відповіді (JSON)', 'Додатковий час, хв'];
 
 function adminTestSave_(d) {
   const code = recipients_(d.to), title = txt_(d.title, 120).trim();
@@ -1312,7 +1317,7 @@ function testStart_(d, p) {
   if (row > 0) { const v = sh.getRange(row, 4, 1, 2).getValues()[0]; return { ok: true, started: iso_(v[0]), done: !!v[1] }; }
   if (iso_(t[8]) && iso_(t[8]) < Date.now()) return { ok: false, error: 'closed' };
   const now = new Date();
-  sh.appendRow([String(d.id), p.key, p.name + ' (' + p.cls + ')', now, '', '', '', '', '', '', '', '', '', '']);
+  sh.appendRow([String(d.id), p.key, p.name + ' (' + p.cls + ')', now, '', '', '', '', '', '', '', '', '', '', '']);
   extrasDrop_();
   return { ok: true, started: now.getTime(), done: false };
 }
@@ -1322,16 +1327,46 @@ function testSubmit_(d, p) {
   const sh = simpleSheet_(TRES_SHEET, TRES_HEADER);
   let row = resRowNum_(sh, d.id, p.key);
   if (row < 0) { testStart_(d, p); row = resRowNum_(sh, d.id, p.key); }
-  const v = sh.getRange(row, 4, 1, 2).getValues()[0];
+  const v = sh.getRange(row, 4, 1, 2).getValues()[0], extra = Number(sh.getRange(row, 15).getValue()) || 0;
   if (v[1]) return { ok: false, error: 'done' };
   const n = JSON.parse(String(t[5] || '[]')).length;
   const okStr = String(d.ok || '').replace(/[^01]/g, '').slice(0, n).padEnd(n, '0');
   const score = okStr.split('').filter(x => x === '1').length, pct = n ? score / n : 0;
   const grade = Math.max(1, Math.round(pct * 12));
-  const started = iso_(v[0]) || Date.now(), late = Date.now() - started > (Number(t[6]) + 2) * 60000;
+  const started = iso_(v[0]) || Date.now(), late = Date.now() - started > (Number(t[6]) + extra + 2) * 60000;
   sh.getRange(row, 5, 1, 10).setValues([[new Date(), score, n, Math.round(pct * 100), grade, num_(d.ex), num_(d.away), "'" + okStr, late ? 'так' : '', txt_(JSON.stringify(d.ans || []), 20000)]]);
   extrasDrop_();
   return { ok: true, score, max: n, grade, late };
+}
+
+/** Учитель додає час: усім (змінюється тривалість роботи) або одному учневі (додаткові хвилини в його рядку). add може бути й від’ємним. */
+function adminTestTime_(d) {
+  const add = Math.round(Number(d.add) || 0);
+  if (!add) return { ok: false, error: 'no_time' };
+  const key = String(d.key || '');
+  if (key) {
+    const sh = simpleSheet_(TRES_SHEET, TRES_HEADER), row = resRowNum_(sh, d.id, key);
+    if (row < 0) return { ok: false, error: 'not_started' };
+    const cell = sh.getRange(row, 15), extra = Math.max(0, Math.min(240, (Number(cell.getValue()) || 0) + add));
+    cell.setValue(extra);
+    extrasDrop_();
+    return { ok: true, extra };
+  }
+  const sh = simpleSheet_(TEST_SHEET, TEST_HEADER), rows = rows_(sh, 1);
+  for (let i = 0; i < rows.length; i++) if (String(rows[i][0]) === String(d.id)) {
+    const cell = sh.getRange(i + 2, 7), min = Math.max(1, Math.min(480, (Number(cell.getValue()) || 0) + add));
+    cell.setValue(min);
+    extrasDrop_();
+    return { ok: true, min };
+  }
+  return { ok: false, error: 'not_found' };
+}
+/** Для учня під час роботи: поточна тривалість і його додаткові хвилини (щоб таймер підхопив зміни вчителя). */
+function testTime_(d, p) {
+  const t = testRow_(d.id); if (!t) return { ok: false, error: 'not_found' };
+  const sh = simpleSheet_(TRES_SHEET, TRES_HEADER), row = resRowNum_(sh, d.id, p.key);
+  const v = row > 0 ? sh.getRange(row, 4, 1, 12).getValues()[0] : null;
+  return { ok: true, min: Number(t[6]) || 0, extra: v ? Number(v[11]) || 0 : 0, started: v ? iso_(v[0]) : 0, done: v ? !!v[1] : false };
 }
 
 function adminTestReset_(d) {
@@ -1346,7 +1381,7 @@ function testsForAdmin_() {
     min: Number(r[6]) || 0, show: !!r[7], due: iso_(r[8]), note: String(r[9] || '') }));
   const results = rows_(simpleSheet_(TRES_SHEET, TRES_HEADER), TRES_HEADER.length).filter(r => r[0]).map(r => ({
     id: String(r[0]), key: String(r[1]), name: String(r[2]), started: iso_(r[3]), done: iso_(r[4]), score: Number(r[5]) || 0, max: Number(r[6]) || 0,
-    grade: Number(r[8]) || 0, ex: Number(r[9]) || 0, away: Number(r[10]) || 0, okStr: String(r[11] || '').replace(/^'/, ''), late: String(r[12]) === 'так' }));
+    grade: Number(r[8]) || 0, ex: Number(r[9]) || 0, away: Number(r[10]) || 0, okStr: String(r[11] || '').replace(/^'/, ''), late: String(r[12]) === 'так', extra: Number(r[14]) || 0 }));
   return { tests, results };
 }
 
