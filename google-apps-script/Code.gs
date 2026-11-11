@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 18;
+const SERVICE_VERSION = 19;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -708,7 +708,11 @@ function doPost(e) {
   if (d.action === 'parent') {
     try { return out_(parentReport_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
   }
-  if (d.action === 'admin_data' || d.action === 'admin_login' || d.action === 'admin_live') {
+  // Урок у класі: учні питають часто, тож відповідаємо з кешу, без аркушів і без черги.
+  if (d.action === 'class_state') {
+    try { return out_(classState_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
+  }
+  if (d.action === 'admin_data' || d.action === 'admin_login' || d.action === 'admin_live' || d.action === 'admin_class_set' || d.action === 'admin_class_get') {
     try { return out_(admin_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
   }
   const lock = LockService.getScriptLock();
@@ -817,6 +821,52 @@ const newId_ = p => p + Date.now().toString(36) + Math.floor(Math.random() * 1e6
 const iso_ = v => v instanceof Date ? v.getTime() : (Number(v) || 0);
 
 /** Чи адресовано повідомлення (призначення) цьому учневі. code: all | class:7-А | keys:k1,k2 */
+/* ───── Урок у класі: пауза й показ слайда ─────
+   Керування (режим, кому, повідомлення, слайд) — у кеші та властивостях скрипта; позначки слайда — лише в кеші.
+   Якщо вчитель забув відновити роботу, через 4 години без змін пауза знімається сама. */
+const CLASS_KEY = 'CLASS_STATE', CLASS_INK = 'CLASS_INK', CLASS_TTL = 4 * 3600 * 1000;
+function classCtl_() {
+  const c = CacheService.getScriptCache();
+  let s = c.get(CLASS_KEY);
+  if (s == null) { s = PropertiesService.getScriptProperties().getProperty(CLASS_KEY) || '{}'; c.put(CLASS_KEY, s, 21600); }
+  let o; try { o = JSON.parse(s) || {}; } catch (e) { o = {}; }
+  if (o.mode && o.mode !== 'off' && Date.now() - (Number(o.at) || 0) > CLASS_TTL) o = { v: o.v, mode: 'off', to: o.to, msg: o.msg };
+  if (!o.mode) o.mode = 'off';
+  return o;
+}
+function classState_(d) {
+  const o = classCtl_(), on = o.mode === 'pause' || o.mode === 'show';
+  const mine = on && addressed_(o.to || 'all', String(d.key || ''), String(d.cls || ''));
+  const v = String(o.v || 0) + (mine ? '' : 'x');
+  const nx = !mine ? 8000 : o.mode === 'show' ? 3000 : 5000; // через скільки мс питати знову
+  if (String(d.v || '') === v) return { ok: true, same: true, nx };
+  if (!mine) return { ok: true, v, mode: 'off', nx };
+  const r = { ok: true, v, mode: o.mode, msg: o.msg || '', nx };
+  if (o.mode === 'show') {
+    let ink = {}; try { ink = JSON.parse(CacheService.getScriptCache().get(CLASS_INK) || '{}') || {}; } catch (e) { ink = {}; }
+    r.show = o.show || null; r.mk = ink.mk || []; r.ink = ink.ink || [];
+  }
+  return r;
+}
+function adminClassSet_(d) {
+  const s = d.st || {}, mode = ['off', 'pause', 'show'].indexOf(s.mode) >= 0 ? s.mode : 'off', now = Date.now();
+  const ctl = { v: now, at: now, mode, to: String(s.to || 'all').slice(0, 4000), msg: String(s.msg || '').slice(0, 300) };
+  if (mode === 'show' && s.show && typeof s.show === 'object') {
+    const x = s.show;
+    ctl.show = { src: x.src === 'z' ? 'z' : 't', id: String(x.id || '').slice(0, 40), view: x.view === 'task' ? 'task' : 'theory', n: Math.max(0, Math.floor(Number(x.n) || 0)),
+      rev: !!x.rev, w: Math.max(200, Math.min(2000, Number(x.w) || 860)), fy: Math.max(0, Math.min(1, Number(x.fy) || 0)) };
+  }
+  const ink = mode === 'show' ? JSON.stringify({ mk: Array.isArray(s.mk) ? s.mk.slice(0, 500) : [], ink: Array.isArray(s.ink) ? s.ink.slice(0, 400) : [] }) : '{}';
+  const txt = JSON.stringify(ctl);
+  if (ink.length > 95000 || txt.length > 8000) return { ok: false, error: 'too_big' };
+  const c = CacheService.getScriptCache(), props = PropertiesService.getScriptProperties();
+  c.putAll({ [CLASS_KEY]: txt, [CLASS_INK]: ink }, 21600);
+  // У властивості пишемо лише тоді, коли змінилося щось, крім слайда: їх читаємо, якщо кеш очистився.
+  let old = {}; try { old = JSON.parse(props.getProperty(CLASS_KEY) || '{}') || {}; } catch (e) { old = {}; }
+  if (old.mode !== ctl.mode || old.to !== ctl.to || old.msg !== ctl.msg || now - (Number(old.at) || 0) > 30 * 60000) props.setProperty(CLASS_KEY, txt);
+  return { ok: true, v: now, mode };
+}
+
 function addressed_(code, key, cls) {
   code = String(code || '');
   if (code.indexOf(';') >= 0) return code.split(';').some(c => addressed_(c, key, cls)); // «клас + окремі учні»
@@ -935,6 +985,8 @@ function admin_(d) {
   if (!adminOk_(d)) return { ok: false, error: 'admin_auth' };
   switch (d.action) {
     case 'admin_data': return adminData_();
+    case 'admin_class_set': return adminClassSet_(d);
+    case 'admin_class_get': return { ok: true, st: classCtl_() };
     case 'admin_live': return adminLive_(d);
     case 'admin_test_save': return adminTestSave_(d);
     case 'admin_test_delete': return deleteById_(simpleSheet_(TEST_SHEET, TEST_HEADER), d.id);

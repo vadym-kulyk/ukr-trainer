@@ -149,7 +149,10 @@
   }
   function sumDays(days, n) { let k = 0; for (let i = 0; i < n; i++) k += (days || {})[dayKey(D.now - i * DAY)] || 0; return k; }
   const dayKey = t => { const d = new Date(t); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
-  function derive() { S = D.students.map(enrich).filter(s => !ui.cls || s.cls === ui.cls); }
+  function derive() {
+    S = D.students.map(enrich).filter(s => !ui.cls || s.cls === ui.cls);
+    try { localStorage.setItem("mg-show-classes", JSON.stringify(classes())); } catch (e) {} // для сторінки показу на уроці (./#show)
+  }
   const all = () => D.students.map(enrich);
 
   /* Статистика завдань тренажера: [topic][n] → { a, w } */
@@ -307,7 +310,7 @@
     const cur = { student: "students", topic: "topics", test: "tests" }[r] || r;
     return `<header class="top"><div class="wrap"><div class="top-row"><a class="logo wordmark" href="#overview" aria-label="Дослівно — до огляду">Досл<span class="wm-st">і</span>вно</a><h1>Адмін-панель</h1><span class="spacer"></span>${window.MGTheme ? MGTheme.btn() : ""}
       <button class="btn sm" data-act="refresh" title="Оновити дані" ${loading ? "disabled" : ""}>↻<span class="small"> ${loading ? "Оновлюю…" : "Оновити"}</span></button></div>
-      <nav class="nav" aria-label="Розділи">${NAV.map(([k, l]) => `<a href="#${k}" class="${cur === k ? "on" : ""}">${l}${k === "messages" && unread ? `<span class="badge">${unread}</span>` : ""}</a>`).join("")}</nav>
+      <nav class="nav" aria-label="Розділи">${NAV.map(([k, l]) => `<a href="#${k}" class="${cur === k ? "on" : ""}">${l}${k === "messages" && unread ? `<span class="badge">${unread}</span>` : ""}</a>`).join("")}<a href="./#show" target="_blank" rel="noopener" title="Показ теми й завдань на уроці, пауза для учнів">Показ на уроці ↗</a></nav>
       ${D ? `<div class="filters"><label class="row small"><span class="muted">Клас:</span><select class="input" id="clsf"><option value="">усі класи</option>${classes().map(c => `<option ${ui.cls === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select></label>
       <span class="hint">${loading ? '<span class="upd">Оновлюю…</span> дані від ' + fmtDT(D.now) : (D.partial ? "Журнал ще рахується · " : "Оновлено ") + fmtDT(D.now)} · учнів: ${S.length}</span></div>` : ""}</div></header><main class="wrap">${body}</main>`;
   }

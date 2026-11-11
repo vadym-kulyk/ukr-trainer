@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=30"></script>
+<script src="theme.js?v=31"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -983,6 +983,65 @@ body.compact .parse-key { display: none; }
 .heat-key i:first-of-type { margin-left: 4px; } .heat-key i:last-of-type { margin-right: 4px; }
 a.wordmark { text-decoration: none; }
 a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
+
+/* ───── Урок у класі: показ для вчителя (#show) і пауза/показ на пристроях учнів (show-app.js) ───── */
+body.showmode .hero, body.showmode .site-foot, body.showmode #fab-theory, body.showmode #selchip { display: none !important; }
+.sh-top { position: sticky; top: 0; z-index: 6; background: var(--bg); border-bottom: 1px solid var(--line); padding: 8px 0; }
+.sh-in { display: grid; gap: 8px; }
+@media (max-width: 700px) { .sh-top { position: static; } .sh-main { padding-top: 12px; } }
+.sh-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+.sh-row .spacer { flex: 1 1 0; }
+.sh-top .btn { min-height: 38px; padding: 5px 12px; font-size: 14px; }
+.sh-sel { flex: 1 1 240px; min-width: 0; max-width: 100%; font: inherit; font-size: 15px; padding: 7px 10px; border-radius: var(--r-sm); border: 2px solid var(--line); background: var(--bg); color: var(--text); }
+.sh-sel.sm { flex: 0 1 auto; }
+.sh-seg { display: inline-flex; gap: 4px; }
+.sh-nav { display: inline-flex; align-items: center; gap: 6px; }
+.sh-n { width: 64px; font: inherit; padding: 7px 8px; border-radius: var(--r-sm); border: 2px solid var(--line); background: var(--bg); color: var(--text); text-align: center; }
+.sh-tools .sh-tool[aria-pressed="true"] { border-color: var(--lime); background: color-mix(in srgb, var(--lime) 14%, var(--bg)); }
+.sh-cols { display: inline-flex; gap: 6px; padding: 0 4px; }
+.sh-col { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--bg); box-shadow: 0 0 0 2px var(--line); padding: 0; }
+.sh-col[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--text); }
+.sh-class { display: grid; gap: 6px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.sh-lab { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; }
+.sh-msg { flex: 1 1 220px; min-width: 0; font: inherit; font-size: 15px; padding: 7px 10px; border-radius: var(--r-sm); border: 2px solid var(--line); background: var(--bg); color: var(--text); }
+.sh-status { font-size: 14px; color: var(--muted); }
+.sh-status.on { color: var(--right); font-weight: 700; }
+.sh-status.err { color: var(--wrong); font-weight: 700; }
+.sh-hint { margin: 0; }
+.sh-main { padding: 16px 16px 120px; }
+.sd-wrap { position: relative; max-width: 860px; margin: 0 auto; transform-origin: 0 0; }
+.show-doc { font-size: 18px; }
+.show-doc .theory, .show-doc .task { margin: 0; }
+.show-doc .sd-btn { cursor: default; user-select: text; -webkit-user-select: text; }
+.show-doc .opt.sd-btn { display: flex; align-items: center; gap: 10px; text-align: left; }
+.show-doc .seg .sd-btn { display: inline-flex; align-items: center; justify-content: center; min-width: 48px; border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 6px 12px; font-weight: 600; font-size: 14px; min-height: 38px; }
+.show-doc .seg .sd-btn.ok { background: var(--right-bg); border-color: var(--right); color: var(--right); }
+.show-doc .seg .sd-btn.no { background: var(--wrong-bg); border-color: var(--wrong); color: var(--wrong); }
+.show-doc .sd-ex { margin-top: 12px; font-size: 16px; color: var(--muted); }
+.sd-ink { position: absolute; left: 0; top: 0; pointer-events: none; }
+.sd-wrap.draw .sd-ink { pointer-events: auto; touch-action: none; cursor: crosshair; }
+.sd-wrap.erase { cursor: pointer; }
+.sd-wrap:not(.draw) .show-doc { user-select: text; -webkit-user-select: text; }
+.mk { --mc: #e5484d; }
+.mk-u-sub { text-decoration: underline solid var(--mc) 2px; text-underline-offset: .24em; }
+.mk-u-pred { text-decoration: underline double var(--mc) 2px; text-underline-offset: .22em; }
+.mk-u-attr { text-decoration: underline wavy var(--mc) 1.5px; text-underline-offset: .26em; }
+.mk-u-obj { text-decoration: underline dashed var(--mc) 2px; text-underline-offset: .24em; }
+.mk-u-adv { background: repeating-linear-gradient(90deg, var(--mc) 0 9px, transparent 9px 12px, var(--mc) 12px 14px, transparent 14px 17px) left bottom / 100% 2px no-repeat; padding-bottom: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.mk-hl { background: color-mix(in srgb, var(--mc) 38%, transparent); border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.mk-box { border: 2px solid var(--mc); border-radius: .55em; padding: 0 .12em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.mk-st { text-decoration: line-through var(--mc) 2px; }
+.mk-u-sub.mk-st, .mk-st .mk-u-sub { text-decoration-line: underline line-through; }
+.cls-ov { position: fixed; inset: 0; z-index: 60; background: var(--bg); display: flex; flex-direction: column; }
+.cls-bar { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--lime) 12%, var(--bg)); font-weight: 700; }
+.cls-bar .cls-msg { font-weight: 500; }
+.cls-body { flex: 1 1 auto; overflow: auto; padding: 16px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.cls-body .sd-fit { margin: 0 auto; max-width: 100%; }
+.cls-pause { max-width: 520px; margin: 12vh auto 0; text-align: center; display: grid; gap: 10px; justify-items: center; }
+.cls-pause h2 { font-size: 26px; margin: 0; }
+.cls-ic { font-size: 56px; line-height: 1; }
+.cls-msg { font-size: 18px; margin: 0; }
+html.cls-lock, html.cls-lock body { overflow: hidden; }
 </style>
 
 </head>
@@ -1028,15 +1087,16 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=30"></script>
-<script src="data-extra.js?v=30"></script>
-<script src="engine.js?v=30"></script>
-<script src="zno-app.js?v=30"></script>
-<script src="nmt-app.js?v=30"></script>
-<script src="fix-app.js?v=30"></script>
-<script src="theory-app.js?v=30"></script>
-<script src="plus-app.js?v=30"></script>
-<script src="exam-app.js?v=30"></script>
+<script src="data.js?v=31"></script>
+<script src="data-extra.js?v=31"></script>
+<script src="engine.js?v=31"></script>
+<script src="zno-app.js?v=31"></script>
+<script src="nmt-app.js?v=31"></script>
+<script src="fix-app.js?v=31"></script>
+<script src="theory-app.js?v=31"></script>
+<script src="plus-app.js?v=31"></script>
+<script src="exam-app.js?v=31"></script>
+<script src="show-app.js?v=31"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1087,7 +1147,7 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "30", THEORY = {}, theoryLoading = {};
+  const VER = "31", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1173,6 +1233,16 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
     trainerReady: (task, p) => { const keep = pend; pend = p; const ok = ready(task); pend = keep; return ok; },
     trainerInput: (b, p) => inputClick(b.dataset, p),
     trainerResp: (task, p) => task.t === "one" ? p.v : task.t === "multi" ? p.v.slice().sort((a, b) => a - b) : p.v.slice()
+  });
+  /* Урок у класі: учитель зупиняє роботу й показує слайд (show-app.js); сторінка вчителя — #show. */
+  const SH = window.MGShow({
+    esc, T, S, E, Z, app, apiUrl: (window.MG_CONFIG && window.MG_CONFIG.resultsUrl || "").trim(), get ui() { return ui; },
+    me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current, toast: m => toast(m),
+    tasksOf: (id, at) => tasksOf(id, at), theoryCached: id => THEORY[id], loadTheory: id => loadTheoryFile(id), typeName: t => TYPE[t],
+    correctHtml: task => correctHtml(task), trainerNewPend: (task, topic) => newPend(task, topic),
+    trainerBody: (task, done, resp, p) => { const keep = pend; pend = p; const h = bodyHtml(task, done, resp); pend = keep; return h; },
+    exempt: () => EX.running() || NM.inExam(),
+    leave: () => { ui.view = "home"; render(); window.scrollTo(0, 0); }
   });
   /* Додаткові дані учня (s.plus): тренування теорії, розминка, серії, діагностика. Об’єднуємо з сервером:
      об’єкти — по ключах; якщо в обох є номер версії v і він різний — беремо новішу версію цілком. */
@@ -1509,9 +1579,11 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
     updateBell();
     document.body.classList.toggle("compact", ui.view !== "home");
     document.body.classList.toggle("exam", NM.inExam());
+    document.body.classList.toggle("showmode", ui.view === "show");
     if (ui.view !== "nmt") NM.stopTick();
     $("#who-name").textContent = loggedIn() ? fullName(me()) : "не ввійшов";
-    if (ui.view === "topic" && ui.topic) renderTopic();
+    if (ui.view === "show") SH.render();
+    else if (ui.view === "topic" && ui.topic) renderTopic();
     else if (ui.view === "ztopic") { const h = Z.topicHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
     else if (ui.view === "fix") { const h = FX.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; }
     else if (ui.view === "ctl") app.innerHTML = EX.pageHtml();
@@ -1519,6 +1591,7 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
     else if (ui.view === "nmt") { const h = NM.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; document.body.classList.toggle("exam", NM.inExam()); }
     else renderHome();
     updateFab();
+    SH.after();
   }
 
   /* Знак теми — коротка типографічна «обкладинка» замість ілюстрації. */
@@ -1928,7 +2001,7 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
   let selWord = "", selTimer = null;
   function readSelection() {
     const sel = window.getSelection ? window.getSelection() : null;
-    if (!sel || sel.isCollapsed || NM.inExam()) return "";
+    if (!sel || sel.isCollapsed || NM.inExam() || ui.view === "show") return "";
     const node = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
     if (!node || !node.closest("#app") || node.closest("input, textarea")) return "";
     let w = sel.toString().normalize("NFC").replace(/\u0301/g, "").replace(/[«»"“”„()\[\].,;:!?…—–]+/g, " ").replace(/\s+/g, " ").trim();
@@ -1960,8 +2033,11 @@ a.wordmark:hover .wm-st { text-decoration-thickness: 4px; }
   NM.bindDrag(app);
   { const run = loggedIn() && NM.activeRun(); if (run) Object.assign(ui, { view: "nmt", ntest: run, nstage: "exam" }); }
   renderProfile();
+  if (location.hash === "#show") ui.view = "show";
+  window.addEventListener("hashchange", () => { if (location.hash === "#show" && ui.view !== "show") { ui.view = "show"; render(); window.scrollTo(0, 0); } });
   render();
   initSync();
+  SH.start();
 })();
 </script>
 
