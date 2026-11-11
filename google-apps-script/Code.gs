@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 17;
+const SERVICE_VERSION = 18;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -942,6 +942,7 @@ function admin_(d) {
     case 'admin_test_time': return adminTestTime_(d);
     case 'admin_test_add': return adminTestAdd_(d);
     case 'admin_test_accept': return adminTestAccept_(d);
+    case 'admin_test_due': return adminTestDue_(d);
     case 'admin_parent_link': return adminParentLink_(d);
     case 'admin_msg_send': return adminMsgSend_(d);
     case 'admin_msg_delete': return deleteById_(simpleSheet_(MSG_SHEET, MSG_HEADER), d.id);
@@ -1406,6 +1407,20 @@ function adminTestAccept_(d) {
   }
   extrasDrop_();
   return { ok: true, acc, changed };
+}
+
+/** Учитель змінює термін роботи (дата й час) або прибирає його (due = 0). Хто вже здав — без змін;
+    хто не встиг почати, після продовження знову бачить кнопку «Почати». */
+function adminTestDue_(d) {
+  const due = Number(d.due) || 0;
+  if (due && (due < Date.now() - 365 * 864e5 || due > Date.now() + 3 * 365 * 864e5)) return { ok: false, error: 'bad_due' };
+  const sh = simpleSheet_(TEST_SHEET, TEST_HEADER), rows = rows_(sh, 1);
+  for (let i = 0; i < rows.length; i++) if (String(rows[i][0]) === String(d.id)) {
+    sh.getRange(i + 2, 9).setValue(due ? new Date(due) : '');
+    extrasDrop_();
+    return { ok: true, due };
+  }
+  return { ok: false, error: 'not_found' };
 }
 
 /** Учитель додає учнів або класи до вже створеної роботи. Отримувачі зберігаються як «class:…;keys:…». */

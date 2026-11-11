@@ -45,7 +45,7 @@
         else if (r && r.started || st.started) { const l = left(t, Object.assign({}, st, { started: (r && r.started) || st.started })); state = `<span class="pill red">триває · ${l > 0 ? "залишилось " + mmss(l) : "час вийшов"}</span>`; btn = `<button class="btn small primary" data-ctl="open" data-id="${esc(t.id)}">Продовжити</button>`; }
         else if (closed) { state = '<span class="pill">термін минув</span>'; btn = ""; }
         else { state = `<span class="pill">${t.items.length} завд. · ${total(t)} хв</span>`; btn = `<button class="btn small primary" data-ctl="open" data-id="${esc(t.id)}">Почати</button>`; }
-        return `<div class="asg-one"><div class="asg-head"><b>${esc(t.title)}</b>${state}${t.due ? `<span class="pill">до ${new Date(t.due).toLocaleDateString("uk-UA")}</span>` : ""}</div>${t.note ? `<p class="hint" style="margin:0">${esc(t.note)}</p>` : ""}<div>${btn}</div></div>`;
+        return `<div class="asg-one"><div class="asg-head"><b>${esc(t.title)}</b>${state}${t.due ? `<span class="pill">до ${new Date(t.due).toLocaleDateString("uk-UA", { day: "numeric", month: "long" })}${(d => d.getHours() === 23 && d.getMinutes() === 59 ? "" : ", " + d.toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit" }))(new Date(t.due))}</span>` : ""}</div>${t.note ? `<p class="hint" style="margin:0">${esc(t.note)}</p>` : ""}<div>${btn}</div></div>`;
       }).join("") + "</section>";
     }
 
