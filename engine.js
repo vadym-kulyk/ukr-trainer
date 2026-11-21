@@ -68,12 +68,20 @@
   const labelOf = (it, k) => it.grp.cats[k];
   function explain(it) {
     const right = it.grp.cls ? it.w + " — " + it.grp.cats[it.c] : full(it, it.c);
+    /* grp.own — у групі до кожного слова дописано власну причину: показуємо лише її, без загального правила теми. */
+    if (it.n && it.grp.own) return "<b>" + esc(right) + "</b> — " + esc(dot(it.n));
     return "<b>" + esc(right) + "</b>" + (it.n ? " — " + esc(dot(it.n)) : it.grp.cls && !/[.!?…]$/.test(right) ? "." : "") + " " + esc(it.grp.rule);
   }
   /* Перелік правильних прикладів у поясненні. Речення (grp.lines) вже мають власні крапки. */
   function listNote(list, grp) {
     const b = list.map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b>");
     return grp.lines ? b.join(" ") + " " : b.join(", ") + ". ";
+  }
+  /* Перелік слів із причинами: для груп own — причина біля кожного слова, інакше — слова й загальне правило. */
+  const wordOf = i => i.grp.cls ? i.w : full(i, i.c);
+  function whyList(list, grp) {
+    if (grp.own && list.every(i => i.n)) return list.map(i => "<b>" + esc(wordOf(i)) + "</b> — " + esc(i.n)).join("; ") + ".";
+    return listNote(list, grp) + esc(grp.rule);
   }
   function wrongK(r, it) {
     const ks = it.f.map((_, k) => k).filter(k => k !== it.c && full(it, k) !== full(it, it.c));
@@ -103,7 +111,7 @@
       if (new Set(chosen.map(i => i.c)).size < 2) return null;
       return { t: "sort", key: "S" + chosen.map(i => i.w).sort().join("|"), src: S(chosen), q: pool[0].grp.sortQ || (pool[0].grp.cls ? "Розподіліть приклади за групами." : "Розподіліть слова за групами: що треба вставити?"),
         cats: pool[0].grp.cats.map(esc), items: chosen.map(i => ({ html: gapHtml(i), c: i.c })),
-        note: chosen.map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b> — " + esc(i.grp.cats[i.c])).join("; ") + ". " + esc(pool[0].grp.rule) };
+        note: pool[0].grp.own ? whyList(chosen, pool[0].grp) : chosen.map(i => "<b>" + esc(i.grp.cls ? i.w : full(i, i.c)) + "</b> — " + esc(i.grp.cats[i.c])).join("; ") + ". " + esc(pool[0].grp.rule) };
     });
     if (spellIt.length) gens.push(function spell(r) {
       const it = pick(r, spellIt);
@@ -127,7 +135,7 @@
       const grp = chosen[0].grp;
       return { t: "multi", key: "M" + k + chosen.map(i => i.w).sort().join("|"), src: S(chosen),
         q: grp.multiQ ? grp.multiQ.replace("{c}", esc(grp.cats[k])) : grp.cls ? "Позначте всі приклади, де " + esc(grp.cats[k]) + "." : "Позначте всі варіанти, де треба вставити " + q(esc(grp.cats[k])) + ".",
-        opts: chosen.map(gapHtml), a, note: listNote(chosen.filter(i => i.c === k), grp) + esc(grp.rule) };
+        opts: chosen.map(gapHtml), a, note: whyList(chosen.filter(i => i.c === k), grp) };
     });
     if (spellIt.length) gens.push(function tf(r) {
       const it = pick(r, spellIt), ok = r() < 0.5;
@@ -146,7 +154,8 @@
       return { t: "one", key: "O" + chosen.map(i => i.w).sort().join("|"), src: S(chosen),
         q: grp.oddQ ? grp.oddQ.replace("{o}", esc(grp.cats[oddIt.c])) : grp.cls ? "Який приклад зайвий у цьому ряду?" : "Знайдіть зайве: де треба вставити інше?",
         opts: order.map(i => gapHtml(chosen[i])), a: b,
-        note: "Зайве — <b>" + esc(oddIt.grp.cls ? oddIt.w : full(oddIt, oddIt.c)) + "</b> (" + esc(grp.cats[oddIt.c]) + "), в інших — " + esc(grp.cats[A]) + ". " + esc(grp.rule) };
+        note: grp.own && oddIt.n ? "Зайве — <b>" + esc(wordOf(oddIt)) + "</b> (" + esc(grp.cats[oddIt.c]) + "): " + esc(dot(oddIt.n)) + " В інших — " + esc(grp.cats[A]) + ": " + whyList(chosen.slice(0, 3), grp)
+          : "Зайве — <b>" + esc(oddIt.grp.cls ? oddIt.w : full(oddIt, oddIt.c)) + "</b> (" + esc(grp.cats[oddIt.c]) + "), в інших — " + esc(grp.cats[A]) + ". " + esc(grp.rule) };
     });
     if (spellG.length) gens.push(function onlyRight(r) {
       const g = pick(r, spellG), chosen = sample(r, byG[g], 4), good = ri(r, 4);
@@ -170,7 +179,7 @@
       return { t: "one", key: "Rw" + A + rows[0].map(i => i.w).sort().join("|"), src: S([].concat(...rows)),
         q: grp.rowQ ? grp.rowQ.replace("{c}", esc(grp.cats[A])) : grp.cls ? "У якому рядку всі приклади — " + esc(grp.cats[A]) + "?" : "У якому рядку в усіх словах треба вставити " + q(esc(grp.cats[A])) + "?",
         opts: order.map(i => grp.lines ? rows[i].map(x => '<span class="ln">' + gapHtml(x) + "</span>").join("") : rows[i].map(gapHtml).join(", ")), a: order.indexOf(0), wide: true,
-        note: listNote(rows[0], grp) + esc(grp.rule) };
+        note: whyList(rows[0], grp) };
     });
     /* Пояснення правила (групи з позначкою why): чому слово написано саме так. */
     const whyIt = items.filter(it => it.grp.why);
