@@ -267,6 +267,13 @@
       h += `<div class="task-nav"><button class="btn primary grow" data-nopen="${t.id}" data-nstage="rules">Пройти ще раз</button><button class="btn" data-act="home">До тестів</button></div></main>`;
       return h;
     }
+    /* Підказка для кнопки «Правило в теорії»: текст правильної відповіді || пояснення. */
+    function hintOf(task) {
+      const txt = s => { const d = document.createElement("div"); d.innerHTML = String(s || ""); return d.textContent.replace(/\s+/g, " ").trim(); };
+      const right = task.type === "single" ? txt((task.opts.find(o => o[0] === task.a) || [])[1])
+        : task.left.map(l => txt(l[1]) + " " + txt((task.right.find(r => r[0] === task.a[l[0]]) || [])[1])).join(" ");
+      return right.slice(0, 300) + " || " + txt(task.ex).slice(0, 900);
+    }
     function reviewTask(task, i, resp) {
       const p = points(task, resp), m = maxOf(task);
       let h = `<section class="nq rv ${p === m ? "rv-ok" : p ? "rv-part" : "rv-no"}" id="nr-${i}"><div class="nq-hrow"><h3 class="nq-h">Завдання ${i + 1}</h3><span class="rv-pts mono">${p}/${m}</span></div><div class="nq-q">${task.q}</div>`;
@@ -282,7 +289,7 @@
       }
       h += `<details class="zex" ${p === m ? "" : "open"}><summary>Пояснення</summary><div class="zex-body">${task.ex || "Пояснення до цього завдання немає."}</div></details>`;
       const refs = (task.th || []).map(r => host.theoryRef(r)).filter(Boolean);
-      if (refs.length) h += `<div class="rv-th">${refs.map(r => `<button class="btn small" data-theory="${esc(r.ref)}">Теорія: ${esc(r.title)}</button>`).join("")}</div>`;
+      if (refs.length) h += `<div class="rv-th">${refs.map(r => host.theoryBtn ? host.theoryBtn(r.ref, hintOf(task)) : `<button class="btn small" data-theory="${esc(r.ref)}">Теорія: ${esc(r.title)}</button>`).join("")}</div>`;
       return h + "</section>";
     }
 

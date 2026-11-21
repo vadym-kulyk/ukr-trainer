@@ -188,6 +188,7 @@
         const ok = st.res[task.id] === "1";
         h += `<div class="fb ${ok ? "good" : "bad"}"><span class="verdict">${ok ? "Правильно!" : "Помилка"}</span>${ok ? "" : `<span>Правильна відповідь: <b>${esc(answerText(task))}</b></span>`}</div>`;
         h += `<details class="zex" open><summary>Пояснення</summary><div class="zex-body">${task.ex ? M(task.ex) : "Пояснення до цього завдання немає."}</div></details>`;
+        if (host.theoryBtn) h += host.theoryBtn("z:" + t.id, hintFor(task));
       }
       const ready = !done && (task.type === "multiple" ? pend.v.length > 0 : task.type === "matching" ? task.left.every(l => pend.v[l[0]]) : pend.v != null);
       h += `<div class="task-nav"><button class="btn" data-act="zprev" ${i === 0 ? "disabled" : ""} aria-label="Попереднє завдання">←</button>`;
@@ -195,6 +196,15 @@
       else h += `<button class="btn primary grow" data-act="znext-open">${nextOpen(topicCache[t.id], st, i) >= 0 ? "Далі →" : "Готово"}</button>`;
       h += `<button class="btn" data-act="znext" ${i === n - 1 ? "disabled" : ""} aria-label="Наступне завдання (пропустити)">→</button></div></article>`;
       return h;
+    }
+    /* Підказка для кнопки «Правило в теорії»: текст правильної відповіді (головне) || текст пояснення. raw — HTML (НМТ). */
+    function hintFor(task, raw) {
+      const txt = s => { const d = document.createElement("div"); d.innerHTML = raw ? String(s || "") : M(s); return d.textContent.replace(/\s+/g, " ").trim(); };
+      let right = "";
+      if (task.type === "single") right = txt((task.opts.find(o => o[0] === task.a) || [])[1]);
+      else if (task.type === "multiple") right = task.opts.filter(o => task.a.includes(o[0])).map(o => txt(o[1])).join(" ");
+      else right = task.left.map(l => txt(l[1]) + " " + txt((task.right.find(r => r[0] === task.a[l[0]]) || [])[1])).join(" ");
+      return right.slice(0, 300) + " || " + txt(task.ex).slice(0, 900);
     }
     function answerText(task) {
       if (task.type === "single") return task.a;
@@ -381,6 +391,6 @@
 
     return { homeHtml, topicHtml, onClick, payload, sent, merge, reportLines, loadIndex, theoryFor, titleOf, md: M,
       progress: id => { loadIndex(); const t = topicMeta(id), st = zstate(id); return { a: st ? Object.keys(st.res).length : 0, n: t ? t.n : (st && st.n) || 0, title: t ? t.title : "Тема ЗНО" }; },
-      getTopic, taskView, input, newPend, readyOf, respOf, check, answerText, mistakes, sectionOf: id => { const t = topicMeta(id); return t ? t.sec : ""; } };
+      getTopic, taskView, input, newPend, readyOf, respOf, check, answerText, hintFor, mistakes, sectionOf: id => { const t = topicMeta(id); return t ? t.sec : ""; } };
   };
 })();

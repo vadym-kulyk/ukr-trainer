@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=31"></script>
+<script src="theme.js?v=32"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1042,6 +1042,12 @@ body.showmode .hero, body.showmode .site-foot, body.showmode #fab-theory, body.s
 .cls-ic { font-size: 56px; line-height: 1; }
 .cls-msg { font-size: 18px; margin: 0; }
 html.cls-lock, html.cls-lock body { overflow: hidden; }
+
+/* Кнопка «Правило в теорії» під поясненням і підсвічене правило в бічній панелі */
+.th-link { justify-self: start; margin-top: 4px; white-space: normal; text-align: left; line-height: 1.25; }
+.fb .th-link { background: var(--bg); }
+.th-focus { background: color-mix(in srgb, var(--marker) 70%, transparent) !important; box-shadow: 0 0 0 6px color-mix(in srgb, var(--marker) 70%, transparent); border-radius: 4px; scroll-margin: 80px; }
+@media (prefers-reduced-motion: no-preference) { .th-focus { animation: thpulse 1.6s ease-out 1; } @keyframes thpulse { 0%, 30% { box-shadow: 0 0 0 10px var(--marker); } } }
 </style>
 
 </head>
@@ -1087,16 +1093,16 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=31"></script>
-<script src="data-extra.js?v=31"></script>
-<script src="engine.js?v=31"></script>
-<script src="zno-app.js?v=31"></script>
-<script src="nmt-app.js?v=31"></script>
-<script src="fix-app.js?v=31"></script>
-<script src="theory-app.js?v=31"></script>
-<script src="plus-app.js?v=31"></script>
-<script src="exam-app.js?v=31"></script>
-<script src="show-app.js?v=31"></script>
+<script src="data.js?v=32"></script>
+<script src="data-extra.js?v=32"></script>
+<script src="engine.js?v=32"></script>
+<script src="zno-app.js?v=32"></script>
+<script src="nmt-app.js?v=32"></script>
+<script src="fix-app.js?v=32"></script>
+<script src="theory-app.js?v=32"></script>
+<script src="plus-app.js?v=32"></script>
+<script src="exam-app.js?v=32"></script>
+<script src="show-app.js?v=32"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1147,7 +1153,7 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "31", THEORY = {}, theoryLoading = {};
+  const VER = "32", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1173,19 +1179,20 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
     trainerTopic: id => { const t = T.find(x => x.id === id); if (!t) return null; const th = theoryOf(id); return { title: t.title, theory: th == null ? '<p class="empty">Завантажую теорію…</p>' : th }; },
     loadTrainerTheory: id => loadTheoryFile(id),
     setZnoUnique: n => { store.znoUnique = n; }, getZnoUnique: () => store.znoUnique || 0,
-    fixCount: g => FX.openCount(g), focusMark: () => focusMark(), focusSince: m => focusSince(m)
+    fixCount: g => FX.openCount(g), focusMark: () => focusMark(), focusSince: m => focusSince(m),
+    theoryBtn: (r, h) => theoryBtn(r, h)
   });
   const NM = window.MGNmt({
     esc, get ui() { return ui; },
     me: () => me(), loggedIn: () => loggedIn(), currentKey: () => store.current, fullName: () => (me() ? fullName(me()) : ""),
     saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now), toast: m => toast(m),
-    render: () => render(), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref), fixCount: g => FX.openCount(g)
+    render: () => render(), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref), fixCount: g => FX.openCount(g), theoryBtn: (r, h) => theoryBtn(r, h)
   });
   /* Розділ «Мої помилки» (fix-app.js). Тренажерні завдання показуємо тими самими функціями, що й у темах. */
   const FX = window.MGFix({
     esc, T, E, Z, NM, tasksOf, get ui() { return ui; },
     me: () => me(), loggedIn: () => loggedIn(), saveLocal: () => saveLocal(), scheduleSync: now => scheduleSync(now),
-    render: () => render(), toast: m => toast(m), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref), scrollTask: () => scrollTask(),
+    render: () => render(), toast: m => toast(m), gateHtml: () => gateHtml(), theoryRef: ref => theoryRef(ref), theoryBtn: (r, h) => theoryBtn(r, h), trainerHint: t => trainerHint(t), scrollTask: () => scrollTask(),
     setHome: h => { store.home = h; saveLocal(); }, focusMark: () => focusMark(), focusSince: m => focusSince(m),
     typeName: t => TYPE[t], correctHtml: task => correctHtml(task), plain: h => plain(h),
     answerText: (task, resp) => answerText(task, resp), rightText: task => rightText(task),
@@ -1712,7 +1719,7 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
     h += bodyHtml(task, done, resp);
     if (done) {
       const ok = st.r[i] === "1";
-      h += `<div class="fb ${ok ? "good" : "bad"}"><span class="verdict">${ok ? "Правильно! +1%" : "Помилка"}</span>${!ok ? correctHtml(task) : ""}${task.note ? `<span>${task.note}</span>` : ""}</div>`;
+      h += `<div class="fb ${ok ? "good" : "bad"}"><span class="verdict">${ok ? "Правильно! +1%" : "Помилка"}</span>${!ok ? correctHtml(task) : ""}${task.note ? `<span>${task.note}</span>` : ""}${theoryBtn("t:" + t.id, trainerHint(task))}</div>`;
     }
     const canCheck = !done && ready(task);
     h += `<div class="task-nav"><button class="btn" data-act="prev" ${i === 0 ? "disabled" : ""} aria-label="Попереднє завдання">←</button>`;
@@ -1861,7 +1868,7 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
     const b = e.target.closest("button"); if (!b) return;
     const d = b.dataset;
     if (d.home) { store.home = d.home; saveLocal(); render(); return; }
-    if (d.theory) { openTheory(d.theory); return; }
+    if (d.theory) { openTheory(d.theory, d.hint); return; }
     if (EX.onClick(b)) return;
     if (TH.onClick(b)) return;
     if (PL.onClick(b)) return;
@@ -1946,18 +1953,63 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
     if (kind === "z") { const title = Z.titleOf(id); if (!title) Z.loadIndex(); return { ref, title: title || "теорія до теми" }; }
     return null;
   }
-  function openTheory(ref) {
+  /* Кнопка «Теорія» під поясненням: відкриває теорію збоку й прокручує до правила, за яким обрано відповідь.
+     hint — «головні слова || інші слова»: правильна відповідь і текст пояснення, за ними шукаємо потрібний блок теорії. */
+  /* Тренажер: головне — правильна відповідь (слова з пояснення), допоміжне — власна примітка слова (без загального правила теми). */
+  function trainerHint(task) {
+    const d = document.createElement("div"); d.innerHTML = task.note || "";
+    const strong = [...d.querySelectorAll("b")].map(x => x.textContent).join(" ") + " " + rightText(task);
+    const own = (task.src || []).map(x => x.n || "").join(" ") + " " + (task.why || "");
+    return strong.replace(/\s+/g, " ").trim().slice(0, 300) + " || " + own.trim();
+  }
+  function theoryBtn(ref, hint) {
+    const r = theoryRef(ref); if (!r) return "";
+    return `<button class="btn small th-link" type="button" data-theory="${esc(r.ref)}" data-hint="${esc(hint || "")}"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5c2.6-.9 4.9-.6 7 .9 2.1-1.5 4.4-1.8 7-.9v11c-2.6-.9-4.9-.6-7 .9-2.1-1.5-4.4-1.8-7-.9z M10 5.4v11"/></svg>Правило в теорії: ${esc(r.title)}</button>`;
+  }
+  const normTh = x => String(x).toLowerCase().replace(/[\u0301]/g, "").replace(/[’ʼ`']/g, "'").replace(/ё/g, "е");
+  const STOP = new Set("тому також якщо коли який яка яке які цьому цей ця це ці того тих для або але при після перед через щоб слово слова словах слові пишемо пишуть правильно правильна правильний відповідь варіант варіанті варіанти речення реченні завдання завжди можна треба тобто отже його її їх них нього неї".split(" "));
+  function thTokens(s) {
+    return [...new Set((normTh(s).match(/[а-яґєіїa-z'-]{3,}/g) || []).map(w => w.replace(/^[-']+|[-']+$/g, "")).filter(w => w.length >= 3 && !STOP.has(w)))];
+  }
+  function focusRule(root, hint) {
+    if (!hint) return;
+    const [a, b] = String(hint).split("||");
+    const strong = thTokens(a || ""), weak = thTokens(b || "").filter(w => !strong.includes(w));
+    if (!strong.length && !weak.length) return;
+    const cands = [...root.querySelectorAll("li, .box, .rule, .exc, .trap, .mnemo, .fscheme, .mm-b, .algo li, tr, p, dd, .tri-in, .tri-out")]
+      .filter(el => !el.closest(".quiz") && el.textContent.length < 900);
+    let best = null, bestS = 0;
+    cands.forEach(el => {
+      const tx = " " + normTh(el.textContent) + " ";
+      let sc = 0;
+      const has = w => tx.includes(w) || (w.length >= 6 && tx.includes(w.slice(0, w.length - 2)));
+      strong.forEach(w => { if (has(w)) sc += w.length >= 4 ? 4 : 2; });
+      weak.forEach(w => { if (has(w)) sc += 1; });
+      sc -= el.textContent.length / 900;               // за рівності — коротший, точніший блок
+      if (sc > bestS) { bestS = sc; best = el; }
+    });
+    if (!best || bestS < 2.5) {               // точного місця немає — відкриваємо головне правило теми
+      const main = root.querySelector(".rule, .lead");
+      if (main) { main.classList.add("th-focus"); setTimeout(() => main.scrollIntoView({ block: "center" }), 60); }
+      return;
+    }
+    const blk = best.closest("li, .box, .rule, .exc, .trap, .mnemo, .fscheme, .mm-b, tr, p") || best;
+    const det = blk.closest("details"); if (det) det.open = true;
+    blk.classList.add("th-focus");
+    setTimeout(() => blk.scrollIntoView({ block: "center" }), 60);
+  }
+  function openTheory(ref, hint) {
     const [kind, id] = String(ref).split(":");
     $("#sheet-search").hidden = true;
     if (kind === "t") {
       const t = T.find(x => x.id === id); if (!t) return;
       openSheet("Теорія: " + t.title);
       sheetBody.innerHTML = '<p class="empty">Завантажую теорію…</p>';
-      loadTheoryFile(id).then(x => { sheetBody.innerHTML = `<article class="theory in-sheet"><div class="tbody">${x}</div></article>`; sheetBody.scrollTop = 0; });
+      loadTheoryFile(id).then(x => { sheetBody.innerHTML = `<article class="theory in-sheet"><div class="tbody">${x}</div></article>`; sheetBody.scrollTop = 0; focusRule(sheetBody, hint); });
     } else {
       openSheet("Теорія");
       sheetBody.innerHTML = '<p class="empty">Завантажую теорію…</p>';
-      Z.theoryFor(id).then(r => { $("#sheet-h").textContent = "Теорія: " + r.title; sheetBody.innerHTML = `<article class="theory in-sheet">${r.html}</article>`; sheetBody.scrollTop = 0; })
+      Z.theoryFor(id).then(r => { $("#sheet-h").textContent = "Теорія: " + r.title; sheetBody.innerHTML = `<article class="theory in-sheet">${r.html}</article>`; sheetBody.scrollTop = 0; focusRule(sheetBody, hint); })
         .catch(() => { sheetBody.innerHTML = '<p class="empty">Не вдалося завантажити теорію. Перевірте інтернет.</p>'; });
     }
     sheetBody.scrollTop = 0;
@@ -1976,7 +2028,7 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
   $("#sheet-close").addEventListener("click", closeSheet);
   sheet.addEventListener("click", e => {
     if (e.target === sheet) { closeSheet(); return; }
-    const b = e.target.closest("[data-theory]"); if (b) openTheory(b.dataset.theory);
+    const b = e.target.closest("[data-theory]"); if (b) openTheory(b.dataset.theory, b.dataset.hint);
     const rb = e.target.closest("[data-sendreply]"); if (rb) sendReply(rb.dataset.sendreply);
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });

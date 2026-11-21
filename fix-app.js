@@ -144,7 +144,8 @@
       else if (m.src === "z") refs = ["z:" + m.topic];
       else refs = task.th || [];
       const items = refs.map(r => host.theoryRef(r)).filter(Boolean);
-      return items.length ? `<div class="rv-th">${items.map(r => `<button class="btn small" data-theory="${esc(r.ref)}">Теорія: ${esc(r.title)}</button>`).join("")}</div>` : "";
+      const hint = m.src === "t" ? host.trainerHint(task) : host.Z.hintFor(task, m.src !== "z");
+      return items.length ? `<div class="rv-th">${items.map(r => host.theoryBtn(r.ref, hint)).join("")}</div>` : "";
     }
     function explainHtml(m, task) {
       if (m.src === "t") return task.note ? `<span>${task.note}</span>` : "";
