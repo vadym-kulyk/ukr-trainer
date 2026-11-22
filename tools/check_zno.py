@@ -32,7 +32,8 @@ def check_html(path):
 
 index = json.load(open(os.path.join(Z, "index.json"), encoding="utf-8"))
 trainer_ids = set(re.findall(r'\bid:\s*["\']([a-z_0-9]+)["\']', open(os.path.join(ROOT, "data.js"), encoding="utf-8").read()
-                             + open(os.path.join(ROOT, "data-extra.js"), encoding="utf-8").read()))
+                             + open(os.path.join(ROOT, "data-extra.js"), encoding="utf-8").read()
+                             + open(os.path.join(ROOT, "data-morph.js"), encoding="utf-8").read()))
 seen_ids, total = set(), 0
 for t in index["topics"]:
     tid = t["id"]
