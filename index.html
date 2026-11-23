@@ -1055,9 +1055,9 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
 body:not(.compact) .hero .wrap { max-width: 1120px; padding-block: 18px 28px; gap: 18px; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
 body.compact .hero-grid { display: none; }
-.poster { background: var(--cobalt); color: #fff; border-radius: 28px; padding: 36px; display: grid; grid-template-rows: auto 1fr auto; min-height: 560px; overflow: hidden; }
+.poster { background: var(--cobalt); color: #fff; border-radius: 28px; padding: 36px; display: grid; grid-template-rows: auto 1fr auto; row-gap: 12px; min-height: 560px; overflow: hidden; }
 .hero .poster h1 { font: 800 clamp(26px, 3.2vw, 40px)/1.12 var(--f-poster); letter-spacing: -.02em; max-width: 13em; color: #fff; text-wrap: balance; }
-.glyph { align-self: center; justify-self: center; font: 900 clamp(200px, 28vw, 360px)/1 var(--f-poster); letter-spacing: -.04em; user-select: none; }
+.glyph { align-self: center; justify-self: center; font: 900 clamp(200px, 28vw, 360px)/1.32 var(--f-poster); letter-spacing: -.04em; user-select: none; }
 .glyph span { display: inline-block; }
 .glyph span.out { animation: g-out .3s ease-in forwards; }
 .glyph span.in { animation: g-in .45s cubic-bezier(.2, .8, .2, 1) forwards; }
@@ -1107,7 +1107,7 @@ body.compact .hero-grid { display: none; }
   .poster { min-height: 360px; padding: 24px; border-radius: 22px; }
   .about, .login { border-radius: 22px; padding: 22px; }
   .caption { flex-direction: column; align-items: flex-start; }
-  .glyph { font-size: 180px; }
+  .glyph { font-size: 150px; }
   .login .pgrid { grid-template-columns: 1fr; }
   .stats dt { font-size: 22px; }
 }
@@ -1138,7 +1138,7 @@ body.compact .hero-grid { display: none; }
       </section>
       <div class="side">
         <section class="about">
-          <p class="sub">Тренажер з української мови для ЗНО і НМТ: теорія за шкільними підручниками і 100 завдань у кожній темі. Банк завдань ЗНО з поясненнями, симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
+          <p class="sub">Тренажер з української для ЗНО і НМТ: теорія за підручниками, по 100 завдань у темі, банк ЗНО з поясненнями.</p>
           <dl class="stats"><div><dt>50</dt><dd>тем з теорією</dd></div><div><dt>5000</dt><dd>завдань</dd></div><div><dt>НМТ</dt><dd>симуляція з таймером</dd></div></dl>
         </section>
         <section class="login" aria-label="Профіль учня">
