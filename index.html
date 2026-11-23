@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=36"></script>
+<script src="theme.js?v=37"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
 <style>
 [hidden] { display: none !important; }
 /* Layout: одна центральна колонка (макс. 860px) — шапка з ім’ям, картки тем, екран теми з вкладками «Теорія / Завдання». */
@@ -1048,6 +1048,70 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
 .fb .th-link { background: var(--bg); }
 .th-focus { background: color-mix(in srgb, var(--marker) 70%, transparent) !important; box-shadow: 0 0 0 6px color-mix(in srgb, var(--marker) 70%, transparent); border-radius: 4px; scroll-margin: 80px; }
 @media (prefers-reduced-motion: no-preference) { .th-focus { animation: thpulse 1.6s ease-out 1; } @keyframes thpulse { 0%, 30% { box-shadow: 0 0 0 10px var(--marker); } } }
+
+/* Головна, варіант «Абетка»: кобальтовий плакат з літерою + біла картка + темна панель профілю */
+:root { --cobalt: #2433d6; --cobalt-line: #6d76ef; --cobalt-soft: #c9cdfb; --f-poster: 'Unbounded', 'Onest', system-ui, sans-serif; }
+.wordmark { font-family: var(--f-poster); font-weight: 900; letter-spacing: -.01em; }
+body:not(.compact) .hero .wrap { max-width: 1120px; padding-block: 18px 28px; gap: 18px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; }
+body.compact .hero-grid { display: none; }
+.poster { background: var(--cobalt); color: #fff; border-radius: 28px; padding: 36px; display: grid; grid-template-rows: auto 1fr auto; min-height: 560px; overflow: hidden; }
+.hero .poster h1 { font: 800 clamp(26px, 3.2vw, 40px)/1.12 var(--f-poster); letter-spacing: -.02em; max-width: 13em; color: #fff; text-wrap: balance; }
+.glyph { align-self: center; justify-self: center; font: 900 clamp(200px, 28vw, 360px)/1 var(--f-poster); letter-spacing: -.04em; user-select: none; }
+.glyph span { display: inline-block; }
+.glyph span.out { animation: g-out .3s ease-in forwards; }
+.glyph span.in { animation: g-in .45s cubic-bezier(.2, .8, .2, 1) forwards; }
+@keyframes g-out { to { transform: translateY(-30%) rotate(-6deg); opacity: 0; } }
+@keyframes g-in { from { transform: translateY(30%) rotate(6deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.caption { display: flex; justify-content: space-between; align-items: end; gap: 16px; font-size: 16px; color: var(--cobalt-soft); }
+.caption b { color: #fff; font-weight: 600; }
+.dots { display: flex; gap: 8px; flex: none; }
+.dots button { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--cobalt-line); background: transparent; color: #fff; font: 800 15px var(--f-poster); padding: 0; }
+.dots button[aria-pressed="true"] { background: #fff; color: var(--cobalt); border-color: #fff; }
+.poster :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.side { display: grid; grid-template-rows: auto 1fr; gap: 20px; min-width: 0; }
+.about { background: var(--surface); border: 1px solid var(--line); border-radius: 28px; padding: 30px 34px; }
+.about .sub { margin: 0 0 22px; font-size: 17px; line-height: 1.55; color: var(--text); max-width: none; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.stats div { border-top: 2px solid var(--text); padding-top: 10px; }
+.stats dt { font: 800 28px/1 var(--f-poster); letter-spacing: -.02em; }
+.stats dd { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+.login { --bg: #1b2050; --surface: #1b2050; --surface-2: #262c66; --line: #353b78; --text: #ffffff; --muted: #a7abd0; --lime: #ffffff; --on-lime: #12163a; --violet: #8a92ff; --yellow: #8a92ff;
+  background: #12163a; color: var(--text); border-radius: 28px; padding: 30px 34px; display: grid; align-content: start; gap: 18px; }
+.login .namebox, .login .namebox.need { background: none; border: 0; padding: 0; gap: 12px; }
+.login .namebox > label { font: 800 20px var(--f-poster); color: #fff; }
+.login .ptabs { border-bottom-color: var(--line); }
+.login .ptabs .tab { color: var(--muted); }
+.login .ptabs .tab[aria-selected="true"] { color: #fff; }
+.login .pgrid { grid-template-columns: 1fr 1fr; gap: 12px; }
+.login .pgrid label { color: var(--muted); font-size: 14px; font-weight: 500; }
+.login .pgrid input { border: 1.5px solid #2f3466; border-radius: 14px; padding: 12px 14px; font-size: 16px; font-weight: 500; }
+.login .pgrid input::placeholder { color: #6a6f9c; }
+.login .pgrid input:focus { border-color: #8a92ff; box-shadow: none; }
+.login .btn.primary { border-radius: 999px; padding: 12px 26px; font: 800 15px var(--f-poster); }
+.login .btn.primary:hover { background: #dfe2ff; border-color: #dfe2ff; filter: none; }
+.login .btn:not(.primary) { background: transparent; border-color: var(--line); color: #fff; }
+.login .pname { font: 800 20px var(--f-poster); }
+.login .overall:empty { display: none; }
+.login .overall { border-top: 1px solid var(--line); padding-top: 16px; }
+.login .bar { background: var(--surface-2); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .login { background: #1a2050; } :root:not([data-theme="light"]) { --cobalt: #2c3ae0; } }
+:root[data-theme="dark"] .login { background: #1a2050; }
+:root[data-theme="dark"] { --cobalt: #2c3ae0; }
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .poster { min-height: 420px; padding: 28px; }
+  .about, .login { padding: 26px; }
+}
+@media (max-width: 480px) {
+  .poster { min-height: 360px; padding: 24px; border-radius: 22px; }
+  .about, .login { border-radius: 22px; padding: 22px; }
+  .caption { flex-direction: column; align-items: flex-start; }
+  .glyph { font-size: 180px; }
+  .login .pgrid { grid-template-columns: 1fr; }
+  .stats dt { font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .glyph span { animation: none !important; } }
 </style>
 
 </head>
@@ -1063,11 +1127,26 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
         <span class="chip" id="sync-chip"><span class="dot"></span><span id="sync-text">Прогрес у профілі</span></span>
       </div>
     </div>
-    <h1 class="parse" aria-label="Уважний учень щодня вивчає рідну мову."><span class="u u-attr">Уважний</span> <span class="u u-sub">учень</span> <span class="u u-adv">щодня</span> <span class="u u-pred">вивчає</span> <span class="u u-attr">рідну</span> <span class="u u-obj">мову</span>.</h1>
-    <ul class="parse-key" aria-label="Як підкреслюємо члени речення"><li><i class="k u-sub"></i>підмет</li><li><i class="k u-pred"></i>присудок</li><li><i class="k u-attr"></i>означення</li><li><i class="k u-obj"></i>додаток</li><li><i class="k u-adv"></i>обставина</li></ul>
-    <p class="sub">Тренажер з української мови для ЗНО і НМТ: 50 тем з теорією і 100 завданнями в кожній. Банк завдань ЗНО з поясненнями. Симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
-    <div class="namebox" id="profilebox"></div>
-    <div class="overall" id="overall"></div>
+    <div class="hero-grid">
+      <section class="poster" aria-labelledby="hero-h">
+        <h1 id="hero-h">Українська — від літери до тексту</h1>
+        <div class="glyph" aria-hidden="true"><span id="glyph">Ґ</span></div>
+        <div class="caption">
+          <span id="glyph-cap" aria-live="polite"><b>Ґ</b> — ґанок, ґудзик, ґрунт</span>
+          <div class="dots" role="group" aria-label="Обрати літеру"><button type="button" aria-pressed="true" data-g="0">Ґ</button><button type="button" aria-pressed="false" data-g="1">Є</button><button type="button" aria-pressed="false" data-g="2">І</button><button type="button" aria-pressed="false" data-g="3">Ї</button></div>
+        </div>
+      </section>
+      <div class="side">
+        <section class="about">
+          <p class="sub">Тренажер з української мови для ЗНО і НМТ: теорія за шкільними підручниками і 100 завдань у кожній темі. Банк завдань ЗНО з поясненнями, симуляція НМТ з таймером і балами 100–200. Виділіть будь-яке слово, щоб побачити його значення.</p>
+          <dl class="stats"><div><dt>50</dt><dd>тем з теорією</dd></div><div><dt>5000</dt><dd>завдань</dd></div><div><dt>НМТ</dt><dd>симуляція з таймером</dd></div></dl>
+        </section>
+        <section class="login" aria-label="Профіль учня">
+          <div class="namebox" id="profilebox"></div>
+          <div class="overall" id="overall"></div>
+        </section>
+      </div>
+    </div>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
   </div>
 </header>
@@ -1093,17 +1172,17 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=36"></script>
-<script src="data-extra.js?v=36"></script>
-<script src="data-morph.js?v=36"></script>
-<script src="engine.js?v=36"></script>
-<script src="zno-app.js?v=36"></script>
-<script src="nmt-app.js?v=36"></script>
-<script src="fix-app.js?v=36"></script>
-<script src="theory-app.js?v=36"></script>
-<script src="plus-app.js?v=36"></script>
-<script src="exam-app.js?v=36"></script>
-<script src="show-app.js?v=36"></script>
+<script src="data.js?v=37"></script>
+<script src="data-extra.js?v=37"></script>
+<script src="data-morph.js?v=37"></script>
+<script src="engine.js?v=37"></script>
+<script src="zno-app.js?v=37"></script>
+<script src="nmt-app.js?v=37"></script>
+<script src="fix-app.js?v=37"></script>
+<script src="theory-app.js?v=37"></script>
+<script src="plus-app.js?v=37"></script>
+<script src="exam-app.js?v=37"></script>
+<script src="show-app.js?v=37"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1154,7 +1233,7 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "36", THEORY = {}, theoryLoading = {};
+  const VER = "37", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -2096,5 +2175,23 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
 })();
 </script>
 
+<script>
+(function () {
+  const L = [["Ґ", "ґанок, ґудзик, ґрунт"], ["Є", "єдність, Європа, приємно"], ["І", "ідея, ім’я, ірис"], ["Ї", "їжак, країна, Україна"]];
+  const g = document.getElementById("glyph"), cap = document.getElementById("glyph-cap");
+  if (!g) return;
+  const btns = [...document.querySelectorAll(".dots button")];
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let i = 0, timer = null;
+  function show(n) {
+    i = n; btns.forEach((b, k) => b.setAttribute("aria-pressed", k === n));
+    const put = () => { g.textContent = L[n][0]; cap.innerHTML = "<b>" + L[n][0] + "</b> — " + L[n][1]; g.className = still ? "" : "in"; };
+    if (still) return put();
+    g.className = "out"; setTimeout(put, 280);
+  }
+  btns.forEach(b => b.addEventListener("click", () => { clearInterval(timer); timer = null; show(+b.dataset.g); }));
+  if (!still) timer = setInterval(() => { if (!document.hidden && !document.body.classList.contains("compact")) show((i + 1) % L.length); }, 3200);
+})();
+</script>
 </body>
 </html>
