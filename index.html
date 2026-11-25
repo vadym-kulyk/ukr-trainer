@@ -1049,7 +1049,7 @@ html.cls-lock, html.cls-lock body { overflow: hidden; }
 .th-focus { background: color-mix(in srgb, var(--marker) 70%, transparent) !important; box-shadow: 0 0 0 6px color-mix(in srgb, var(--marker) 70%, transparent); border-radius: 4px; scroll-margin: 80px; }
 @media (prefers-reduced-motion: no-preference) { .th-focus { animation: thpulse 1.6s ease-out 1; } @keyframes thpulse { 0%, 30% { box-shadow: 0 0 0 10px var(--marker); } } }
 
-/* Головна, варіант «Абетка»: кобальтовий плакат з літерою + біла картка + темна панель профілю */
+/* Головна: кобальтова картка з описом + темна панель профілю (заставку показує splash.js) */
 :root { --cobalt: #2433d6; --cobalt-line: #6d76ef; --cobalt-soft: #c9cdfb; --f-poster: 'Unbounded', 'Onest', system-ui, sans-serif; }
 .wordmark { font-family: var(--f-poster); font-weight: 900; letter-spacing: -.01em; }
 body:not(.compact) .hero { background: var(--bg); border-bottom: 0; }
@@ -1057,27 +1057,14 @@ body:not(.compact) .hero .wrap { padding-block: 16px 4px; gap: 16px; }
 body:not(.compact) main { padding-top: 18px; }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
 body.compact .hero-grid { display: none; }
-.poster { background: var(--cobalt); color: #fff; border-radius: 24px; padding: 28px; display: grid; grid-template-rows: auto 1fr auto; row-gap: 8px; overflow: hidden; container-type: inline-size; }
-.hero .poster h1 { font: 800 clamp(24px, 2.6vw, 30px)/1.15 var(--f-poster); letter-spacing: -.02em; max-width: 13em; color: #fff; text-wrap: balance; }
-.glyph { align-self: center; justify-self: center; font: 900 48cqi/1.25 var(--f-poster); letter-spacing: -.04em; user-select: none; }
-.glyph span { display: inline-block; }
-.glyph span.out { animation: g-out .3s ease-in forwards; }
-.glyph span.in { animation: g-in .45s cubic-bezier(.2, .8, .2, 1) forwards; }
-@keyframes g-out { to { transform: translateY(-30%) rotate(-6deg); opacity: 0; } }
-@keyframes g-in { from { transform: translateY(30%) rotate(6deg); opacity: 0; } to { transform: none; opacity: 1; } }
-.caption { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; font-size: 15px; color: var(--cobalt-soft); }
-.caption b { color: #fff; font-weight: 600; }
-.dots { display: flex; gap: 8px; flex: none; }
-.dots button { width: 42px; height: 42px; border-radius: 50%; border: 1.5px solid var(--cobalt-line); background: transparent; color: #fff; font: 800 15px var(--f-poster); padding: 0; }
-.dots button[aria-pressed="true"] { background: #fff; color: var(--cobalt); border-color: #fff; }
-.poster :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-.side { display: grid; grid-template-rows: 1fr auto; gap: 16px; min-width: 0; }
-.about { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 24px 26px; display: flex; flex-direction: column; gap: 18px; }
-.about .sub { margin: 0; font-size: 16px; line-height: 1.55; color: var(--text); max-width: none; }
-.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: auto 0 0; }
-.stats div { border-top: 2px solid var(--text); padding-top: 10px; }
+.about { background: var(--cobalt); color: #fff; border-radius: 24px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.hero .about h1 { margin: 0; font: 800 clamp(24px, 2.6vw, 32px)/1.15 var(--f-poster); letter-spacing: -.02em; max-width: 13em; color: #fff; text-wrap: balance; }
+.about .sub { margin: 0; font-size: 16px; line-height: 1.55; color: var(--cobalt-soft); max-width: 34em; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: auto 0 0; padding-top: 10px; }
+.stats div { border-top: 2px solid var(--cobalt-line); padding-top: 10px; }
+.about :focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
 .stats dt { font: 800 24px/1 var(--f-poster); letter-spacing: -.02em; }
-.stats dd { margin: 6px 0 0; font-size: 14px; color: var(--muted); }
+.stats dd { margin: 6px 0 0; font-size: 14px; color: var(--cobalt-soft); }
 .login { --bg: #1b2050; --surface: #1b2050; --surface-2: #262c66; --line: #353b78; --text: #ffffff; --muted: #a7abd0; --lime: #ffffff; --on-lime: #12163a; --violet: #8a92ff; --yellow: #8a92ff;
   background: #12163a; color: var(--text); border-radius: 24px; padding: 24px 26px; display: grid; align-content: start; gap: 16px; }
 .login .namebox, .login .namebox.need { background: none; border: 0; padding: 0; gap: 12px; }
@@ -1102,18 +1089,13 @@ body.compact .hero-grid { display: none; }
 :root[data-theme="dark"] { --cobalt: #2c3ae0; }
 @media (max-width: 900px) {
   .hero-grid { grid-template-columns: 1fr; }
-  .poster { padding: 26px; }
-  .glyph { font-size: min(42cqi, 240px); }
   .about, .login { padding: 24px; }
 }
 @media (max-width: 480px) {
-  .poster { padding: 22px; border-radius: 22px; }
   .about, .login { border-radius: 22px; padding: 22px; }
-  .glyph { font-size: 46cqi; }
   .login .pgrid { grid-template-columns: 1fr; }
   .stats dt { font-size: 22px; }
 }
-@media (prefers-reduced-motion: reduce) { .glyph span { animation: none !important; } }
 </style>
 
 </head>
@@ -1131,24 +1113,15 @@ body.compact .hero-grid { display: none; }
       </div>
     </div>
     <div class="hero-grid">
-      <section class="poster" aria-labelledby="hero-h">
+      <section class="about" aria-labelledby="hero-h">
         <h1 id="hero-h">Українська — від літери до тексту</h1>
-        <div class="glyph" aria-hidden="true"><span id="glyph">Ґ</span></div>
-        <div class="caption">
-          <span id="glyph-cap" aria-live="polite"><b>Ґ</b> — ґанок, ґудзик, ґрунт</span>
-          <div class="dots" role="group" aria-label="Обрати літеру"><button type="button" aria-pressed="true" data-g="0">Ґ</button><button type="button" aria-pressed="false" data-g="1">Є</button><button type="button" aria-pressed="false" data-g="2">І</button><button type="button" aria-pressed="false" data-g="3">Ї</button></div>
-        </div>
+        <p class="sub">Тренажер для ЗНО і НМТ: теорія за підручниками, по 100 завдань у темі, банк ЗНО з поясненнями.</p>
+        <dl class="stats"><div><dt>50</dt><dd>тем з теорією</dd></div><div><dt>5000</dt><dd>завдань</dd></div><div><dt>НМТ</dt><dd>симуляція з таймером</dd></div></dl>
       </section>
-      <div class="side">
-        <section class="about">
-          <p class="sub">Тренажер з української для ЗНО і НМТ: теорія за підручниками, по 100 завдань у темі, банк ЗНО з поясненнями.</p>
-          <dl class="stats"><div><dt>50</dt><dd>тем з теорією</dd></div><div><dt>5000</dt><dd>завдань</dd></div><div><dt>НМТ</dt><dd>симуляція з таймером</dd></div></dl>
-        </section>
-        <section class="login" aria-label="Профіль учня">
-          <div class="namebox" id="profilebox"></div>
-          <div class="overall" id="overall"></div>
-        </section>
-      </div>
+      <section class="login" aria-label="Профіль учня">
+        <div class="namebox" id="profilebox"></div>
+        <div class="overall" id="overall"></div>
+      </section>
     </div>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
   </div>
@@ -2178,23 +2151,5 @@ body.compact .hero-grid { display: none; }
 })();
 </script>
 
-<script>
-(function () {
-  const L = [["Ґ", "ґанок, ґудзик, ґрунт"], ["Є", "єдність, Європа, приємно"], ["І", "ідея, ім’я, ірис"], ["Ї", "їжак, країна, Україна"]];
-  const g = document.getElementById("glyph"), cap = document.getElementById("glyph-cap");
-  if (!g) return;
-  const btns = [...document.querySelectorAll(".dots button")];
-  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let i = 0, timer = null;
-  function show(n) {
-    i = n; btns.forEach((b, k) => b.setAttribute("aria-pressed", k === n));
-    const put = () => { g.textContent = L[n][0]; cap.innerHTML = "<b>" + L[n][0] + "</b> — " + L[n][1]; g.className = still ? "" : "in"; };
-    if (still) return put();
-    g.className = "out"; setTimeout(put, 280);
-  }
-  btns.forEach(b => b.addEventListener("click", () => { clearInterval(timer); timer = null; show(+b.dataset.g); }));
-  if (!still) timer = setInterval(() => { if (!document.hidden && !document.body.classList.contains("compact")) show((i + 1) % L.length); }, 3200);
-})();
-</script>
 </body>
 </html>
