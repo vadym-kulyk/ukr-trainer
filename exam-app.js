@@ -34,11 +34,24 @@
     const mmss = ms => { ms = Math.max(0, ms); const m = Math.floor(ms / 60000), s = Math.floor(ms % 60000 / 1000); return m + ":" + String(s).padStart(2, "0"); };
 
     /* ── Картка на головній ── */
-    function homeHtml() {
+    /* Кожна робота належить одній темі тренажера: учитель обирає її під час створення (завдання цієї теми — першими). */
+    const homeOf = t => t.home || (t.items && t.items[0] ? t.items[0][0] : "");
+    const fresh = () => list().filter(t => !(t.res && t.res.done && t.res.done < Date.now() - 30 * 86400000));
+    const pending = t => !(t.res && t.res.done) && !(t.due && t.due < Date.now() && !(t.res && t.res.started));
+    /* Теми, у яких є незавершені роботи: { id: кількість }. */
+    function topics() { const m = {}; if (host.loggedIn()) fresh().filter(pending).forEach(t => { const k = homeOf(t); m[k] = (m[k] || 0) + 1; }); return m; }
+    /* Нагадування над списком тем тренажера: яка робота чекає і в якій темі. */
+    function bannerHtml() {
       if (!host.loggedIn()) return "";
-      const ts = list().filter(t => !(t.res && t.res.done && t.res.done < Date.now() - 30 * 86400000));
+      const ts = fresh().filter(pending); if (!ts.length) return "";
+      return `<section class="asg ctl-home"><h2>Моніторингові роботи</h2>` + ts.map(t => { const tp = T.find(x => x.id === homeOf(t));
+        return `<div class="asg-one"><div class="asg-head"><b>${esc(t.title)}</b>${tp ? `<span class="pill">тема «${esc(tp.title)}»</span>` : ""}</div><div><button class="btn small primary" ${tp ? `data-open="${esc(tp.id)}" data-tab="tasks"` : `data-ctl="open" data-id="${esc(t.id)}"`}>Перейти до теми</button></div></div>`; }).join("") + "</section>";
+    }
+    function homeHtml(topic) {
+      if (!host.loggedIn()) return "";
+      const ts = fresh().filter(t => !topic || homeOf(t) === topic);
       if (!ts.length) return "";
-      return `<section class="asg ctl-home"><h2>Моніторингові роботи</h2>` + ts.map(t => {
+      return `<section class="asg ctl-home"><h2>Моніторингова робота</h2>` + ts.map(t => {
         const st = local(t.id), r = t.res, closed = t.due && t.due < Date.now() && !(r && r.started);
         let state, btn;
         if (r && r.done) { state = `<span class="pill green">здано: ${r.score}/${r.max} · оцінка ${r.grade}</span>`; btn = t.show ? `<button class="btn small" data-ctl="open" data-id="${esc(t.id)}">Переглянути</button>` : ""; }
@@ -52,7 +65,7 @@
     /* ── Сторінка моніторингової роботи ── */
     function pageHtml() {
       const t = testOf(host.ui.ctl);
-      const top = `<div class="topbar"><div class="wrap"><div class="tb-row"><button class="btn small ghost" data-ctl="home">← Головна</button><span class="tb-title">${t ? esc(t.title) : "Моніторингова робота"}</span>${t && runOn(t) ? `<span class="ctl-timer mono" id="ctl-timer">${mmss(left(t, local(t.id)))}</span>` : ""}</div></div></div>`;
+      const top = `<div class="topbar"><div class="wrap"><div class="tb-row"><button class="btn small ghost" data-ctl="home">${t && T.some(x => x.id === homeOf(t)) ? "← До теми" : "← Головна"}</button><span class="tb-title">${t ? esc(t.title) : "Моніторингова робота"}</span>${t && runOn(t) ? `<span class="ctl-timer mono" id="ctl-timer">${mmss(left(t, local(t.id)))}</span>` : ""}</div></div></div>`;
       if (!t) return top + '<main class="wrap"><p class="empty">Моніторингову роботу не знайдено. Можливо, учитель її видалив.</p></main>';
       const st = local(t.id), r = t.res;
       if (r && r.done) return top + `<main class="wrap">${resultHtml(t)}</main>`;
@@ -149,7 +162,7 @@
         return false;
       }
       const t = testOf(d.id || host.ui.ctl);
-      if (d.ctl === "home") { host.ui.view = "home"; p = null; host.render(); window.scrollTo(0, 0); return true; }
+      if (d.ctl === "home") { const t = testOf(host.ui.ctl), tp = t && homeOf(t); if (tp && T.some(x => x.id === tp)) Object.assign(host.ui, { view: "topic", topic: tp, tab: "tasks" }); else host.ui.view = "home"; p = null; host.render(); window.scrollTo(0, 0); return true; }
       if (d.ctl === "open" && t) { host.ui.view = "ctl"; host.ui.ctl = t.id; p = null; host.render(); window.scrollTo(0, 0); return true; }
       if (!t) return true;
       const st = local(t.id);
@@ -168,6 +181,6 @@
       return true;
     }
 
-    return { homeHtml, pageHtml, onClick, running: () => list().some(t => runOn(t)) };
+    return { homeHtml, bannerHtml, topics, homeOf, pageHtml, onClick, running: () => list().some(t => runOn(t)) };
   };
 })();

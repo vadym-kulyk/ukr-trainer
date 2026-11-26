@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=42"></script>
+<script src="theme.js?v=43"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1178,7 +1178,7 @@ html.dr-on { overflow: hidden; }
 .hero-grid.in .stats dt { font-size: 22px; }
 .login.in, .hero-grid.in .login { gap: 18px; padding: 24px; background: linear-gradient(160deg, #1b2156 0%, #12163a 70%); }
 .me { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; }
-.me-av { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font: 800 19px var(--f-poster); color: #12163a; background: conic-gradient(from 200deg, #8fa6ff, #52c48d, #ffc94d, #ff7aa8, #8fa6ff); box-shadow: 0 0 0 3px #12163a, 0 0 0 5px rgb(143 166 255 / .35); }
+.me-av { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font: 800 19px var(--f-poster); color: #12163a; background: #8fa6ff; }
 .me-t { display: grid; gap: 6px; justify-items: start; min-width: 0; }
 .login .me .pname { font: 800 clamp(20px, 2.2vw, 26px)/1.15 var(--f-poster); letter-spacing: -.02em; color: #fff; overflow-wrap: anywhere; }
 .me-cls { font-size: 13px; font-weight: 700; color: #dfe3ff; background: rgb(143 166 255 / .16); border: 1px solid rgb(143 166 255 / .35); border-radius: 999px; padding: 3px 10px; }
@@ -1198,11 +1198,30 @@ html.dr-on { overflow: hidden; }
 .login .st-h { grid-area: h; } .login .st-of { grid-area: of; } .login .st-big { grid-area: big; align-self: center; font-size: clamp(28px, 3vw, 36px); }
 .login .st-bar { grid-area: bar; margin: 8px 0 6px; } .login .st-line { grid-area: line; }
 @media (max-width: 400px) { .me-av { width: 46px; height: 46px; font-size: 16px; } }
+
+/* Шапка на телефоні: словник, тема й збереження — лише значками */
+.sync-ic { display: none; }
+@media (max-width: 640px) {
+  .brand { gap: 8px; }
+  .brand-tools { gap: 6px; flex: none; }
+  .brand-tools .chip, .brand-tools .theme-btn { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 10px; flex: none; }
+  .dict-btn .lbl, .theme-btn .lbl { display: none; }
+  #sync-chip { position: relative; }
+  #sync-chip .sync-ic { display: block; }
+  #sync-chip #sync-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #sync-chip .dot { position: absolute; right: 6px; bottom: 7px; width: 8px; height: 8px; margin: 0; box-shadow: 0 0 0 2px var(--bg); }
+  .burger { width: 36px; height: 36px; }
+  .brand-l { gap: 8px; }
+}
+/* Моніторингова робота в темі тренажера */
+.ctl-tag { display: inline-block; vertical-align: 2px; margin-left: 4px; font: 700 11px/1 var(--f-text); padding: 4px 7px; border-radius: 6px; background: color-mix(in srgb, var(--violet) 16%, transparent); color: var(--violet-ink); white-space: nowrap; }
+.card.topic.has-ctl { border-color: color-mix(in srgb, var(--violet) 55%, var(--line)); }
+body[data-sec] main > .ctl-home { margin-top: 16px; }
 </style>
 
 </head>
 <body>
-<script src="splash.js?v=42"></script>
+<script src="splash.js?v=43"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
@@ -1212,7 +1231,7 @@ html.dr-on { overflow: hidden; }
         <span data-theme-slot=""></span>
         <button class="chip dict-btn" id="dict-btn" type="button" aria-label="Відкрити тлумачний словник"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5c2.6-.9 4.9-.6 7 .9 2.1-1.5 4.4-1.8 7-.9v11c-2.6-.9-4.9-.6-7 .9-2.1-1.5-4.4-1.8-7-.9z M10 5.4v11"/></svg><span class="lbl">Словник</span></button>
         <button class="chip bell-btn" id="bell-btn" type="button" aria-label="Повідомлення від учителя" hidden><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 14V9a5 5 0 0 1 10 0v5l1.5 1.5h-13z M8.5 17.5h3"/></svg><span class="tab-badge" id="bell-n" hidden></span></button>
-        <span class="chip" id="sync-chip"><span class="dot"></span><span id="sync-text">Прогрес у профілі</span></span>
+        <span class="chip" id="sync-chip" role="status"><svg class="ic sync-ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 15.5h8.2a3.3 3.3 0 0 0 .4-6.6A4.8 4.8 0 0 0 5.4 8 3.8 3.8 0 0 0 6 15.5z"/></svg><span class="dot"></span><span id="sync-text">Прогрес у профілі</span></span>
       </div>
     </div>
     <div class="hero-grid">
@@ -1266,17 +1285,17 @@ html.dr-on { overflow: hidden; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=42"></script>
-<script src="data-extra.js?v=42"></script>
-<script src="data-morph.js?v=42"></script>
-<script src="engine.js?v=42"></script>
-<script src="zno-app.js?v=42"></script>
-<script src="nmt-app.js?v=42"></script>
-<script src="fix-app.js?v=42"></script>
-<script src="theory-app.js?v=42"></script>
-<script src="plus-app.js?v=42"></script>
-<script src="exam-app.js?v=42"></script>
-<script src="show-app.js?v=42"></script>
+<script src="data.js?v=43"></script>
+<script src="data-extra.js?v=43"></script>
+<script src="data-morph.js?v=43"></script>
+<script src="engine.js?v=43"></script>
+<script src="zno-app.js?v=43"></script>
+<script src="nmt-app.js?v=43"></script>
+<script src="fix-app.js?v=43"></script>
+<script src="theory-app.js?v=43"></script>
+<script src="plus-app.js?v=43"></script>
+<script src="exam-app.js?v=43"></script>
+<script src="show-app.js?v=43"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1327,7 +1346,7 @@ html.dr-on { overflow: hidden; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "42", THEORY = {}, theoryLoading = {};
+  const VER = "43", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1607,7 +1626,7 @@ html.dr-on { overflow: hidden; }
       error: ["Немає зв’язку", "bad"]
     };
     const m = M[mode] || M.local; txt.textContent = m[0]; if (m[1]) chip.classList.add(m[1]);
-    chip.title = mode === "local" ? "Учитель ще не підключив таблицю результатів. Звіт можна скопіювати внизу сторінки." : mode === "error" ? "Прогрес збережено на пристрої й буде надіслано, щойно з’явиться інтернет." : "";
+    chip.title = m[0] + (mode === "local" ? ". Учитель ще не підключив таблицю результатів. Звіт можна скопіювати внизу сторінки." : mode === "error" ? ". Прогрес збережено на пристрої й буде надіслано, щойно з’явиться інтернет." : "");
   }
   function scheduleSync(now) {
     const s = me();
@@ -1848,15 +1867,16 @@ html.dr-on { overflow: hidden; }
     const nfix = loggedIn() ? FX.openCount() : 0;
     let h = `<main class="wrap"><div class="navtiles" role="tablist" aria-label="Розділи сайту">${NAV.map(n => `<button class="nt nv-${n.id}" role="tab" aria-selected="${home === n.id}" data-home="${n.id}"><span class="nv-ic">${n.ic}</span><span class="nt-t"><b>${n.title}${n.id === "fix" && nfix ? ` <span class="tab-badge" aria-label="відкритих помилок: ${nfix}">${nfix}</span>` : ""}</b><small>${n.sub}</small></span></button>`).join("")}</div>`;
     if (home === "fix") { app.innerHTML = h + FX.homeHtml() + "</main>"; return; }
-    h += assignHtml() + EX.homeHtml();
+    h += assignHtml();
     if (home === "zno") { app.innerHTML = h + Z.homeHtml() + reportSection() + "</main>"; return; }
     if (home === "nmt") { app.innerHTML = h + NM.homeHtml() + reportSection() + "</main>"; return; }
-    h += PL.todayHtml();
+    h += EX.bannerHtml() + PL.todayHtml();
+    const ctlT = EX.topics();
     S.forEach(sec => {
       h += `<section class="section" data-sec="${sec.id}"><div class="section-h"><span class="mono">${sec.id}</span><h2>${esc(sec.title)}</h2></div><div class="cards">`;
       T.filter(t => t.sec === sec.id).forEach(t => {
         const st = topicStats(t.id);
-        h += `<article class="card topic">${glyphHtml(t)}<h3>${esc(t.title)}</h3>
+        h += `<article class="card topic${ctlT[t.id] ? " has-ctl" : ""}">${glyphHtml(t)}<h3>${esc(t.title)}${ctlT[t.id] ? ' <span class="ctl-tag">Моніторингова робота</span>' : ""}</h3>
           ${miniMap(t.id)}
           <div class="meta"><span>Виконано <b class="mono">${st.a}</b>/100</span><span>Результат <b class="mono">${st.c}%</b> ${st.c === 100 ? '<span class="badge100">100%</span>' : ""}</span></div>
           <div class="acts"><button class="btn small" data-open="${t.id}" data-tab="theory">Теорія</button><button class="btn small primary" data-open="${t.id}" data-tab="tasks">${st.a ? (st.a === 100 ? "Переглянути" : "Продовжити") : "Почати"}</button></div></article>`;
@@ -1889,7 +1909,7 @@ html.dr-on { overflow: hidden; }
       <div class="tb-row"><button class="btn small ghost" data-act="home" aria-label="До списку тем">← Теми</button><span class="tb-title">${t.sec} · ${esc(t.title)}</span></div>
       <div class="tabs three" role="tablist"><button class="tab" role="tab" aria-selected="${ui.tab === "theory"}" data-tabto="theory">Теорія</button><button class="tab" role="tab" aria-selected="${ui.tab === "tasks"}" data-tabto="tasks">Завдання</button><button class="tab" role="tab" aria-selected="${ui.tab === "theorytrain"}" data-tabto="theorytrain">Тренування теорії</button></div>
     </div></div><main class="wrap" style="padding-top:0">`;
-    h += ui.tab === "theory" ? theoryHtml(t) : ui.tab === "theorytrain" ? TH.pageHtml(t) : tasksHtml(t);
+    h += EX.homeHtml(t.id) + (ui.tab === "theory" ? theoryHtml(t) : ui.tab === "theorytrain" ? TH.pageHtml(t) : tasksHtml(t));
     h += "</main>";
     app.innerHTML = h;
   }

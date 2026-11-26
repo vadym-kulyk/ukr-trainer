@@ -9,7 +9,7 @@
     const dueEd = { id: "", v: "" };
     /* мс → значення для <input type="datetime-local"> у місцевому часі */
     const dtVal = ms => { const d = new Date(ms), p = n => String(n).padStart(2, "0"); return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes()); };
-    const ctl = { open: false, id: "", title: "", topics: new Set(), per: 2, min: 30, show: true, due: "", dueT: "23:59", note: "", type: "class", classes: new Set(), keys: new Set(), q: "", iq: "", busy: false };
+    const ctl = { open: false, id: "", title: "", topics: new Set(), home: "", per: 2, min: 30, show: true, due: "", dueT: "23:59", note: "", type: "class", classes: new Set(), keys: new Set(), q: "", iq: "", busy: false };
     let live = null, liveTimer = null, liveBusy = false, parentLinks = {};
 
     /* ── Допоміжне ── */
@@ -268,6 +268,8 @@
       });
       return out + "</div>";
     }
+    /* Тема, у якій учні бачать роботу: обрана вчителем, інакше перша з вибраних. */
+    const homeOf = () => ctl.topics.has(ctl.home) ? ctl.home : [...ctl.topics][0] || "";
     function ctlForm() {
       const iq = ctl.iq.toLowerCase();
       let pick = "";
@@ -279,6 +281,7 @@
       return `<div class="card"><h3>Нова моніторингова робота</h3>
         <label class="field"><span>Назва</span><input class="input" id="ktitle" maxlength="120" placeholder="Напр.: Моніторингова робота «Не з різними частинами мови»" value="${esc(ctl.title)}"></label>
         <div class="field"><span>Теми тренажера (вибрано: ${ctl.topics.size})</span><input class="input" id="kiq" placeholder="Пошук теми" value="${esc(ctl.iq)}"><div class="picker">${pick || '<span class="hint">Нічого не знайдено.</span>'}</div></div>
+        ${ctl.topics.size ? `<label class="field"><span>Тема в тренажері, де учні побачать роботу</span><select class="input" id="khome">${[...ctl.topics].map(id => { const t = T.find(x => x.id === id); return `<option value="${esc(id)}" ${homeOf() === id ? "selected" : ""}>${esc(t ? t.title : id)}</option>`; }).join("")}</select><span class="hint">Робота з’явиться в цій темі тренажера і в її картці на головній. Завдання цієї теми підуть першими.</span></label>` : ""}
         <div class="row"><label class="field"><span>Завдань з кожної теми</span><select class="input" id="kper">${[1, 2, 3, 4, 5, 6, 8, 10].map(v => `<option ${ctl.per === v ? "selected" : ""}>${v}</option>`).join("")}</select></label>
           <label class="field"><span>Час, хвилин</span><input class="input" type="number" id="kmin" min="1" max="240" value="${ctl.min}"></label>
           <label class="field"><span>Термін (дата)</span><input class="input" type="date" id="kdue" value="${esc(ctl.due)}"></label><label class="field"><span>Час</span><input class="input" type="time" id="kdueT" value="${esc(ctl.dueT)}"></label></div>
@@ -429,16 +432,17 @@
           due: h.dayKey(due.getTime()), note: "Ця тема дається важко — попрацюй над нею: спершу теорія й «Тренування теорії», потім завдання.", open: true });
         location.hash = "assign"; setTimeout(() => window.scrollTo(0, 0), 30); h.render(); return true;
       }
-      if (d.act === "ctl-new") { Object.assign(ctl, { open: true, id: "", title: "", topics: new Set(), per: 2, min: 30, show: true, due: "", dueT: "23:59", note: "", type: h.ui.cls ? "class" : "all", classes: new Set(h.ui.cls ? [h.ui.cls] : []), keys: new Set(), q: "", iq: "" }); h.render(); return true; }
+      if (d.act === "ctl-new") { Object.assign(ctl, { open: true, id: "", title: "", topics: new Set(), home: "", per: 2, min: 30, show: true, due: "", dueT: "23:59", note: "", type: h.ui.cls ? "class" : "all", classes: new Set(h.ui.cls ? [h.ui.cls] : []), keys: new Set(), q: "", iq: "" }); h.render(); return true; }
       if (d.act === "ctl-cancel") { ctl.open = false; h.render(); return true; }
       if (d.act === "ctl-save") {
         if (!ctl.topics.size) { h.toast("Оберіть хоча б одну тему"); return true; }
         if ((ctl.type === "class" && !ctl.classes.size) || (ctl.type === "keys" && !ctl.keys.size)) { h.toast("Оберіть, кому призначити"); return true; }
         const items = [];
-        [...ctl.topics].forEach(id => { const idx = E.shuffle(Math.random, Array.from({ length: N }, (_, i) => i)).slice(0, ctl.per); idx.forEach(i => items.push([id, i])); });
+        const home = homeOf();
+        [home, ...[...ctl.topics].filter(id => id !== home)].forEach(id => { const idx = E.shuffle(Math.random, Array.from({ length: N }, (_, i) => i)).slice(0, ctl.per); idx.forEach(i => items.push([id, i])); });
         ctl.busy = true; h.render.keepScroll = true; h.render();
         const due = ctl.due ? new Date(ctl.due + "T" + (ctl.dueT || "23:59") + ":00").getTime() : 0;
-        const r = await h.api(Object.assign({ action: "admin_test_save", title: ctl.title, items, min: ctl.min, show: ctl.show, due, note: ctl.note }, h.toPayload(ctl)));
+        const r = await h.api(Object.assign({ action: "admin_test_save", title: ctl.title, items, home, min: ctl.min, show: ctl.show, due, note: ctl.note }, h.toPayload(ctl)));
         ctl.busy = false;
         if (r && r.ok) { ctl.open = false; h.toast("Моніторингову роботу збережено й надіслано"); await h.refreshQuiet(); } else { h.toast("Не вдалося зберегти"); h.render(); }
         return true;
@@ -534,6 +538,7 @@
     function onChange(el) {
       if (el.dataset.ctladdkey) { if (el.checked) add.keys.add(el.dataset.ctladdkey); else add.keys.delete(el.dataset.ctladdkey); h.render.keepScroll = true; h.render(); return true; }
       if (el.dataset.ctltopic) { if (el.checked) ctl.topics.add(el.dataset.ctltopic); else ctl.topics.delete(el.dataset.ctltopic); h.render.keepScroll = true; h.render(); return true; }
+      if (el.id === "khome") { ctl.home = el.value; return true; }
       if (el.id === "kper") { ctl.per = +el.value; h.render.keepScroll = true; h.render(); return true; }
       if (el.id === "kdue") { ctl.due = el.value; return true; }
       if (el.id === "kdueT") { ctl.dueT = el.value; return true; }
