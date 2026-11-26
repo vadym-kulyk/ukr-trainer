@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=41"></script>
+<script src="theme.js?v=42"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1124,18 +1124,16 @@ body.compact .hero-grid { display: none; }
 :root[data-theme="dark"] .nv-zno { --nc: #52c48d; --nc-on: #062a19; --nc-ink: #6fd4a3; } :root[data-theme="dark"] .nv-nmt { --nc: #ffc94d; --nc-ink: #ffd36b; } :root[data-theme="dark"] .nv-fix { --nc: #ff7aa8; --nc-on: #2e0716; --nc-ink: #ff94bb; }
 .nv-ic svg, .burger svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
 .navtiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-block: 18px 22px; }
-.nt { display: grid; justify-items: start; align-content: start; gap: 10px; padding: 16px; min-width: 0; border: 2px solid color-mix(in srgb, var(--nc) 45%, var(--line)); border-radius: 18px; background: color-mix(in srgb, var(--nc) 9%, var(--bg)); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s; }
+.nt { display: grid; justify-items: start; align-content: start; gap: 10px; padding: 16px; min-width: 0; border: 2px solid var(--line); border-radius: 18px; background: var(--bg); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s; }
 .nt .nv-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--nc); color: var(--nc-on); }
 .nt .nv-ic svg { width: 28px; height: 28px; }
 .nt-t { display: grid; gap: 3px; min-width: 0; }
-.nt b { font: 800 17px/1.2 var(--f-display); letter-spacing: -.01em; }
+.nt b { font: 800 17px/1.2 var(--f-display); letter-spacing: -.01em; transition: color .15s; }
 .nt small { font-size: 13px; line-height: 1.35; color: var(--muted); }
-.nt:hover { border-color: var(--nc); transform: translateY(-2px); box-shadow: 0 8px 20px color-mix(in srgb, var(--nc) 22%, transparent); }
+.nt:hover { border-color: color-mix(in srgb, var(--nc) 55%, var(--line)); transform: translateY(-2px); box-shadow: 0 8px 20px rgb(16 22 42 / .07); }
 .nt:focus-visible { outline: 3px solid var(--nc); outline-offset: 3px; }
-.nt[aria-selected="true"] { background: var(--nc); border-color: var(--nc); color: var(--nc-on); box-shadow: 0 10px 24px color-mix(in srgb, var(--nc) 35%, transparent); }
-.nt[aria-selected="true"] .nv-ic { background: color-mix(in srgb, var(--nc-on) 18%, transparent); color: var(--nc-on); }
-.nt[aria-selected="true"] small { color: inherit; opacity: .85; }
-.nt[aria-selected="true"] .tab-badge { background: var(--nc-on); color: var(--nc); }
+.nt[aria-selected="true"] { border-color: var(--nc); box-shadow: 0 0 0 4px color-mix(in srgb, var(--nc) 18%, transparent), 0 10px 24px color-mix(in srgb, var(--nc) 14%, transparent); }
+.nt[aria-selected="true"] b { color: var(--nc-ink); }
 @media (max-width: 760px) { .navtiles { grid-template-columns: 1fr 1fr; } }
 .brand-l { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .burger { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); cursor: pointer; padding: 0; }
@@ -1204,7 +1202,7 @@ html.dr-on { overflow: hidden; }
 
 </head>
 <body>
-<script src="splash.js?v=41"></script>
+<script src="splash.js?v=42"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
@@ -1268,17 +1266,17 @@ html.dr-on { overflow: hidden; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=41"></script>
-<script src="data-extra.js?v=41"></script>
-<script src="data-morph.js?v=41"></script>
-<script src="engine.js?v=41"></script>
-<script src="zno-app.js?v=41"></script>
-<script src="nmt-app.js?v=41"></script>
-<script src="fix-app.js?v=41"></script>
-<script src="theory-app.js?v=41"></script>
-<script src="plus-app.js?v=41"></script>
-<script src="exam-app.js?v=41"></script>
-<script src="show-app.js?v=41"></script>
+<script src="data.js?v=42"></script>
+<script src="data-extra.js?v=42"></script>
+<script src="data-morph.js?v=42"></script>
+<script src="engine.js?v=42"></script>
+<script src="zno-app.js?v=42"></script>
+<script src="nmt-app.js?v=42"></script>
+<script src="fix-app.js?v=42"></script>
+<script src="theory-app.js?v=42"></script>
+<script src="plus-app.js?v=42"></script>
+<script src="exam-app.js?v=42"></script>
+<script src="show-app.js?v=42"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1329,7 +1327,7 @@ html.dr-on { overflow: hidden; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "41", THEORY = {}, theoryLoading = {};
+  const VER = "42", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
