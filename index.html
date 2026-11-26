@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=46"></script>
+<script src="theme.js?v=47"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1224,78 +1224,95 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
 @media (min-width: 641px) { .hero-grid.in .login .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* ══ Головна «Літери» (варіант C): темна шапка учня, «Продовжити», розділи-літери, однотонні меню ══ */
-body.me-in:not(.compact) .hero { --bg: #12163a; --surface: #1b2050; --surface-2: #262c66; --line: #2f3670; --text: #fff; --muted: #a7abd0;
-  background: #12163a; background-image: none; color: #fff; border-bottom: 0; }
-body.me-in:not(.compact) .hero .wordmark { color: #fff; }
+/* Кольори: світла тема — світла шапка й темна смуга «Продовжити»; темна тема — темна шапка й біла смуга */
+.hero, .secnav { --c-ink: #12163a; --c-sub: #5b6480; --c-rule: #dfe4ee; --c-big: #dfe3ff; --c-chip: #c9cfe6; --c-chip-bg: rgb(255 255 255 / .7);
+  --k1: #2445c7; --k2: #1e8a5a; --k3: #b07300; --k4: #d6336c;
+  --cont-bg: #12163a; --cont-ink: #fff; --cont-sub: #a7abd0; --cont-g: #8fa6ff; --cont-bar: #2a3068; --cont-fill: #8fa6ff; --go-bg: #fff; --go-ink: #12163a;
+  --sn-line: #dfe4ee; --sn-bg: #fff; --sn-hover: #f4f6fb; --sn-on: #eef1ff; --sn-sub: #5b6480; --sn-n: #c9cfe6; --sn-focus: #12163a; }
+:root[data-theme="dark"] .hero, :root[data-theme="dark"] .secnav { --c-ink: #fff; --c-sub: #a7abd0; --c-rule: #2a3068; --c-big: var(--cobalt); --c-chip: #3b43a0; --c-chip-bg: rgb(18 22 58 / .6);
+  --k1: #8fa6ff; --k2: #52c48d; --k3: #ffc94d; --k4: #ff7aa8;
+  --cont-bg: #fff; --cont-ink: #12163a; --cont-sub: #5b6480; --cont-g: var(--cobalt); --cont-bar: #e3e6f2; --cont-fill: var(--cobalt); --go-bg: var(--cobalt); --go-ink: #fff;
+  --sn-line: #262c66; --sn-bg: #12163a; --sn-hover: #181d4a; --sn-on: #222a6e; --sn-sub: #8f94bf; --sn-n: #3b43a0; --sn-focus: #fff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero, :root:not([data-theme="light"]) .secnav { --c-ink: #fff; --c-sub: #a7abd0; --c-rule: #2a3068; --c-big: var(--cobalt); --c-chip: #3b43a0; --c-chip-bg: rgb(18 22 58 / .6);
+  --k1: #8fa6ff; --k2: #52c48d; --k3: #ffc94d; --k4: #ff7aa8;
+  --cont-bg: #fff; --cont-ink: #12163a; --cont-sub: #5b6480; --cont-g: var(--cobalt); --cont-bar: #e3e6f2; --cont-fill: var(--cobalt); --go-bg: var(--cobalt); --go-ink: #fff;
+  --sn-line: #262c66; --sn-bg: #12163a; --sn-hover: #181d4a; --sn-on: #222a6e; --sn-sub: #8f94bf; --sn-n: #3b43a0; --sn-focus: #fff; } }
+:root[data-theme="dark"] body.me-in:not(.compact) .hero { --bg: #12163a; --surface: #1b2050; --surface-2: #262c66; --line: #2f3670; --text: #fff; --muted: #a7abd0; background: #12163a; background-image: none; color: #fff; border-bottom: 0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body.me-in:not(.compact) .hero { --bg: #12163a; --surface: #1b2050; --surface-2: #262c66; --line: #2f3670; --text: #fff; --muted: #a7abd0; background: #12163a; background-image: none; color: #fff; border-bottom: 0; } }
+body.me-in:not(.compact) .hero { border-bottom: 0; }
+body.me-in:not(.compact) .hero .wordmark { color: var(--c-ink); }
 body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
 .hero-grid.in .login { background: none; padding: 0; border-radius: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 0 28px; align-items: end; }
 .hero-grid.in .login .namebox { position: relative; overflow: hidden; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; min-height: 230px; padding: 8px 0 22px; }
-.cme-big { position: absolute; left: -14px; top: 0; font: 900 300px/.74 var(--f-poster); letter-spacing: -.06em; color: var(--cobalt); pointer-events: none; user-select: none; }
-.cme-name { position: relative; margin: 0; font: 800 clamp(30px, 3.6vw, 42px)/1.05 var(--f-poster); letter-spacing: -.03em; color: #fff; overflow-wrap: anywhere; }
+.cme-big { position: absolute; left: -14px; top: 0; font: 900 300px/.74 var(--f-poster); letter-spacing: -.06em; color: var(--c-big); pointer-events: none; user-select: none; }
+.cme-name { position: relative; margin: 0; font: 800 clamp(30px, 3.6vw, 42px)/1.05 var(--f-poster); letter-spacing: -.03em; color: var(--c-ink); overflow-wrap: anywhere; }
 .cme-row { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
-.cme-cls { font: 600 14px var(--f-text); color: #c9cdfb; border: 1px solid #3b43a0; border-radius: 6px; padding: 3px 10px; background: rgb(18 22 58 / .6); }
-.cme-out { font: 600 13px var(--f-text); color: #c9cdfb; background: rgb(18 22 58 / .6); border: 0; padding: 4px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.cme-out:hover { color: #fff; }
+.cme-cls { font: 600 14px var(--f-text); color: var(--c-sub); border: 1px solid var(--c-chip); border-radius: 6px; padding: 3px 10px; background: var(--c-chip-bg); }
+.cme-out { font: 600 13px var(--f-text); color: var(--c-sub); background: var(--c-chip-bg); border: 0; padding: 4px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.cme-out:hover { color: var(--c-ink); }
 .hero-grid.in .login .st-band { background: none; padding: 0 0 22px; border-radius: 0; display: block; }
-.cst { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 16px; padding: 14px 0; border-top: 1px solid #2a3068; }
-.cst:last-child { border-bottom: 1px solid #2a3068; }
+.cst { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 16px; padding: 14px 0; border-top: 1px solid var(--c-rule); }
+.cst:last-child { border-bottom: 1px solid var(--c-rule); }
 .cst-k { grid-column: 1; font: 700 15px var(--f-text); color: var(--c); }
-.cst-s { grid-column: 1; font-size: 13px; color: #a7abd0; }
-.cst-s b { color: #fff; }
-.cst-v { grid-column: 2; grid-row: 1 / 3; text-align: right; font: 800 34px/1 var(--f-poster); letter-spacing: -.03em; color: #fff; white-space: nowrap; }
-.cst-v small { display: block; font: 600 12px var(--f-text); color: #a7abd0; letter-spacing: 0; margin-bottom: 4px; }
-.cst-v i { font: 600 14px var(--f-text); font-style: normal; color: #a7abd0; letter-spacing: 0; margin-left: 2px; }
+.cst-s { grid-column: 1; font-size: 13px; color: var(--c-sub); }
+.cst-s b { color: var(--c-ink); }
+.cst-v { grid-column: 2; grid-row: 1 / 3; text-align: right; font: 800 34px/1 var(--f-poster); letter-spacing: -.03em; color: var(--c-ink); white-space: nowrap; }
+.cst-v small { display: block; font: 600 12px var(--f-text); color: var(--c-sub); letter-spacing: 0; margin-bottom: 4px; }
+.cst-v i { font: 600 14px var(--f-text); font-style: normal; color: var(--c-sub); letter-spacing: 0; margin-left: 2px; }
 .hero-grid.in .me-hint { grid-column: 1 / -1; margin: 0 0 12px; }
 /* «Продовжити з того місця, де зупинився» */
-.cont { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px 22px; padding: 18px 24px; margin: 4px 0 14px; background: #fff; color: #12163a; border-radius: 16px; }
+.cont { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px 22px; padding: 18px 24px; margin: 4px 0 14px; background: var(--cont-bg); color: var(--cont-ink); border-radius: 16px; }
 .cont:empty, body.compact .cont { display: none; }
-.cont-g { font: 900 60px/.8 var(--f-poster); color: var(--cobalt); letter-spacing: -.05em; min-width: 52px; }
-.cont-t small { display: block; font: 600 13px var(--f-text); color: #5b6480; }
+.cont-g { font: 900 60px/.8 var(--f-poster); color: var(--cont-g); letter-spacing: -.05em; min-width: 52px; }
+.cont-t small { display: block; font: 600 13px var(--f-text); color: var(--cont-sub); }
 .cont-t b { display: block; margin-top: 3px; font: 800 22px/1.15 var(--f-poster); letter-spacing: -.025em; }
-.cont-t em { font: 500 14px var(--f-text); font-style: normal; color: #5b6480; }
-.cont-bar { display: block; max-width: 360px; height: 5px; margin-top: 10px; border-radius: 3px; background: #e3e6f2; overflow: hidden; }
-.cont-bar i { display: block; height: 100%; background: var(--cobalt); }
-.cont-go { font: 800 15px var(--f-poster); color: #fff; background: var(--cobalt); border: 0; border-radius: 10px; padding: 15px 24px; white-space: nowrap; cursor: pointer; }
+.cont-t em { font: 500 14px var(--f-text); font-style: normal; color: var(--cont-sub); }
+.cont-bar { display: block; max-width: 360px; height: 5px; margin-top: 10px; border-radius: 3px; background: var(--cont-bar); overflow: hidden; }
+.cont-bar i { display: block; height: 100%; background: var(--cont-fill); }
+.cont-go { font: 800 15px var(--f-poster); color: var(--go-ink); background: var(--go-bg); border: 0; border-radius: 10px; padding: 15px 24px; white-space: nowrap; cursor: pointer; }
 .cont-go:hover { filter: brightness(1.15); }
-.cont-go:focus-visible { outline: 3px solid #12163a; outline-offset: 2px; }
+.cont-go:focus-visible { outline: 3px solid var(--cont-g); outline-offset: 2px; }
 /* Розділи-літери (комп’ютер) */
-.secnav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 6px 0 16px; background: #262c66; border: 1px solid #262c66; border-radius: 16px; overflow: hidden; }
+.secnav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 6px 0 16px; background: var(--sn-line); border: 1px solid var(--sn-line); border-radius: 16px; overflow: hidden; }
 .secnav:empty, body.compact .secnav { display: none; }
-.sn { --c: #8fa6ff; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px 12px; padding: 14px 16px 16px; background: #12163a; color: #c9cdfb; border: 0; font: inherit; text-align: left; cursor: pointer; min-width: 0; }
-.sn.nv-zno { --c: #52c48d; } .sn.nv-nmt { --c: #ffc94d; } .sn.nv-fix { --c: #ff7aa8; }
+.sn { --c: var(--k1); display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px 12px; padding: 14px 16px 16px; background: var(--sn-bg); color: var(--c-sub); border: 0; font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.sn.nv-zno { --c: var(--k2); } .sn.nv-nmt { --c: var(--k3); } .sn.nv-fix { --c: var(--k4); }
 .sn-g { grid-row: span 2; width: 36px; font: 900 34px/1 var(--f-poster); color: var(--c); }
-.sn b { font: 700 16px/1.2 var(--f-text); color: #fff; }
-.sn small { font-size: 13px; color: #8f94bf; }
-.sn:hover { background: #181d4a; }
-.sn[aria-current] { background: #222a6e; box-shadow: inset 0 -4px 0 var(--c); }
-.sn[aria-current] small { color: #c9cdfb; }
-.sn:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
-.sn-n { display: inline-block; margin-left: 6px; vertical-align: 2px; font: 700 11px/16px var(--f-text); color: #c9cdfb; border: 1px solid #3b43a0; border-radius: 9px; padding: 0 6px; }
+.sn b { font: 700 16px/1.2 var(--f-text); color: var(--c-ink); }
+.sn small { font-size: 13px; color: var(--sn-sub); }
+.sn:hover { background: var(--sn-hover); }
+.sn[aria-current] { background: var(--sn-on); box-shadow: inset 0 -4px 0 var(--c); }
+.sn[aria-current] small { color: var(--c-sub); }
+.sn:focus-visible { outline: 3px solid var(--sn-focus); outline-offset: -3px; }
+.sn-n { display: inline-block; margin-left: 6px; vertical-align: 2px; font: 700 11px/16px var(--f-text); color: var(--c-sub); border: 1px solid var(--sn-n); border-radius: 9px; padding: 0 6px; }
 @media (max-width: 900px) { .sn { padding: 12px; gap: 2px 8px; } .sn-g { font-size: 26px; width: 26px; } .sn b { font-size: 14px; } .sn small { display: none; } }
-/* Бокове меню: однотонне, тонкі значки */
-.drawer { --bg: #0d1030; --surface: #161b46; --line: #2a3068; --text: #fff; --muted: #8f94bf; background: #0d1030; color: #fff; box-shadow: 8px 0 32px rgb(0 0 0 / .35); }
-.drawer .wordmark { color: #fff; }
-.drawer .burger { background: none; border-color: #2f3670; color: #fff; }
+/* Бокове й нижнє меню: однотонні, тонкі значки; кольори за темою */
+.drawer, .bnav { --m-bg: #fff; --m-ink: #12163a; --m-sub: #5b6480; --m-ic: #6b7193; --m-line: #e3e6f0; --m-hover: #f2f4fa; --m-on-bg: #12163a; --m-on-ink: #fff; --m-n: #c9cfe6; }
+:root[data-theme="dark"] .drawer, :root[data-theme="dark"] .bnav { --m-bg: #0d1030; --m-ink: #fff; --m-sub: #c9cdfb; --m-ic: #8f94bf; --m-line: #2a3068; --m-hover: #161b46; --m-on-bg: #fff; --m-on-ink: #12163a; --m-n: #3b43a0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .drawer, :root:not([data-theme="light"]) .bnav { --m-bg: #0d1030; --m-ink: #fff; --m-sub: #c9cdfb; --m-ic: #8f94bf; --m-line: #2a3068; --m-hover: #161b46; --m-on-bg: #fff; --m-on-ink: #12163a; --m-n: #3b43a0; } }
+.drawer { background: var(--m-bg); color: var(--m-ink); box-shadow: 8px 0 32px rgb(0 0 0 / .3); }
+.drawer .wordmark { color: var(--m-ink); }
+.drawer .burger { background: none; border-color: var(--m-line); color: var(--m-ink); }
+.drawer .dr-cap { color: var(--m-ic); }
 .dr-list { gap: 2px; }
-.dr-it { position: relative; grid-template-columns: 22px minmax(0, 1fr); gap: 14px; padding: 12px; border-radius: 10px; color: #c9cdfb; }
-.dr-it .nv-ic { position: static; width: 22px; height: 22px; border-radius: 0; background: none !important; color: #8f94bf !important; }
+.dr-it { position: relative; grid-template-columns: 22px minmax(0, 1fr); gap: 14px; padding: 12px; border-radius: 10px; color: var(--m-sub); }
+.dr-it .nv-ic { position: static; width: 22px; height: 22px; border-radius: 0; background: none !important; color: var(--m-ic) !important; }
 .dr-it .nv-ic svg { width: 20px; height: 20px; }
-.dr-it:hover { background: #161b46; }
-.dr-it[aria-current] { background: #fff; color: #12163a; font-weight: 800; }
-.dr-it[aria-current] .nv-ic { color: #12163a !important; }
-.dr-it .nv-dot { top: 50%; right: 12px; transform: translateY(-50%); background: none; color: #c9cdfb; border: 1px solid #3b43a0; font-size: 11px; line-height: 16px; height: 16px; }
-.dr-it[aria-current] .nv-dot { color: #12163a; border-color: #c5c9e3; }
-/* Нижнє меню на телефоні: однотонне й низьке */
+.dr-it:hover { background: var(--m-hover); }
+.dr-it[aria-current] { background: var(--m-on-bg); color: var(--m-on-ink); font-weight: 800; }
+.dr-it[aria-current] .nv-ic { color: var(--m-on-ink) !important; }
+.dr-it .nv-dot { top: 50%; right: 12px; transform: translateY(-50%); background: none; color: var(--m-sub); border: 1px solid var(--m-n); font-size: 11px; line-height: 16px; height: 16px; }
+.dr-it[aria-current] .nv-dot { color: var(--m-on-ink); border-color: currentColor; }
 @media (max-width: 640px) {
   .secnav { display: none; }
-  .bnav { background: #0d1030; border-top: 1px solid #2a3068; box-shadow: none; padding: 0 max(4px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(4px, env(safe-area-inset-left, 0px)); }
-  .bn { position: relative; min-height: 50px; gap: 2px; padding: 7px 2px 8px; color: #8f94bf; font: 600 11px/1.1 var(--f-text); }
+  .bnav { background: var(--m-bg); border-top: 1px solid var(--m-line); box-shadow: none; padding: 0 max(4px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(4px, env(safe-area-inset-left, 0px)); }
+  .bn { position: relative; min-height: 50px; gap: 2px; padding: 7px 2px 8px; color: var(--m-ic); font: 600 11px/1.1 var(--f-text); }
   .bn .nv-ic { width: auto; height: auto; border-radius: 0; background: none !important; color: inherit !important; }
   .bn .nv-ic svg { width: 20px; height: 20px; }
-  .bn[aria-current] { color: #fff; font-weight: 800; }
-  .bn[aria-current]::before { content: ""; position: absolute; top: -1px; left: 30%; right: 30%; height: 2px; border-radius: 2px; background: #fff; }
-  .bn .nv-dot { top: -4px; right: -16px; background: #0d1030; color: #c9cdfb; border: 1px solid #3b43a0; font-size: 10px; line-height: 14px; height: 14px; min-width: 12px; padding: 0 4px; }
-  .bn:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+  .bn[aria-current] { color: var(--m-ink); font-weight: 800; }
+  .bn[aria-current]::before { content: ""; position: absolute; top: -1px; left: 30%; right: 30%; height: 2px; border-radius: 2px; background: var(--m-ink); }
+  .bn .nv-dot { top: -4px; right: -16px; background: var(--m-bg); color: var(--m-sub); border: 1px solid var(--m-n); font-size: 10px; line-height: 14px; height: 14px; min-width: 12px; padding: 0 4px; }
+  .bn:focus-visible { outline: 2px solid var(--m-ink); outline-offset: -2px; }
   body:not(.exam):not(.showmode) { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
   body:not(.exam):not(.showmode) .fab, body:not(.exam):not(.showmode) .toast { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
   body:not(.exam):not(.showmode) .selchip { bottom: calc(130px + env(safe-area-inset-bottom, 0px)); }
@@ -1315,7 +1332,7 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
 
 </head>
 <body>
-<script src="splash.js?v=46"></script>
+<script src="splash.js?v=47"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
@@ -1381,17 +1398,17 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=46"></script>
-<script src="data-extra.js?v=46"></script>
-<script src="data-morph.js?v=46"></script>
-<script src="engine.js?v=46"></script>
-<script src="zno-app.js?v=46"></script>
-<script src="nmt-app.js?v=46"></script>
-<script src="fix-app.js?v=46"></script>
-<script src="theory-app.js?v=46"></script>
-<script src="plus-app.js?v=46"></script>
-<script src="exam-app.js?v=46"></script>
-<script src="show-app.js?v=46"></script>
+<script src="data.js?v=47"></script>
+<script src="data-extra.js?v=47"></script>
+<script src="data-morph.js?v=47"></script>
+<script src="engine.js?v=47"></script>
+<script src="zno-app.js?v=47"></script>
+<script src="nmt-app.js?v=47"></script>
+<script src="fix-app.js?v=47"></script>
+<script src="theory-app.js?v=47"></script>
+<script src="plus-app.js?v=47"></script>
+<script src="exam-app.js?v=47"></script>
+<script src="show-app.js?v=47"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1442,7 +1459,7 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "46", THEORY = {}, theoryLoading = {};
+  const VER = "47", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1884,9 +1901,9 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
     const pc = (x, y) => Math.round(x / y * 100);
     const fmt = n => n.toLocaleString("uk-UA");
     const row = (c, title, line, cap, big) => `<div class="cst" style="--c:${c}"><span class="cst-k">${title}</span><span class="cst-v"><small>${cap}</small>${big}</span><span class="cst-s">${line}</span></div>`;
-    box.innerHTML = row("#8fa6ff", "Тренажер", `виконано <b>${fmt(a)}</b> із ${fmt(total)}`, "правильно", a ? pc(c, a) + "&nbsp;%" : "—")
-      + row("#52c48d", "Завдання ЗНО", `виконано <b>${fmt(z.done)}</b> із ${fmt(zt)}`, "правильно", z.done ? pc(z.ok, z.done) + "&nbsp;%" : "—")
-      + row("#ffc94d", "Симуляції НМТ", nm.sims ? `пройдено <b>${nm.tests}</b> із ${nm.total || "—"} тестів` : "спробуйте перший тест", "найкращий бал", nm.bestS ? `${nm.bestS}<i>/200</i>` : "—");
+    box.innerHTML = row("var(--k1)", "Тренажер", `виконано <b>${fmt(a)}</b> із ${fmt(total)}`, "правильно", a ? pc(c, a) + "&nbsp;%" : "—")
+      + row("var(--k2)", "Завдання ЗНО", `виконано <b>${fmt(z.done)}</b> із ${fmt(zt)}`, "правильно", z.done ? pc(z.ok, z.done) + "&nbsp;%" : "—")
+      + row("var(--k3)", "Симуляції НМТ", nm.sims ? `пройдено <b>${nm.tests}</b> із ${nm.total || "—"} тестів` : "спробуйте перший тест", "найкращий бал", nm.bestS ? `${nm.bestS}<i>/200</i>` : "—");
     $("#cont").innerHTML = contHtml(s);
   }
   /* «Продовжити з того місця, де зупинився»: остання відкрита тема тренажера, інакше перша незавершена. */
