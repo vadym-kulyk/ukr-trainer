@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=40"></script>
+<script src="theme.js?v=41"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1173,11 +1173,38 @@ html.dr-on { overflow: hidden; }
   body:not(.exam):not(.showmode) .selchip { bottom: calc(146px + env(safe-area-inset-bottom, 0px)); }
 }
 @media (prefers-reduced-motion: reduce) { .nt, .drawer, .drawer-bg { transition: none; } .nt:hover { transform: none; } }
+
+/* ── Картка учня: ім’я, клас і статистика в одній картці ── */
+.hero-grid.in { grid-template-columns: minmax(0, 9fr) minmax(0, 11fr); }
+.hero-grid.in .about h1 { font-size: clamp(26px, 3vw, 36px); }
+.hero-grid.in .stats dt { font-size: 22px; }
+.login.in, .hero-grid.in .login { gap: 18px; padding: 24px; background: linear-gradient(160deg, #1b2156 0%, #12163a 70%); }
+.me { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; }
+.me-av { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; font: 800 19px var(--f-poster); color: #12163a; background: conic-gradient(from 200deg, #8fa6ff, #52c48d, #ffc94d, #ff7aa8, #8fa6ff); box-shadow: 0 0 0 3px #12163a, 0 0 0 5px rgb(143 166 255 / .35); }
+.me-t { display: grid; gap: 6px; justify-items: start; min-width: 0; }
+.login .me .pname { font: 800 clamp(20px, 2.2vw, 26px)/1.15 var(--f-poster); letter-spacing: -.02em; color: #fff; overflow-wrap: anywhere; }
+.me-cls { font-size: 13px; font-weight: 700; color: #dfe3ff; background: rgb(143 166 255 / .16); border: 1px solid rgb(143 166 255 / .35); border-radius: 999px; padding: 3px 10px; }
+.login .me .btn { border-radius: 999px; }
+.login .st-band { background: none; padding: 0; border-radius: 0; display: grid; gap: 12px; }
+.login .st-head > span:first-child { font: 700 13px var(--f-text); color: var(--muted); }
+.login .st-head { font-size: 14px; }
+.login .st-tile { padding: 14px; border-radius: 16px; background: rgb(255 255 255 / .04); border: 1px solid rgb(255 255 255 / .08); position: relative; overflow: hidden; }
+.login .st-tile::before { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 3px; background: var(--c); }
+.st-tile.st-n { --c: #ffc94d; }
+.login .st-line { font-size: 13px; }
+.me-hint { margin: 0; font-size: 12.5px; line-height: 1.45; color: #8f94bf; }
+@media (max-width: 900px) { .hero-grid.in { grid-template-columns: 1fr; } }
+.login .st-grid { grid-template-columns: 1fr; gap: 8px; }
+.login .st-tile { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "h big" "of big" "bar bar" "line line"; column-gap: 12px; row-gap: 0; padding: 12px 14px 12px 18px; }
+.login .st-tile::before { right: auto; bottom: 0; width: 4px; height: auto; }
+.login .st-h { grid-area: h; } .login .st-of { grid-area: of; } .login .st-big { grid-area: big; align-self: center; font-size: clamp(28px, 3vw, 36px); }
+.login .st-bar { grid-area: bar; margin: 8px 0 6px; } .login .st-line { grid-area: line; }
+@media (max-width: 400px) { .me-av { width: 46px; height: 46px; font-size: 16px; } }
 </style>
 
 </head>
 <body>
-<script src="splash.js?v=40"></script>
+<script src="splash.js?v=41"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
@@ -1198,9 +1225,10 @@ html.dr-on { overflow: hidden; }
       </section>
       <section class="login" aria-label="Профіль учня">
         <div class="namebox" id="profilebox"></div>
+        <section class="overall st-band" id="overall" aria-label="Моя статистика"></section>
+        <p class="hint me-hint" id="me-hint" hidden></p>
       </section>
     </div>
-    <section class="overall st-band" id="overall" aria-label="Моя статистика"></section>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
   </div>
 </header>
@@ -1240,17 +1268,17 @@ html.dr-on { overflow: hidden; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=40"></script>
-<script src="data-extra.js?v=40"></script>
-<script src="data-morph.js?v=40"></script>
-<script src="engine.js?v=40"></script>
-<script src="zno-app.js?v=40"></script>
-<script src="nmt-app.js?v=40"></script>
-<script src="fix-app.js?v=40"></script>
-<script src="theory-app.js?v=40"></script>
-<script src="plus-app.js?v=40"></script>
-<script src="exam-app.js?v=40"></script>
-<script src="show-app.js?v=40"></script>
+<script src="data.js?v=41"></script>
+<script src="data-extra.js?v=41"></script>
+<script src="data-morph.js?v=41"></script>
+<script src="engine.js?v=41"></script>
+<script src="zno-app.js?v=41"></script>
+<script src="nmt-app.js?v=41"></script>
+<script src="fix-app.js?v=41"></script>
+<script src="theory-app.js?v=41"></script>
+<script src="plus-app.js?v=41"></script>
+<script src="exam-app.js?v=41"></script>
+<script src="show-app.js?v=41"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1301,7 +1329,7 @@ html.dr-on { overflow: hidden; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "40", THEORY = {}, theoryLoading = {};
+  const VER = "41", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1434,16 +1462,23 @@ html.dr-on { overflow: hidden; }
     if (!v) return;
     ["first", "last", "cls", "pin", "pin2"].forEach(k => { const el = $("#p-" + k); if (el && v[k]) el.value = v[k]; });
   }
+  const meHint = $("#me-hint"), heroGrid = $(".hero-grid");
   function renderProfile() {
     const box = $("#profilebox"), s = me();
     if (loggedIn()) {
       box.classList.remove("need");
-      box.innerHTML = `<label>Профіль учня</label><div class="namerow"><span class="pname"></span><button class="btn small" id="p-logout" type="button">Вийти</button></div>
-        <span class="hint">${RESULTS_URL ? "Прогрес зберігається в профілі. На іншому пристрої увійдіть з тими самими ім’ям, класом і PIN-кодом." : "Прогрес зберігається на цьому пристрої."}${RESULTS_URL ? " Під час завдань учитель бачить час відповіді й виходи зі сторінки." : ""}</span>`;
-      box.querySelector(".pname").textContent = fullName(s);
+      const ini = String(s.name || "").split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+      box.innerHTML = `<div class="me"><span class="me-av" aria-hidden="true"></span><div class="me-t"><b class="pname"></b>${s.cls ? '<span class="me-cls"></span>' : ""}</div><button class="btn small" id="p-logout" type="button">Вийти</button></div>`;
+      box.querySelector(".me-av").textContent = ini || "?";
+      box.querySelector(".pname").textContent = s.name;
+      if (s.cls) box.querySelector(".me-cls").textContent = s.cls + " клас";
+      meHint.hidden = false;
+      meHint.textContent = RESULTS_URL ? "Прогрес зберігається в профілі: на іншому пристрої увійдіть з тими самими ім’ям, класом і PIN-кодом. Під час завдань учитель бачить час відповіді й виходи зі сторінки." : "Прогрес зберігається на цьому пристрої.";
+      heroGrid.classList.add("in");
       return;
     }
     const reg = pmode === "register";
+    meHint.hidden = true; heroGrid.classList.remove("in");
     box.classList.add("need");
     box.innerHTML = `<div class="ptabs" role="tablist"><button class="tab" type="button" role="tab" aria-selected="${!reg}" data-pmode="login">Увійти</button><button class="tab" type="button" role="tab" aria-selected="${reg}" data-pmode="register">Створити профіль</button></div>
       <form id="pform" class="pform" novalidate>
@@ -1736,7 +1771,7 @@ html.dr-on { overflow: hidden; }
       <div class="st-bar" aria-hidden="true"><i style="width:${Math.min(100, fill)}%"></i></div><span class="st-line">${line}</span></div>`;
     const acc = (ok, done) => done ? `правильно <b>${pc(ok, done)}%</b> (${fmt(ok)} з ${fmt(done)})` : "ще немає відповідей";
     const all = a + z.done, allOk = c + z.ok;
-    box.innerHTML = `<div class="st-head"><span>Моя статистика</span>${all ? `<span>${fmt(all)} відповідей · правильно <b>${pc(allOk, all)}%</b></span>` : ""}</div>
+    box.innerHTML = `<div class="st-head"><span>Моя статистика</span>${all ? `<span><b>${fmt(all)}</b> відповідей · правильно <b>${pc(allOk, all)}%</b></span>` : ""}</div>
       <div class="st-grid">
         ${tile("st-t", "Тренажер", fmt(a), "з " + fmt(total) + " завдань", a / total * 100, acc(c, a))}
         ${tile("st-z", "Завдання ЗНО", fmt(z.done), "з " + fmt(zt) + " завдань", z.done / zt * 100, acc(z.ok, z.done))}
