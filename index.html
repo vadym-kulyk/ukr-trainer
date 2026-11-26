@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=45"></script>
+<script src="theme.js?v=46"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1222,11 +1222,100 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
 .hero-grid.in { grid-template-columns: 1fr; }
 .hero-grid.in .about { display: none; }
 @media (min-width: 641px) { .hero-grid.in .login .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ══ Головна «Літери» (варіант C): темна шапка учня, «Продовжити», розділи-літери, однотонні меню ══ */
+body.me-in:not(.compact) .hero { --bg: #12163a; --surface: #1b2050; --surface-2: #262c66; --line: #2f3670; --text: #fff; --muted: #a7abd0;
+  background: #12163a; background-image: none; color: #fff; border-bottom: 0; }
+body.me-in:not(.compact) .hero .wordmark { color: #fff; }
+body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
+.hero-grid.in .login { background: none; padding: 0; border-radius: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 0 28px; align-items: end; }
+.hero-grid.in .login .namebox { position: relative; overflow: hidden; align-self: stretch; display: flex; flex-direction: column; justify-content: flex-end; min-height: 230px; padding: 8px 0 22px; }
+.cme-big { position: absolute; left: -14px; top: 0; font: 900 300px/.74 var(--f-poster); letter-spacing: -.06em; color: var(--cobalt); pointer-events: none; user-select: none; }
+.cme-name { position: relative; margin: 0; font: 800 clamp(30px, 3.6vw, 42px)/1.05 var(--f-poster); letter-spacing: -.03em; color: #fff; overflow-wrap: anywhere; }
+.cme-row { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 12px; }
+.cme-cls { font: 600 14px var(--f-text); color: #c9cdfb; border: 1px solid #3b43a0; border-radius: 6px; padding: 3px 10px; background: rgb(18 22 58 / .6); }
+.cme-out { font: 600 13px var(--f-text); color: #c9cdfb; background: rgb(18 22 58 / .6); border: 0; padding: 4px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.cme-out:hover { color: #fff; }
+.hero-grid.in .login .st-band { background: none; padding: 0 0 22px; border-radius: 0; display: block; }
+.cst { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 16px; padding: 14px 0; border-top: 1px solid #2a3068; }
+.cst:last-child { border-bottom: 1px solid #2a3068; }
+.cst-k { grid-column: 1; font: 700 15px var(--f-text); color: var(--c); }
+.cst-s { grid-column: 1; font-size: 13px; color: #a7abd0; }
+.cst-s b { color: #fff; }
+.cst-v { grid-column: 2; grid-row: 1 / 3; text-align: right; font: 800 34px/1 var(--f-poster); letter-spacing: -.03em; color: #fff; white-space: nowrap; }
+.cst-v small { display: block; font: 600 12px var(--f-text); color: #a7abd0; letter-spacing: 0; margin-bottom: 4px; }
+.cst-v i { font: 600 14px var(--f-text); font-style: normal; color: #a7abd0; letter-spacing: 0; margin-left: 2px; }
+.hero-grid.in .me-hint { grid-column: 1 / -1; margin: 0 0 12px; }
+/* «Продовжити з того місця, де зупинився» */
+.cont { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px 22px; padding: 18px 24px; margin: 4px 0 14px; background: #fff; color: #12163a; border-radius: 16px; }
+.cont:empty, body.compact .cont { display: none; }
+.cont-g { font: 900 60px/.8 var(--f-poster); color: var(--cobalt); letter-spacing: -.05em; min-width: 52px; }
+.cont-t small { display: block; font: 600 13px var(--f-text); color: #5b6480; }
+.cont-t b { display: block; margin-top: 3px; font: 800 22px/1.15 var(--f-poster); letter-spacing: -.025em; }
+.cont-t em { font: 500 14px var(--f-text); font-style: normal; color: #5b6480; }
+.cont-bar { display: block; max-width: 360px; height: 5px; margin-top: 10px; border-radius: 3px; background: #e3e6f2; overflow: hidden; }
+.cont-bar i { display: block; height: 100%; background: var(--cobalt); }
+.cont-go { font: 800 15px var(--f-poster); color: #fff; background: var(--cobalt); border: 0; border-radius: 10px; padding: 15px 24px; white-space: nowrap; cursor: pointer; }
+.cont-go:hover { filter: brightness(1.15); }
+.cont-go:focus-visible { outline: 3px solid #12163a; outline-offset: 2px; }
+/* Розділи-літери (комп’ютер) */
+.secnav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 6px 0 16px; background: #262c66; border: 1px solid #262c66; border-radius: 16px; overflow: hidden; }
+.secnav:empty, body.compact .secnav { display: none; }
+.sn { --c: #8fa6ff; display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px 12px; padding: 14px 16px 16px; background: #12163a; color: #c9cdfb; border: 0; font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.sn.nv-zno { --c: #52c48d; } .sn.nv-nmt { --c: #ffc94d; } .sn.nv-fix { --c: #ff7aa8; }
+.sn-g { grid-row: span 2; width: 36px; font: 900 34px/1 var(--f-poster); color: var(--c); }
+.sn b { font: 700 16px/1.2 var(--f-text); color: #fff; }
+.sn small { font-size: 13px; color: #8f94bf; }
+.sn:hover { background: #181d4a; }
+.sn[aria-current] { background: #222a6e; box-shadow: inset 0 -4px 0 var(--c); }
+.sn[aria-current] small { color: #c9cdfb; }
+.sn:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+.sn-n { display: inline-block; margin-left: 6px; vertical-align: 2px; font: 700 11px/16px var(--f-text); color: #c9cdfb; border: 1px solid #3b43a0; border-radius: 9px; padding: 0 6px; }
+@media (max-width: 900px) { .sn { padding: 12px; gap: 2px 8px; } .sn-g { font-size: 26px; width: 26px; } .sn b { font-size: 14px; } .sn small { display: none; } }
+/* Бокове меню: однотонне, тонкі значки */
+.drawer { --bg: #0d1030; --surface: #161b46; --line: #2a3068; --text: #fff; --muted: #8f94bf; background: #0d1030; color: #fff; box-shadow: 8px 0 32px rgb(0 0 0 / .35); }
+.drawer .wordmark { color: #fff; }
+.drawer .burger { background: none; border-color: #2f3670; color: #fff; }
+.dr-list { gap: 2px; }
+.dr-it { position: relative; grid-template-columns: 22px minmax(0, 1fr); gap: 14px; padding: 12px; border-radius: 10px; color: #c9cdfb; }
+.dr-it .nv-ic { position: static; width: 22px; height: 22px; border-radius: 0; background: none !important; color: #8f94bf !important; }
+.dr-it .nv-ic svg { width: 20px; height: 20px; }
+.dr-it:hover { background: #161b46; }
+.dr-it[aria-current] { background: #fff; color: #12163a; font-weight: 800; }
+.dr-it[aria-current] .nv-ic { color: #12163a !important; }
+.dr-it .nv-dot { top: 50%; right: 12px; transform: translateY(-50%); background: none; color: #c9cdfb; border: 1px solid #3b43a0; font-size: 11px; line-height: 16px; height: 16px; }
+.dr-it[aria-current] .nv-dot { color: #12163a; border-color: #c5c9e3; }
+/* Нижнє меню на телефоні: однотонне й низьке */
+@media (max-width: 640px) {
+  .secnav { display: none; }
+  .bnav { background: #0d1030; border-top: 1px solid #2a3068; box-shadow: none; padding: 0 max(4px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(4px, env(safe-area-inset-left, 0px)); }
+  .bn { position: relative; min-height: 50px; gap: 2px; padding: 7px 2px 8px; color: #8f94bf; font: 600 11px/1.1 var(--f-text); }
+  .bn .nv-ic { width: auto; height: auto; border-radius: 0; background: none !important; color: inherit !important; }
+  .bn .nv-ic svg { width: 20px; height: 20px; }
+  .bn[aria-current] { color: #fff; font-weight: 800; }
+  .bn[aria-current]::before { content: ""; position: absolute; top: -1px; left: 30%; right: 30%; height: 2px; border-radius: 2px; background: #fff; }
+  .bn .nv-dot { top: -4px; right: -16px; background: #0d1030; color: #c9cdfb; border: 1px solid #3b43a0; font-size: 10px; line-height: 14px; height: 14px; min-width: 12px; padding: 0 4px; }
+  .bn:focus-visible { outline: 2px solid #fff; outline-offset: -2px; }
+  body:not(.exam):not(.showmode) { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  body:not(.exam):not(.showmode) .fab, body:not(.exam):not(.showmode) .toast { bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  body:not(.exam):not(.showmode) .selchip { bottom: calc(130px + env(safe-area-inset-bottom, 0px)); }
+  .hero-grid.in .login { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .hero-grid.in .login .namebox { min-height: 140px; padding: 6px 0 16px; }
+  .cme-big { left: auto; right: -8px; top: 8px; font-size: 190px; }
+  .cme-name { font-size: 32px; }
+  .cst { padding: 10px 0; }
+  .cst-v { font-size: 26px; }
+  .cont { grid-template-columns: auto minmax(0, 1fr); gap: 12px 14px; padding: 16px; margin-top: 14px; }
+  .cont-g { font-size: 46px; min-width: 40px; }
+  .cont-t b { font-size: 18px; }
+  .cont-bar { display: none; }
+  .cont-go { grid-column: 1 / -1; padding: 13px; }
+}
 </style>
 
 </head>
 <body>
-<script src="splash.js?v=45"></script>
+<script src="splash.js?v=46"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
@@ -1251,6 +1340,8 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
         <p class="hint me-hint" id="me-hint" hidden></p>
       </section>
     </div>
+    <div class="cont" id="cont"></div>
+    <nav class="secnav" id="secnav" aria-label="Розділи сайту"></nav>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
   </div>
 </header>
@@ -1290,17 +1381,17 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=45"></script>
-<script src="data-extra.js?v=45"></script>
-<script src="data-morph.js?v=45"></script>
-<script src="engine.js?v=45"></script>
-<script src="zno-app.js?v=45"></script>
-<script src="nmt-app.js?v=45"></script>
-<script src="fix-app.js?v=45"></script>
-<script src="theory-app.js?v=45"></script>
-<script src="plus-app.js?v=45"></script>
-<script src="exam-app.js?v=45"></script>
-<script src="show-app.js?v=45"></script>
+<script src="data.js?v=46"></script>
+<script src="data-extra.js?v=46"></script>
+<script src="data-morph.js?v=46"></script>
+<script src="engine.js?v=46"></script>
+<script src="zno-app.js?v=46"></script>
+<script src="nmt-app.js?v=46"></script>
+<script src="fix-app.js?v=46"></script>
+<script src="theory-app.js?v=46"></script>
+<script src="plus-app.js?v=46"></script>
+<script src="exam-app.js?v=46"></script>
+<script src="show-app.js?v=46"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1351,7 +1442,7 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "45", THEORY = {}, theoryLoading = {};
+  const VER = "46", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1489,11 +1580,13 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
     const box = $("#profilebox"), s = me();
     if (loggedIn()) {
       box.classList.remove("need");
-      const ini = String(s.name || "").split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
-      box.innerHTML = `<div class="me"><span class="me-av" aria-hidden="true"></span><div class="me-t"><b class="pname"></b>${s.cls ? '<span class="me-cls"></span>' : ""}</div><button class="btn small" id="p-logout" type="button">Вийти</button></div>`;
-      box.querySelector(".me-av").textContent = ini || "?";
-      box.querySelector(".pname").textContent = s.name;
-      if (s.cls) box.querySelector(".me-cls").textContent = s.cls + " клас";
+      const parts = String(s.name || "").trim().split(/\s+/), first = parts.shift() || "", rest = parts.join(" ");
+      box.innerHTML = `<div class="cme"><span class="cme-big" aria-hidden="true"></span><h2 class="cme-name"><span class="cme-f"></span>${rest ? '<br><span class="cme-l"></span>' : ""}</h2>
+        <div class="cme-row">${s.cls ? '<span class="cme-cls"></span>' : ""}<button class="cme-out" id="p-logout" type="button">Вийти</button></div></div>`;
+      box.querySelector(".cme-big").textContent = (first[0] || "?").toUpperCase();
+      box.querySelector(".cme-f").textContent = first;
+      if (rest) box.querySelector(".cme-l").textContent = rest;
+      if (s.cls) box.querySelector(".cme-cls").textContent = s.cls + " клас";
       meHint.hidden = false;
       meHint.textContent = RESULTS_URL ? "Прогрес зберігається в профілі: на іншому пристрої увійдіть з тими самими ім’ям, класом і PIN-кодом. Під час завдань учитель бачить час відповіді й виходи зі сторінки." : "Прогрес зберігається на цьому пристрої.";
       heroGrid.classList.add("in");
@@ -1781,25 +1874,34 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
   /* Статистика учня: тренажер, ЗНО, НМТ. Точність — частка правильних серед виконаних. */
   function renderOverall() {
     const box = $("#overall");
-    if (!loggedIn()) { box.innerHTML = ""; return; }
+    document.body.classList.toggle("me-in", loggedIn());
+    if (!loggedIn()) { box.innerHTML = ""; $("#cont").innerHTML = ""; return; }
     const s = me(); let a = 0, c = 0;
     T.forEach(t => { const st = statsOf(s && s.topics[t.id] ? s.topics[t.id].r : EMPTY); a += st.a; c += st.c; });
     const total = T.length * N;
     Z.loadIndex(); NM.loadIndex();
     const z = Z.overall(), zt = z.total || 2077, nm = NM.summary();
-    const pc = (x, y) => y ? Math.round(x / y * 100) : 0;
+    const pc = (x, y) => Math.round(x / y * 100);
     const fmt = n => n.toLocaleString("uk-UA");
-    const tile = (cls, title, big, of, fill, line) => `<div class="st-tile ${cls}"><span class="st-h">${title}</span><b class="st-big">${big}</b><span class="st-of">${of}</span>
-      <div class="st-bar" aria-hidden="true"><i style="width:${Math.min(100, fill)}%"></i></div><span class="st-line">${line}</span></div>`;
-    const acc = (ok, done) => done ? `правильно <b>${pc(ok, done)}%</b> (${fmt(ok)} з ${fmt(done)})` : "ще немає відповідей";
-    const all = a + z.done, allOk = c + z.ok;
-    box.innerHTML = `<div class="st-head"><span>Моя статистика</span>${all ? `<span><b>${fmt(all)}</b> відповідей · правильно <b>${pc(allOk, all)}%</b></span>` : ""}</div>
-      <div class="st-grid">
-        ${tile("st-t", "Тренажер", fmt(a), "з " + fmt(total) + " завдань", a / total * 100, acc(c, a))}
-        ${tile("st-z", "Завдання ЗНО", fmt(z.done), "з " + fmt(zt) + " завдань", z.done / zt * 100, acc(z.ok, z.done))}
-        ${tile("st-n", "Симуляції НМТ", fmt(nm.sims), nm.sims === 1 ? "симуляцію пройдено" : nm.sims >= 2 && nm.sims <= 4 ? "симуляції пройдено" : "симуляцій пройдено", nm.total ? nm.tests / nm.total * 100 : 0,
-          nm.sims ? `найкращий бал <b>${nm.bestS || "поріг не подолано"}</b>${nm.total ? ` · тестів ${nm.tests} з ${nm.total}` : ""}` : "спробуйте перший тест")}
-      </div>`;
+    const row = (c, title, line, cap, big) => `<div class="cst" style="--c:${c}"><span class="cst-k">${title}</span><span class="cst-v"><small>${cap}</small>${big}</span><span class="cst-s">${line}</span></div>`;
+    box.innerHTML = row("#8fa6ff", "Тренажер", `виконано <b>${fmt(a)}</b> із ${fmt(total)}`, "правильно", a ? pc(c, a) + "&nbsp;%" : "—")
+      + row("#52c48d", "Завдання ЗНО", `виконано <b>${fmt(z.done)}</b> із ${fmt(zt)}`, "правильно", z.done ? pc(z.ok, z.done) + "&nbsp;%" : "—")
+      + row("#ffc94d", "Симуляції НМТ", nm.sims ? `пройдено <b>${nm.tests}</b> із ${nm.total || "—"} тестів` : "спробуйте перший тест", "найкращий бал", nm.bestS ? `${nm.bestS}<i>/200</i>` : "—");
+    $("#cont").innerHTML = contHtml(s);
+  }
+  /* «Продовжити з того місця, де зупинився»: остання відкрита тема тренажера, інакше перша незавершена. */
+  function contHtml(s) {
+    const st = id => statsOf(s.topics[id] ? s.topics[id].r : EMPTY);
+    let t = T.find(x => x.id === s.lastT);
+    if (!t || st(t.id).a >= N) t = T.find(x => { const v = st(x.id).a; return v > 0 && v < N; }) || T.find(x => st(x.id).a < N);
+    if (!t) return "";
+    const v = st(t.id), r = s.topics[t.id] ? s.topics[t.id].r : EMPTY, next = Math.max(0, r.indexOf(".")) + 1;
+    const sec = (S.find(x => x.id === t.sec) || {}).title || "";
+    const started = v.a > 0;
+    return `<span class="cont-g" aria-hidden="true">${esc(t.title.trim()[0].toUpperCase())}</span>
+      <div class="cont-t"><small>${started ? "Продовжити з того місця, де зупинився" : "З чого почати"}</small><b>${esc(t.title)}</b><em>${esc(sec)}${sec ? ", " : ""}завдання ${next} зі ${N}</em>
+      <span class="cont-bar" aria-hidden="true"><i style="width:${v.a / N * 100}%"></i></span></div>
+      <button class="cont-go" type="button" data-open="${t.id}" data-tab="tasks">${started ? "Продовжити" : "Почати"}</button>`;
   }
 
   function render() {
@@ -1849,17 +1951,21 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
   /* Розділи сайту: плитки на головній, нижня панель на телефоні й бокове меню. */
   const svgI = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
   const NAV = [
-    { id: "trainer", title: "Тренажер", short: "Тренажер", sub: "50 тем · 5000 завдань", ic: svgI('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>') },
-    { id: "zno", title: "Завдання ЗНО", short: "ЗНО", sub: "банк завдань за темами", ic: svgI('<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 9l1.5 1.5L13 7.5M8.5 15l1.5 1.5 3-3M15 9.5h1M15 15.5h1"/>') },
-    { id: "nmt", title: "Симуляція НМТ", short: "НМТ", sub: "тест на час, як на іспиті", ic: svgI('<circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M10 3h4M18.5 6.5l1.2-1.2"/>') },
-    { id: "fix", title: "Мої помилки", short: "Помилки", sub: "повтори те, що не вийшло", ic: svgI('<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.7h3.7"/><path d="M10 10l4 4M14 10l-4 4"/>') }
+    { id: "trainer", title: "Тренажер", short: "Тренажер", g: "Т", sub: "50 тем", ic: svgI('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>') },
+    { id: "zno", title: "Завдання ЗНО", short: "ЗНО", g: "З", sub: "банк за темами", ic: svgI('<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 9l1.5 1.5L13 7.5M8.5 15l1.5 1.5 3-3M15 9.5h1M15 15.5h1"/>') },
+    { id: "nmt", title: "Симуляція НМТ", short: "НМТ", g: "Н", sub: "60 хвилин", ic: svgI('<circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M10 3h4M18.5 6.5l1.2-1.2"/>') },
+    { id: "fix", title: "Мої помилки", short: "Помилки", g: "П", sub: "на повторення", ic: svgI('<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.7h3.7"/><path d="M10 10l4 4M14 10l-4 4"/>') }
   ];
   const navCur = () => ({ home: store.home || "trainer", topic: "trainer", ztopic: "zno", nmt: "nmt", fix: "fix" })[ui.view] || "";
   function navHtml(cls) {
     const cur = navCur(), nfix = loggedIn() ? FX.openCount() : 0;
     return NAV.map(n => `<button class="${cls} nv-${n.id}" type="button" data-nav="${n.id}"${cur === n.id ? ' aria-current="page"' : ""}><span class="nv-ic">${n.ic}${n.id === "fix" && nfix ? `<span class="nv-dot" aria-label="відкритих помилок: ${nfix}">${nfix > 99 ? "99+" : nfix}</span>` : ""}</span><span class="nv-l">${cls === "bn" ? n.short : n.title}</span></button>`).join("");
   }
-  function updateNav() { $("#bnav").innerHTML = navHtml("bn"); $("#dr-nav").innerHTML = navHtml("dr-it"); }
+  function secHtml() {
+    const cur = navCur(), nfix = loggedIn() ? FX.openCount() : 0;
+    return NAV.map(n => `<button class="sn nv-${n.id}" type="button" data-home="${n.id}"${cur === n.id ? ' aria-current="page"' : ""}><span class="sn-g" aria-hidden="true">${n.g}</span><b>${n.title}${n.id === "fix" && nfix ? `<span class="sn-n" aria-label="відкритих помилок: ${nfix}">${nfix > 99 ? "99+" : nfix}</span>` : ""}</b><small>${n.sub}</small></button>`).join("");
+  }
+  function updateNav() { $("#bnav").innerHTML = navHtml("bn"); $("#dr-nav").innerHTML = navHtml("dr-it"); $("#secnav").innerHTML = secHtml(); }
   function goSection(id) {
     if (NM.inExam()) { toast("Спершу завершіть тест НМТ."); return; }
     store.home = id; saveLocal(); ui.view = "home"; confirmReset = false; render();
@@ -1869,8 +1975,7 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
   function renderHome() {
     ui.view = "home"; delete document.body.dataset.sec;
     const home = store.home || "trainer";
-    const nfix = loggedIn() ? FX.openCount() : 0;
-    let h = `<main class="wrap"><div class="navtiles" role="tablist" aria-label="Розділи сайту">${NAV.map(n => `<button class="nt nv-${n.id}" role="tab" aria-selected="${home === n.id}" data-home="${n.id}"><span class="nv-ic">${n.ic}</span><span class="nt-t"><b>${n.title}${n.id === "fix" && nfix ? ` <span class="tab-badge" aria-label="відкритих помилок: ${nfix}">${nfix}</span>` : ""}</b><small>${n.sub}</small></span></button>`).join("")}</div>`;
+    let h = `<main class="wrap">`;
     if (home === "fix") { app.innerHTML = h + FX.homeHtml() + "</main>"; return; }
     h += assignHtml();
     if (home === "zno") { app.innerHTML = h + Z.homeHtml() + reportSection() + "</main>"; return; }
@@ -2081,7 +2186,7 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
     const ok = E.check(task, resp), fo = focusSince(pend && pend.f);
     st.r = st.r.slice(0, task.n) + (ok ? "1" : "0") + st.r.slice(task.n + 1);
     st.ch[task.n] = resp;
-    const s = me();
+    const s = me(); s.lastT = t.id;
     (s.queue = s.queue || []).push({ id: store.current + "|" + t.id + "|" + (st.att || 1) + "|" + task.n, topic: t.id, att: st.att || 1, n: task.n + 1, type: task.t, ok, at: Date.now(),
       q: plain(task.q) + (task.big ? " — " + plain(task.big) : ""), ans: answerText(task, resp), right: rightText(task), sec: fo.sec, away: fo.away, ex: fo.ex });
     if (s.queue.length > 3000) s.queue = s.queue.slice(-3000);
@@ -2117,7 +2222,7 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
     if (FX.onClick(b)) return;
     if (NM.onClick(b)) return;
     if (Z.onClick(b)) return;
-    if (d.open) { ui = Object.assign(ui, { view: "topic", topic: d.open, tab: d.tab, reviewing: false }); confirmReset = false; pend = null; jumpFirst(); render(); window.scrollTo(0, 0); return; }
+    if (d.open) { openTopic(d.open, d.tab); return; }
     if (d.tabto) { ui.tab = d.tabto; TH.leave(); if (d.tabto === "tasks") jumpFirst(); render(); window.scrollTo(0, 0); return; }
     if (b.id === "copy-report") { copyText(reportText(), $("#report-text")); return; }
     const act = d.act;
@@ -2154,6 +2259,10 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
     if (d.ord !== undefined) { p.v.push(+d.ord); return true; }
     if (d.unord !== undefined) { p.v.splice(+d.unord, 1); return true; }
     return false;
+  }
+  function openTopic(id, tab) {
+    const s = me(); if (s && T.some(x => x.id === id)) { s.lastT = id; saveLocal(); }
+    ui = Object.assign(ui, { view: "topic", topic: id, tab, reviewing: false }); confirmReset = false; pend = null; jumpFirst(); render(); window.scrollTo(0, 0);
   }
   function jumpFirst() {
     if (!me() || !ui.topic) return;
@@ -2308,6 +2417,8 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !drawer.hidden) closeDrawer(true); });
   $("#bnav").addEventListener("click", e => { const b = e.target.closest("[data-nav]"); if (b) goSection(b.dataset.nav); });
+  $("#secnav").addEventListener("click", e => { const b = e.target.closest("[data-home]"); if (!b || NM.inExam()) return; store.home = b.dataset.home; saveLocal(); render(); });
+  $("#cont").addEventListener("click", e => { const b = e.target.closest("[data-open]"); if (b) openTopic(b.dataset.open, b.dataset.tab); });
 
   /* Кнопка «Теорія» під час виконання завдань теми. */
   const fab = $("#fab-theory");
