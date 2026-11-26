@@ -526,8 +526,7 @@ window.TOPICS = [
   <li><b>Пів</b> зі значенням «половина» + іменник у Р. в.: <i>пів яблука, пів години, пів Києва</i>.</li>
   <li>Прислівник + прикметник, де прислівник зберігає наголос: <i>діаметрально протилежний, науково обґрунтований</i>.</li>
 </ul>
-<div class="mg-pair"><span class="mg-chip mg-chip--wrong">пів-яблука</span><span class="mg-arrow">→</span><span class="mg-chip mg-chip--right">пів яблука</span></div>
-<p class="note">Норма «Українського правопису» 2019 року.</p>`,
+<div class="mg-pair"><span class="mg-chip mg-chip--wrong">пів-яблука</span><span class="mg-arrow">→</span><span class="mg-chip mg-chip--right">пів яблука</span></div>`,
   groups: {
     cw: { own: true, cats: ["разом","через дефіс","окремо"], fills: ["","-"," "], ask: "Як треба написати?", rule: "Разом — слова зі сполучним голосним і підрядним зв’язком; через дефіс — рівноправні частини та два іменники; пів «половина» + Р. в. — окремо." }
   },

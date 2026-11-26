@@ -65,7 +65,6 @@
     function homeHtml() {
       if (!index) { loadIndex(); return indexErr ? '<p class="empty">Не вдалося завантажити тести НМТ. Перевірте інтернет і оновіть сторінку.</p>' : '<p class="empty">Завантажую тести НМТ…</p>'; }
       let h = `<section class="zsum nmt-intro">
-        <p class="nmt-src">Завдання й пояснення взято з <a href="https://zno.osvita.ua/ukrainian/" target="_blank" rel="noopener">ЗНО-онлайн (zno.osvita.ua)</a>, розділ «Національний мультитест з української мови».</p>
         <h2 class="nmt-h">Симуляція НМТ з української мови</h2>
         <ul class="nmt-facts"><li><b>30</b> завдань</li><li><b>60</b> хвилин</li><li><b>45</b> тестових балів максимум</li><li>шкала <b>100–200</b></li></ul>
         <p style="margin:0">Усе як на справжньому тесті: таймер, кнопка «Зберегти відповідь», підсумок лише наприкінці. Під час тесту словник і теорія вимкнені. Після тесту — розбір кожного завдання з поясненням і теорією.</p></section>`;
@@ -82,8 +81,7 @@
           h += `<article class="card"><h3>${esc(t.title)}</h3>
             <div class="meta"><span>${t.n} завдань · 60 хв</span><span>Спроб: <b class="mono">${(st && st.hist && st.hist.length) || 0}</b></span></div>
             <div class="meta">${status}</div>
-            <div class="acts">${last ? `<button class="btn small" data-nopen="${t.id}" data-nstage="result">Результат</button>` : ""}<button class="btn small primary" data-nopen="${t.id}" data-nstage="${run ? "exam" : "rules"}">${run ? "Продовжити" : last ? "Пройти ще раз" : "Почати"}</button></div>
-            <a class="nmt-link" href="${esc(t.src)}" target="_blank" rel="noopener">Джерело: zno.osvita.ua ↗</a></article>`;
+            <div class="acts">${last ? `<button class="btn small" data-nopen="${t.id}" data-nstage="result">Результат</button>` : ""}<button class="btn small primary" data-nopen="${t.id}" data-nstage="${run ? "exam" : "rules"}">${run ? "Продовжити" : last ? "Пройти ще раз" : "Почати"}</button></div></article>`;
         });
         h += "</div></section>";
       });
@@ -117,7 +115,7 @@
       return `<div class="topbar"><div class="wrap"><div class="tb-row"><button class="btn small ghost" data-act="home" aria-label="До списку тестів">← Тести</button><span class="tb-title">НМТ · ${esc(t.title)}</span></div></div></div>`;
     }
     function srcLine(t) {
-      return `<p class="nmt-src">Завдання: <a href="${esc(t.src)}" target="_blank" rel="noopener">${esc(t.title)} на zno.osvita.ua</a></p>`;
+      return "";
     }
     function rulesHtml(t) {
       const name = host.fullName ? host.fullName() : "";

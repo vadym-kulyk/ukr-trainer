@@ -33,7 +33,7 @@
   el.innerHTML =
     '<div class="sl" data-z="10"></div><div class="sl" data-z="25"></div><div class="sl" data-z="50"></div><div class="sl" data-z="90"></div>' +
     '<div class="sh"><h1>Досл<b>і</b>вно</h1><h2>Занурся в мову глибше, ніж на уроці.</h2>' +
-    "<p>50 тем із теорією за підручниками, 5000 завдань з поясненнями, банк ЗНО і симуляція НМТ з таймером.</p>" +
+    "<p>50 тем із теорією, 5000 завдань з поясненнями, банк ЗНО і симуляція НМТ з таймером.</p>" +
     '<button type="button">Почати</button></div>';
   document.documentElement.classList.add("dl-splash-on");
   document.body.insertBefore(el, document.body.firstChild);
