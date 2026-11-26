@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=43"></script>
+<script src="theme.js?v=44"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1217,11 +1217,16 @@ html.dr-on { overflow: hidden; }
 .ctl-tag { display: inline-block; vertical-align: 2px; margin-left: 4px; font: 700 11px/1 var(--f-text); padding: 4px 7px; border-radius: 6px; background: color-mix(in srgb, var(--violet) 16%, transparent); color: var(--violet-ink); white-space: nowrap; }
 .card.topic.has-ctl { border-color: color-mix(in srgb, var(--violet) 55%, var(--line)); }
 body[data-sec] main > .ctl-home { margin-top: 16px; }
+
+/* Учень увійшов: вітальну синю картку ховаємо, картка учня на всю ширину */
+.hero-grid.in { grid-template-columns: 1fr; }
+.hero-grid.in .about { display: none; }
+@media (min-width: 641px) { .hero-grid.in .login .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 </style>
 
 </head>
 <body>
-<script src="splash.js?v=43"></script>
+<script src="splash.js?v=44"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
@@ -1285,17 +1290,17 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=43"></script>
-<script src="data-extra.js?v=43"></script>
-<script src="data-morph.js?v=43"></script>
-<script src="engine.js?v=43"></script>
-<script src="zno-app.js?v=43"></script>
-<script src="nmt-app.js?v=43"></script>
-<script src="fix-app.js?v=43"></script>
-<script src="theory-app.js?v=43"></script>
-<script src="plus-app.js?v=43"></script>
-<script src="exam-app.js?v=43"></script>
-<script src="show-app.js?v=43"></script>
+<script src="data.js?v=44"></script>
+<script src="data-extra.js?v=44"></script>
+<script src="data-morph.js?v=44"></script>
+<script src="engine.js?v=44"></script>
+<script src="zno-app.js?v=44"></script>
+<script src="nmt-app.js?v=44"></script>
+<script src="fix-app.js?v=44"></script>
+<script src="theory-app.js?v=44"></script>
+<script src="plus-app.js?v=44"></script>
+<script src="exam-app.js?v=44"></script>
+<script src="show-app.js?v=44"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1346,7 +1351,7 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "43", THEORY = {}, theoryLoading = {};
+  const VER = "44", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -2309,8 +2314,9 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
     let ref = null;
     if (ui.view === "topic" && ui.tab === "tasks" && ui.topic) ref = "t:" + ui.topic;
     if (ui.view === "ztopic" && ui.tab === "tasks" && ui.ztopic) ref = "z:" + ui.ztopic;
-    fab.hidden = !ref; if (ref) fab.dataset.ref = ref;
-    document.body.classList.toggle("has-fab", !!ref);
+    /* Плаваючу кнопку «Теорія» прибрано: вона закривала варіанти відповідей. Теорія — у вкладці теми. */
+    fab.hidden = true; void ref;
+    document.body.classList.remove("has-fab");
   }
   fab.addEventListener("click", () => openTheory(fab.dataset.ref));
 
