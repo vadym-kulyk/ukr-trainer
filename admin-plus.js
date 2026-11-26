@@ -429,7 +429,7 @@
         const x = suggestions()[+d.sgi]; if (!x) return true;
         const due = new Date(D().now + 7 * DAY);
         Object.assign(h.asg, { id: "", title: "Повторення: " + x.t.title, items: new Set(["t:" + x.t.id]), type: "keys", classes: new Set(), keys: new Set(x.who.map(s => s.key)), q: "", iq: "",
-          due: h.dayKey(due.getTime()), note: "Ця тема дається важко — попрацюй над нею: спершу теорія й «Тренування теорії», потім завдання.", open: true });
+          due: h.dayKey(due.getTime()), note: "Ця тема дається важко — попрацюй над нею: спершу теорія, потім завдання.", open: true });
         location.hash = "assign"; setTimeout(() => window.scrollTo(0, 0), 30); h.render(); return true;
       }
       if (d.act === "ctl-new") { Object.assign(ctl, { open: true, id: "", title: "", topics: new Set(), home: "", per: 2, min: 30, show: true, due: "", dueT: "23:59", note: "", type: h.ui.cls ? "class" : "all", classes: new Set(h.ui.cls ? [h.ui.cls] : []), keys: new Set(), q: "", iq: "" }); h.render(); return true; }
