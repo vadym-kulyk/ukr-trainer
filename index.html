@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=37"></script>
+<script src="theme.js?v=38"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1081,8 +1081,26 @@ body.compact .hero-grid { display: none; }
 .login .btn.primary:hover { background: #dfe2ff; border-color: #dfe2ff; filter: none; }
 .login .btn:not(.primary) { background: transparent; border-color: var(--line); color: #fff; }
 .login .pname { font: 800 20px var(--f-poster); }
-.login .overall:empty { display: none; }
-.login .overall { border-top: 1px solid var(--line); padding-top: 16px; }
+.st-band:empty { display: none; }
+.st-band { --muted: #a7abd0; background: #12163a; color: #fff; border-radius: 24px; padding: 20px 24px 22px; gap: 14px; }
+:root[data-theme="dark"] .st-band { background: #1a2050; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .st-band { background: #1a2050; } }
+/* Статистика учня в панелі профілю: три яскраві плитки */
+.st-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.st-head > span:first-child { font: 800 20px var(--f-poster); color: #fff; }
+.st-head b { color: #fff; }
+.st-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.st-tile { --c: #8fa6ff; border-radius: 18px; padding: 16px 18px; display: grid; align-content: start; gap: 2px; min-width: 0;
+  background: color-mix(in srgb, var(--c) 16%, #12163a); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); }
+.st-tile.st-z { --c: #ff8fc0; } .st-tile.st-n { --c: #ffd36b; }
+.st-h { font-size: 15px; font-weight: 700; color: var(--c); }
+.st-big { font: 900 clamp(30px, 4vw, 44px)/1.1 var(--f-poster); color: #fff; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.st-of { font-size: 13px; color: var(--muted); }
+.st-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; margin: 8px 0 6px; }
+.st-bar i { display: block; height: 100%; background: var(--c); border-radius: 3px; }
+.st-line { font-size: 14px; line-height: 1.35; color: var(--muted); }
+.st-line b { color: #fff; }
+@media (max-width: 640px) { .st-band { padding: 18px; border-radius: 22px; } .st-grid { grid-template-columns: 1fr; gap: 8px; } .st-tile { padding: 14px 16px; } .st-big { font-size: 32px; } }
 .login .bar { background: var(--surface-2); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .login { background: #1a2050; } :root:not([data-theme="light"]) { --cobalt: #2c3ae0; } }
 :root[data-theme="dark"] .login { background: #1a2050; }
@@ -1120,9 +1138,9 @@ body.compact .hero-grid { display: none; }
       </section>
       <section class="login" aria-label="Профіль учня">
         <div class="namebox" id="profilebox"></div>
-        <div class="overall" id="overall"></div>
       </section>
     </div>
+    <section class="overall st-band" id="overall" aria-label="Моя статистика"></section>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
   </div>
 </header>
@@ -1148,17 +1166,17 @@ body.compact .hero-grid { display: none; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=37"></script>
-<script src="data-extra.js?v=37"></script>
-<script src="data-morph.js?v=37"></script>
-<script src="engine.js?v=37"></script>
-<script src="zno-app.js?v=37"></script>
-<script src="nmt-app.js?v=37"></script>
-<script src="fix-app.js?v=37"></script>
-<script src="theory-app.js?v=37"></script>
-<script src="plus-app.js?v=37"></script>
-<script src="exam-app.js?v=37"></script>
-<script src="show-app.js?v=37"></script>
+<script src="data.js?v=38"></script>
+<script src="data-extra.js?v=38"></script>
+<script src="data-morph.js?v=38"></script>
+<script src="engine.js?v=38"></script>
+<script src="zno-app.js?v=38"></script>
+<script src="nmt-app.js?v=38"></script>
+<script src="fix-app.js?v=38"></script>
+<script src="theory-app.js?v=38"></script>
+<script src="plus-app.js?v=38"></script>
+<script src="exam-app.js?v=38"></script>
+<script src="show-app.js?v=38"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1209,7 +1227,7 @@ body.compact .hero-grid { display: none; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "37", THEORY = {}, theoryLoading = {};
+  const VER = "38", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1469,7 +1487,7 @@ body.compact .hero-grid { display: none; }
   /* Записи журналу з тем ЗНО приймає лише скрипт версії 5+, до того вони чекають у черзі. */
   const isZnoEvent = e => /^z[0-9a-f]{6}$/.test(String(e.topic || ""));
   /* Події ЗНО приймає скрипт таблиці від версії 5, події НМТ — від версії 6. */
-  const canSend = e => /^nmt:/.test(String(e.topic || "")) ? serverV >= 6 : serverV >= 5 || !isZnoEvent(e);
+  const canSend = e => e.type === "nmtq" ? serverV >= 21 : /^nmt:/.test(String(e.topic || "")) ? serverV >= 6 : serverV >= 5 || !isZnoEvent(e);
   const resetIds = new Set();
   function setSync(mode) {
     const chip = $("#sync-chip"), txt = $("#sync-text");
@@ -1629,12 +1647,28 @@ body.compact .hero-grid { display: none; }
   }
 
   /* ───── Рендер ───── */
+  /* Статистика учня: тренажер, ЗНО, НМТ. Точність — частка правильних серед виконаних. */
   function renderOverall() {
+    const box = $("#overall");
+    if (!loggedIn()) { box.innerHTML = ""; return; }
     const s = me(); let a = 0, c = 0;
     T.forEach(t => { const st = statsOf(s && s.topics[t.id] ? s.topics[t.id].r : EMPTY); a += st.a; c += st.c; });
     const total = T.length * N;
-    $("#overall").innerHTML = `<div class="overall-top"><span>Загальний прогрес: <b class="mono">${a}</b> з ${total} завдань</span><span>Правильно: <b class="mono">${c}</b> · <b class="mono">${(c / total * 100).toFixed(1)}%</b></span></div>
-      <div class="bar" role="progressbar" aria-label="Загальний прогрес" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${a}"><b style="width:${a / total * 100}%"></b><i style="width:${c / total * 100}%"></i></div>`;
+    Z.loadIndex(); NM.loadIndex();
+    const z = Z.overall(), zt = z.total || 2077, nm = NM.summary();
+    const pc = (x, y) => y ? Math.round(x / y * 100) : 0;
+    const fmt = n => n.toLocaleString("uk-UA");
+    const tile = (cls, title, big, of, fill, line) => `<div class="st-tile ${cls}"><span class="st-h">${title}</span><b class="st-big">${big}</b><span class="st-of">${of}</span>
+      <div class="st-bar" aria-hidden="true"><i style="width:${Math.min(100, fill)}%"></i></div><span class="st-line">${line}</span></div>`;
+    const acc = (ok, done) => done ? `правильно <b>${pc(ok, done)}%</b> (${fmt(ok)} з ${fmt(done)})` : "ще немає відповідей";
+    const all = a + z.done, allOk = c + z.ok;
+    box.innerHTML = `<div class="st-head"><span>Моя статистика</span>${all ? `<span>${fmt(all)} відповідей · правильно <b>${pc(allOk, all)}%</b></span>` : ""}</div>
+      <div class="st-grid">
+        ${tile("st-t", "Тренажер", fmt(a), "з " + fmt(total) + " завдань", a / total * 100, acc(c, a))}
+        ${tile("st-z", "Завдання ЗНО", fmt(z.done), "з " + fmt(zt) + " завдань", z.done / zt * 100, acc(z.ok, z.done))}
+        ${tile("st-n", "Симуляції НМТ", fmt(nm.sims), nm.sims === 1 ? "симуляцію пройдено" : nm.sims >= 2 && nm.sims <= 4 ? "симуляції пройдено" : "симуляцій пройдено", nm.total ? nm.tests / nm.total * 100 : 0,
+          nm.sims ? `найкращий бал <b>${nm.bestS || "поріг не подолано"}</b>${nm.total ? ` · тестів ${nm.tests} з ${nm.total}` : ""}` : "спробуйте перший тест")}
+      </div>`;
   }
 
   function render() {

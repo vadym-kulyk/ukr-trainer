@@ -43,6 +43,8 @@
     }
     const left = run => Math.max(0, run.end - now());
     function scale(p) { return index && index.scale[p] ? index.scale[p] : 0; }
+    /* Скільки симуляцій завершено: на пристрої зберігаємо лише 10 останніх, тож беремо й лічильник спроб (без тесту, що триває). */
+    const doneCount = st => !st ? 0 : Math.max((st.hist || []).filter(h => !(h.att === 0 && h.at === 0)).length, (st.att || 0) - (st.run && !st.run.done ? 1 : 0));
     function best(st) { return (st && st.hist || []).reduce((b, h) => (!b || h.p > b.p ? h : b), null); }
     function mmss(ms) { const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0"); }
 
@@ -51,6 +53,10 @@
       if (task.type === "single") return resp === task.a ? 1 : 0;
       return task.left.reduce((n, [lk]) => n + (resp[lk] && resp[lk] === task.a[lk] ? 1 : 0), 0);
     }
+    const plainText = h => String(h || "").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
+    const optText = (task, k) => { const o = (task.opts || []).find(x => x[0] === k); return o ? k + " — " + plainText(o[1]).slice(0, 120) : String(k); };
+    const respText = (task, r) => r == null ? "без відповіді" : task.type === "single" ? optText(task, r) : task.left.map(([lk]) => lk + "–" + (r[lk] || "?")).join(", ");
+    const rightText = task => task.type === "single" ? optText(task, task.a) : task.left.map(([lk]) => lk + "–" + task.a[lk]).join(", ");
     const maxOf = task => task.type === "single" ? 1 : task.left.length;
     const same = (a, b) => JSON.stringify(a == null ? null : a) === JSON.stringify(b == null ? null : b);
     function complete(task, resp) { return task.type === "single" ? !!resp : !!resp && task.left.every(([lk]) => resp[lk]); }
@@ -242,6 +248,12 @@
         q: "Симуляція НМТ: " + t.title, ans: p + "/" + t.max + " → " + (s || "поріг не подолано") + "; час " + Math.ceil(rec.dur / 60) + " хв; виходів зі сторінки: " + rec.blur + (auto ? "; завершено таймером" : ""),
         right: "макс. " + t.max
       });
+      // Кожне завдання окремим рядком журналу — учитель і батьки бачать, яку відповідь обрано.
+      data.tasks.forEach((task, i) => {
+        const r = run.saved[i], got = points(task, r), mx = maxOf(task);
+        ss.queue.push({ id: host.currentKey() + "|nmtq|" + t.id + "|" + rec.att + "|" + i, topic: "nmt:" + t.id, att: rec.att, n: i + 1, type: "nmtq", ok: got === mx, at: end,
+          q: plainText(task.q).slice(0, 400), ans: respText(task, r) + (mx > 1 ? " (" + got + " з " + mx + ")" : ""), right: rightText(task) });
+      });
       host.ui.nstage = "result"; host.ui.nreview = -1;
       host.saveLocal(); host.scheduleSync(true);
     }
@@ -375,7 +387,7 @@
         const st = s.nmt[id], hist = st.hist || [];
         if (!hist.length) continue;
         const last = hist[hist.length - 1], b = best(st);
-        out[id] = { p: last.p, s: last.s, bp: b.p, bs: b.s, n: hist.length, at: last.at, blur: last.blur };
+        out[id] = { p: last.p, s: last.s, bp: b.p, bs: b.s, n: doneCount(st), at: last.at, blur: last.blur };
       }
       return Object.keys(out).length ? out : null;
     }
@@ -384,8 +396,8 @@
       rec.nmt = rec.nmt || {};
       for (const id in fromServer) {
         const v = fromServer[id], st = rec.nmt[id] || (rec.nmt[id] = { att: 0, hist: [] });
+        if (v && v.n) st.att = Math.max(st.att || 0, v.n + (st.run && !st.run.done ? 1 : 0));
         if (!st.hist.length && v && v.n) {
-          st.att = v.n;
           if (v.bp !== v.p) st.hist.push({ at: 0, p: v.bp, s: v.bs, max: 45, dur: 0, blur: 0, ans: {}, att: 0 });
           st.hist.push({ at: v.at || 0, p: v.p, s: v.s, max: 45, dur: 0, blur: v.blur || 0, ans: {}, att: v.n, remote: true });
         }
@@ -416,7 +428,13 @@
     }
     const testTitle = id => { const t = meta(id); return t ? t.title : "Тест НМТ"; };
 
-    return { homeHtml, pageHtml, onClick, payload, merge, reportLines, loadIndex, bindDrag, inExam, stopTick, activeRun,
+    /* Підсумок для головної: скільки симуляцій пройдено, найкращий бал. */
+    function summary() {
+      const s = host.me(); let sims = 0, tests = 0, bestS = 0, bestP = 0;
+      for (const id in (s && s.nmt) || {}) { const st = s.nmt[id], n = doneCount(st); if (!n) continue; sims += n; tests++; const b = best(st); if (b) { bestS = Math.max(bestS, b.s || 0); bestP = Math.max(bestP, b.p || 0); } }
+      return { sims, tests, bestS, bestP, total: index ? index.tests.length : 0 };
+    }
+    return { summary, homeHtml, pageHtml, onClick, payload, merge, reportLines, loadIndex, bindDrag, inExam, stopTick, activeRun,
       getTest, mistakes, testTitle, points, maxOf };
   };
 })();

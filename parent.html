@@ -43,6 +43,17 @@ h1, h2, h3 { font-family: var(--f-display); margin: 0; line-height: 1.2; } h1 { 
 .tag.red { background: var(--wrong-bg); color: var(--wrong); } .tag.green { background: var(--right-bg); color: var(--right); }
 .chart { width: 100%; height: auto; display: block; color: var(--muted); } .chart rect { fill: color-mix(in srgb, var(--violet) 60%, transparent); } .chart text { font-size: 12px; fill: currentColor; }
 .err { color: var(--wrong); }
+.big3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.big { --c: #2445c7; border-radius: 16px; padding: 14px; display: grid; align-content: start; gap: 2px; min-width: 0; background: color-mix(in srgb, var(--c) 10%, var(--bg)); border: 1px solid color-mix(in srgb, var(--c) 35%, transparent); }
+.big.b-z { --c: #c2185b; } .big.b-n { --c: #b7791f; }
+.big .h { font-size: 14px; font-weight: 700; color: var(--c); }
+.big > b { font: 800 32px/1.1 var(--f-display); letter-spacing: -.02em; }
+.big .of { font-size: 13px; color: var(--muted); }
+.big .pbar { margin: 8px 0 6px; } .big .pbar i { background: var(--c); }
+.big .ln { font-size: 14px; color: var(--muted); } .big .ln b { color: var(--text); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .big { --c: #8fa6ff; } :root:not([data-theme="light"]) .big.b-z { --c: #ff8fc0; } :root:not([data-theme="light"]) .big.b-n { --c: #ffd36b; } }
+:root[data-theme="dark"] .big { --c: #8fa6ff; } :root[data-theme="dark"] .big.b-z { --c: #ff8fc0; } :root[data-theme="dark"] .big.b-n { --c: #ffd36b; }
+@media (max-width: 640px) { .big3 { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .trow { grid-template-columns: minmax(0, 1fr) 70px 44px; } h1 { font-size: 20px; } }
 @media print { .noprint { display: none !important; } body { background: #fff; color: #000; } .card { break-inside: avoid; border-color: #ccc; } }
 
@@ -73,6 +84,7 @@ a.wordmark { text-decoration: none; }
 <body>
 <div class="wrap" id="root"><p class="hint">Завантажую звіт…</p></div>
 <script src="config.js"></script>
+<script src="answers-view.js?v=38"></script>
 <script>
 (function () {
   "use strict";
@@ -88,10 +100,10 @@ a.wordmark { text-decoration: none; }
   if (!API) return fail("Сайт не підключено до таблиці результатів.");
   if (!r) return fail("У посиланні немає підпису.");
 
-  async function load() {
+  async function load(body) {
     for (let i = 0; i < 3; i++) {
       try {
-        const res = await fetch(API, { method: "POST", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "parent", t: r }) });
+        const res = await fetch(API, { method: "POST", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body || { action: "parent", t: r }) });
         const d = JSON.parse(await res.text());
         if (d && (d.ok || d.error !== "server")) return d;
       } catch (e) {}
@@ -108,19 +120,24 @@ a.wordmark { text-decoration: none; }
     return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Активність за 30 днів">` + list.map((x, i) => { const hh = (H - 28) * x.v / max; return `<rect x="${i * bw + 2}" y="${H - 20 - hh}" width="${bw - 4}" height="${hh}" rx="2"><title>${x.k}: ${x.v}</title></rect>` + (i % 5 === 0 ? `<text x="${i * bw + bw / 2}" y="${H - 4}" text-anchor="middle">${x.k.slice(8)}.${x.k.slice(5, 7)}</text>` : ""); }).join("") + "</svg>";
   }
 
-  load().then(d => {
+  const nmtIndex = fetch("nmt/index.json").then(x => x.json()).catch(() => null);
+  Promise.all([load(), nmtIndex]).then(([d, ni]) => {
     if (!d) return fail("Немає зв’язку з сервером. Спробуйте пізніше.");
     if (!d.ok) return fail(d.error === "link" ? "Посилання недійсне або застаріле." : "Не вдалося завантажити звіт.");
     const t = d.topics, a = t.reduce((x, y) => x + y.a, 0), c = t.reduce((x, y) => x + y.c, 0);
     const act = d.act || {}, w0 = week(act.dn, 0), w1 = week(act.dn, 1), plus = d.plus || {};
     const started = t.filter(x => x.a >= 10).map(x => Object.assign({ acc: x.c / x.a }, x));
     const weak = started.filter(x => x.acc < 0.6).sort((x, y) => x.acc - y.acc).slice(0, 5), strong = started.filter(x => x.acc >= 0.85).sort((x, y) => y.acc - x.acc).slice(0, 5);
-    const diag = plus.diag;
+    const diag = plus.diag, sims = d.nmt.sims != null ? d.nmt.sims : d.nmt.tests;
+    const nmtRows = ni && d.nmt.list ? ni.tests.filter(x => d.nmt.list[x.id]).map(x => Object.assign({ title: x.title }, d.nmt.list[x.id])) : [];
     let h = `<div class="top"><a class="logo wordmark" href="./" aria-label="Дослівно — на головну сайту">Досл<span class="wm-st">і</span>вно</a><span class="spacer"></span>${window.MGTheme ? MGTheme.btn() : ""}<button class="btn noprint" onclick="window.print()">Друк / PDF</button></div>
       <div class="card"><h1>Звіт про навчання</h1><p><b>${esc(d.name)}</b>, клас ${esc(d.cls)}</p><p class="hint">Українська мова: тренажер, завдання ЗНО й симуляції НМТ. Сформовано ${new Date(d.now).toLocaleString("uk-UA")}.</p>
-      <div class="kpis"><div class="kpi"><b>${a} / ${t.length * 100}</b><span>виконано завдань тренажера</span></div><div class="kpi"><b>${pct(a ? c / a : null)}</b><span>правильних відповідей</span></div>
-      <div class="kpi"><b>${d.zno.a ? pct(d.zno.c / d.zno.a) : "—"}</b><span>точність у завданнях ЗНО (${d.zno.a})</span></div><div class="kpi"><b>${d.nmt.best || "—"}</b><span>найкращий бал симуляції НМТ (100–200)</span></div>
-      <div class="kpi"><b>${streak((() => { const o = Object.assign({}, act.days || {}); for (const k in plus.days || {}) o[k] = Math.max(o[k] || 0, plus.days[k] || 0); return o; })())}</b><span>днів поспіль із заняттями</span></div><div class="kpi"><b>${act.mins != null ? (act.mins >= 60 ? (act.mins / 60).toFixed(1).replace(".", ",") + " год" : act.mins + " хв") : "—"}</b><span>час занять (орієнтовно)</span></div>
+      <div class="big3">
+        <div class="big b-t"><span class="h">Тренажер</span><b>${a}</b><span class="of">з ${t.length * 100} завдань</span><div class="pbar"><i style="width:${a / (t.length * 100) * 100}%"></i></div><span class="ln">${a ? `правильно <b>${pct(c / a)}</b> (${c} з ${a})` : "ще немає відповідей"}</span></div>
+        <div class="big b-z"><span class="h">Завдання ЗНО</span><b>${d.zno.a}</b><span class="of">з ${d.zno.total || 2077} завдань</span><div class="pbar"><i style="width:${d.zno.a / (d.zno.total || 2077) * 100}%"></i></div><span class="ln">${d.zno.a ? `правильно <b>${pct(d.zno.c / d.zno.a)}</b> (${d.zno.c} з ${d.zno.a})` : "ще немає відповідей"}</span></div>
+        <div class="big b-n"><span class="h">Симуляції НМТ</span><b>${sims}</b><span class="of">пройдено</span><div class="pbar"><i style="width:${ni && ni.tests ? d.nmt.tests / ni.tests.length * 100 : 0}%"></i></div><span class="ln">${sims ? `найкращий бал <b>${d.nmt.best || "поріг не подолано"}</b> · тестів ${d.nmt.tests}${ni && ni.tests ? " з " + ni.tests.length : ""}` : "ще не було симуляцій"}</span></div>
+      </div>
+      <div class="kpis"><div class="kpi"><b>${streak((() => { const o = Object.assign({}, act.days || {}); for (const k in plus.days || {}) o[k] = Math.max(o[k] || 0, plus.days[k] || 0); return o; })())}</b><span>днів поспіль із заняттями</span></div><div class="kpi"><b>${act.mins != null ? (act.mins >= 60 ? (act.mins / 60).toFixed(1).replace(".", ",") + " год" : act.mins + " хв") : "—"}</b><span>час занять (орієнтовно)</span></div>
       <div class="kpi"><b>${w0.n}</b><span>відповідей цього тижня (минулого: ${w1.n})</span></div><div class="kpi"><b>${d.fix ? d.fix.done + " / " + (d.fix.done + d.fix.open) : "—"}</b><span>виправлено помилок</span></div></div></div>
       <div class="card"><h2>Активність за 30 днів</h2>${chart(act.days)}<p class="hint">Кількість відповідей щодня.</p></div>`;
     if (weak.length || strong.length) h += `<div class="card"><h2>Що вдається, а над чим попрацювати</h2>
@@ -129,10 +146,13 @@ a.wordmark { text-decoration: none; }
     if (diag && diag.res) { const n = Object.keys(diag.res).length, ok = Object.values(diag.res).filter(v => v === "1").length; h += `<div class="card"><h2>Діагностика</h2><p>Правильно ${ok} з ${n} (по одному завданню з кожної теми)${diag.at ? ", " + new Date(diag.at).toLocaleDateString("uk-UA") : ""}.</p></div>`; }
     if (d.tests && d.tests.length) h += `<div class="card"><h2>Моніторингові роботи</h2><div class="rows">${d.tests.map(x => `<div class="trow"><span>${esc(x.title)} <span class="hint">· ${new Date(x.done).toLocaleDateString("uk-UA")}</span></span><span class="num">${x.score}/${x.max}</span><b class="num">${x.grade}</b></div>`).join("")}</div><p class="hint">Оцінка — за 12-бальною шкалою.</p></div>`;
     if (d.assign && d.assign.length) h += `<div class="card"><h2>Завдання від учителя</h2><div class="rows">${d.assign.map(x => { const ts = x.items.filter(i => i[0] === "t").map(i => t.find(z => z.id === i.slice(2))).filter(Boolean); const p = ts.length ? ts.reduce((s, z) => s + z.a / 100, 0) / ts.length : null; return `<div class="trow"><span>${esc(x.title)}${x.due ? ` <span class="hint">· до ${new Date(x.due).toLocaleDateString("uk-UA")}</span>` : ""}</span><div class="pbar">${p != null ? `<i style="width:${p * 100}%"></i>` : ""}</div><span class="num">${p != null ? pct(p) : ""}</span></div>`; }).join("")}</div></div>`;
+    if (nmtRows.length) h += `<div class="card"><h2>Симуляції НМТ</h2><p class="hint">Бал 100–200 за офіційною таблицею; у дужках — тестові бали з 45.</p><div class="rows">${nmtRows.map(x => `<div class="trow"><span>${esc(x.title)} <span class="hint">· спроб ${x.n}${x.at ? ", остання " + new Date(x.at).toLocaleDateString("uk-UA") : ""}</span></span><span class="num">остання ${x.s || "—"} (${x.p})</span><b class="num">${x.bs || "—"}</b></div>`).join("")}</div><p class="hint">Праворуч — найкращий результат.</p></div>`;
     h += `<div class="card"><h2>Теми тренажера</h2><p class="hint">Смужка — скільки зі 100 завдань теми виконано; число — частка правильних.</p><div class="rows">${t.map(x => `<div class="trow"><span>${esc(x.title)}</span><div class="pbar"><i class="${x.a && x.c / x.a < 0.6 ? "low" : x.a && x.c / x.a < 0.8 ? "mid" : ""}" style="width:${x.a}%"></i></div><span class="num">${x.a ? pct(x.c / x.a) : "—"}</span></div>`).join("")}</div></div>
+      <div class="card"><h2>Відповіді учня</h2><p class="hint">Кожне виконане завдання: що запитали, яку відповідь обрав учень і яка правильна. Згруповано за темою та спробою, найновіші вгорі.</p><div id="av-box"></div></div>
       <p class="hint">Посилання особисте: воно відкриває звіт лише цього учня. Не пересилайте його стороннім. Якщо посилання потрапило до чужих рук, попросіть учителя створити нове — старе перестане працювати.</p>
       <footer class="site-foot">Створено Вадимом Куликом</footer>`;
     root.innerHTML = h;
+    MGAnswers(src => load({ action: "parent_answers", t: r, src })).mount(document.getElementById("av-box"));
   });
 })();
 </script>

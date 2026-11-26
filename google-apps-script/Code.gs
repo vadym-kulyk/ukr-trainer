@@ -20,7 +20,7 @@
 
 const SHEET_NAME = 'Результати';
 const LOG_SHEET = 'Спроби';
-const SERVICE_VERSION = 20;
+const SERVICE_VERSION = 21;
 const ZNO_SHEET = 'ЗНО';
 const NMT_SHEET = 'НМТ';
 const PROFILE_SHEET = 'Профілі';
@@ -29,7 +29,7 @@ const MAX_FAILS = 8;
 const LOG_HEADER = ['Час', 'Учень', 'Тема', 'Спроба теми №', 'Завдання №', 'Тип завдання', 'Результат', 'Запитання', 'Відповідь учня', 'Правильна відповідь',
   'Час на завдання, с', 'Виходів зі сторінки', 'Поза сторінкою, с'];
 const TYPE_NAMES = { one: 'одна відповідь', multi: 'кілька відповідей', sort: 'розподіл за групами', match: 'відповідність', order: 'порядок',
-  single: 'ЗНО: одна відповідь', multiple: 'ЗНО: кілька відповідей', matching: 'ЗНО: відповідність', nmt: 'НМТ: симуляція', fix: 'робота над помилками',
+  single: 'ЗНО: одна відповідь', multiple: 'ЗНО: кілька відповідей', matching: 'ЗНО: відповідність', nmt: 'НМТ: симуляція', nmtq: 'НМТ: завдання тесту', fix: 'робота над помилками',
   th: 'тренування теорії', wu: 'щоденна розминка', diag: 'діагностика', ctl: 'моніторингова робота' };
 const EXTRA_TYPES = [TYPE_NAMES.th, TYPE_NAMES.wu, TYPE_NAMES.diag, TYPE_NAMES.ctl];
 const TASKS_PER_TOPIC = 100;
@@ -719,14 +719,14 @@ function doPost(e) {
   try { d = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false, error: 'server', detail: 'bad json' }); }
   // Читання статистики й вхід адміністратора нічого не записують у спільні аркуші,
   // тож не стоять у черзі за збереженнями учнів.
-  if (d.action === 'parent') {
-    try { return out_(parentReport_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
+  if (d.action === 'parent' || d.action === 'parent_answers') {
+    try { return out_(d.action === 'parent' ? parentReport_(d) : parentAnswers_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
   }
   // Урок у класі: учні питають часто, тож відповідаємо з кешу, без аркушів і без черги.
   if (d.action === 'class_state') {
     try { return out_(classState_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
   }
-  if (d.action === 'admin_data' || d.action === 'admin_login' || d.action === 'admin_live' || d.action === 'admin_class_set' || d.action === 'admin_class_get') {
+  if (d.action === 'admin_data' || d.action === 'admin_answers' || d.action === 'admin_login' || d.action === 'admin_live' || d.action === 'admin_class_set' || d.action === 'admin_class_get') {
     try { return out_(admin_(d)); } catch (err) { return out_({ ok: false, error: 'server', detail: String(err) }); }
   }
   const lock = LockService.getScriptLock();
@@ -999,6 +999,7 @@ function admin_(d) {
   if (!adminOk_(d)) return { ok: false, error: 'admin_auth' };
   switch (d.action) {
     case 'admin_data': return adminData_();
+    case 'admin_answers': return adminAnswers_(d);
     case 'admin_class_set': return adminClassSet_(d);
     case 'admin_class_get': return { ok: true, st: classCtl_() };
     case 'admin_live': return adminLive_(d);
@@ -1202,6 +1203,7 @@ function logAgg_() {
     main.forEach((r, i) => {
       const t = iso_(r[0]); if (!t) return;
       const name = String(r[1]), type = String(r[5]), ok = String(r[6]).indexOf('✓') >= 0, isX = EXTRA_TYPES.indexOf(type) >= 0;
+      if (type === TYPE_NAMES.nmtq) return; // окремі завдання симуляції НМТ — лише для перегляду відповідей
       const isFix = type === TYPE_NAMES.fix || isX, isNmt = type === TYPE_NAMES.nmt, plain = !isFix && !isNmt;
       const dk = dayOf(t), dd = agg.days[dk] || (agg.days[dk] = { a: 0, ok: 0, fix: 0, x: 0, u: {} });
       if (isX) dd.x++; else if (isFix) dd.fix++; else if (!isNmt) { dd.a++; if (ok) dd.ok++; }
@@ -1555,7 +1557,7 @@ function adminLive_(d) {
     const n = Math.min(mins > 20 ? 4000 : 1500, last - 1), from = last - n + 1, wide = ls.getMaxColumns() >= 13;
     const vals = ls.getRange(from, 1, n, wide ? 13 : 10).getValues();
     vals.forEach(r => {
-      const t = iso_(r[0]); if (t < since) return;
+      const t = iso_(r[0]); if (t < since || String(r[5]) === TYPE_NAMES.nmtq) return;
       const name = String(r[1]), p = byName[name] || {};
       const o = out[name] || (out[name] = { name, key: p.key || '', cls: p.cls || '', first: t, last: 0, topic: '', type: '', seq: [], n: 0, ok: 0, ex: 0, away: 0, ev: [] });
       const ok = String(r[6]).indexOf('✓') >= 0 || String(r[6]) === 'поріг подолано';
@@ -1601,13 +1603,65 @@ function parentReport_(d) {
   const sh = sheet_(), stored = readStored_(sh, findRow_(sh, key));
   const topics = TOPICS.map(([id, title]) => { const r = cleanR_(stored[id]) || ''; let a = 0, c = 0; for (const ch of r) { if (ch !== '.') a++; if (ch === '1') c++; } return { id, title, a, c }; });
   const zno = znoOut_(key);
-  let za = 0, zc = 0; Object.keys(zno).forEach(id => String(zno[id]).split(';').forEach(x => { const m = x.match(/^\d+:([01])$/); if (m) { za++; if (m[1] === '1') zc++; } }));
+  // ЗНО: одне завдання може бути в кількох темах — рахуємо унікальні (правильно хоч раз — правильно).
+  const zu = {}; Object.keys(zno).forEach(id => String(zno[id]).split(';').forEach(x => { const m = x.match(/^(\d+):([01])$/); if (m && (m[2] === '1' || !(m[1] in zu))) zu[m[1]] = m[2]; }));
+  const za = Object.keys(zu).length, zc = Object.keys(zu).filter(k => zu[k] === '1').length;
   const nmt = readNmt_(key), plus = plusSummary_(readPlus_(key));
-  let best = 0, tests = 0; Object.keys(nmt || {}).forEach(id => { tests++; best = Math.max(best, Number(nmt[id].bs) || 0); });
+  let best = 0, tests = 0, sims = 0; Object.keys(nmt || {}).forEach(id => { tests++; sims += Number(nmt[id].n) || 0; best = Math.max(best, Number(nmt[id].bs) || 0); });
   const { agg } = logAgg_(), x = agg.st[display] || null;
   const act = x ? { last: x.last, n: x.n, ok: x.ok, mins: Math.round(x.mins), days: x.days, dn: x.dn } : null;
   const ex = extrasData_();
   const assign = ex.a.filter(r => addressed_(r[3], key, cls)).map(r => ({ title: r[2], items: r[4].split(',').filter(Boolean), due: r[5] }));
   const tr = testsForAdmin_(), myTests = tr.results.filter(r => r.key === key && r.done).map(r => { const t = tr.tests.find(z => z.id === r.id); return { title: t ? t.title : 'Моніторингова робота', done: r.done, score: r.score, max: r.max, grade: r.grade }; });
-  return { ok: true, now: Date.now(), name, cls, topics, zno: { a: za, c: zc }, nmt: { tests, best }, fix: stored._fixSum || null, plus, act, assign, tests: myTests };
+  return { ok: true, now: Date.now(), name, cls, topics, zno: { a: za, c: zc, total: ZNO_UNIQUE }, nmt: { tests, sims, best, list: nmt }, fix: stored._fixSum || null, plus, act, assign, tests: myTests };
+}
+
+/* ═════════════════════════ Відповіді учня (для вчителя й батьків) ═════════════════════════
+   Рядки журналу «Спроби» одного учня: що саме він відповів у кожному завданні.
+   src: t — тренажер, z — ЗНО, n — НМТ, f — робота над помилками, x — розминка, діагностика, теорія, моніторингові. */
+const ANSWERS_MAX = 1500;
+function srcOf_(title, type) {
+  if (type === TYPE_NAMES.fix) return 'f';
+  if (EXTRA_TYPES.indexOf(type) >= 0) return 'x';
+  if (title.indexOf('НМТ ') === 0) return 'n';
+  if (title.indexOf('ЗНО ') === 0) return 'z';
+  return 't';
+}
+function studentAnswers_(display, src) {
+  const ls = logSheet_(), last = ls.getLastRow(), counts = { t: 0, z: 0, n: 0, f: 0, x: 0 };
+  if (last < 2) return { ok: true, rows: [], counts, more: false };
+  // Спершу лише ім’я, тема й тип (стовпці B–F), потім — повні рядки потрібного проміжку.
+  const head = ls.getRange(2, 2, last - 1, 5).getValues(), hit = [];
+  for (let i = head.length - 1; i >= 0; i--) {
+    const r = head[i]; if (String(r[0]) !== display) continue;
+    const k = srcOf_(String(r[1]), String(r[4])); counts[k]++;
+    if (k === src && hit.length < ANSWERS_MAX) hit.push(i + 2);
+  }
+  if (!hit.length) return { ok: true, rows: [], counts, more: false };
+  const from = hit[hit.length - 1], to = hit[0], cols = Math.min(11, ls.getMaxColumns());
+  const vals = ls.getRange(from, 1, to - from + 1, cols).getValues();
+  const rows = hit.map(rn => {
+    const v = vals[rn - from];
+    return [iso_(v[0]), String(v[2]), Number(v[3]) || 1, Number(v[4]) || 0, String(v[5]), String(v[6]), String(v[7]).slice(0, 500), String(v[8]).slice(0, 300), String(v[9]).slice(0, 300), cols >= 11 && v[10] !== '' ? Number(v[10]) : null];
+  });
+  return { ok: true, rows, counts, more: counts[src] > rows.length };
+}
+const ANS_SRC = ['t', 'z', 'n', 'f', 'x'];
+function displayOf_(key) {
+  const ps = profileSheet_(), row = findRow_(ps, key);
+  if (row < 0) return null;
+  const v = ps.getRange(row, 1, 1, 3).getValues()[0];
+  return String(v[1]) + ' (' + String(v[2]) + ')';
+}
+function adminAnswers_(d) {
+  const display = displayOf_(String(d.key || ''));
+  if (!display) return { ok: false, error: 'not_found' };
+  return studentAnswers_(display, ANS_SRC.indexOf(d.src) >= 0 ? d.src : 't');
+}
+function parentAnswers_(d) {
+  const t = String(d.t || '').replace(/[^A-Za-z0-9]/g, '');
+  if (t.length < 8) return { ok: false, error: 'link' };
+  const key = rows_(profileSheet_(), 1).map(r => String(r[0])).filter(Boolean).find(k => parentToken_(k) === t);
+  if (!key) return { ok: false, error: 'link' };
+  return studentAnswers_(displayOf_(key), ANS_SRC.indexOf(d.src) >= 0 ? d.src : 't');
 }

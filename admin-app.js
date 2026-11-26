@@ -22,7 +22,7 @@
   const ui = { cls: "", sorts: {}, q: "", topicSrc: "t", taskSrc: "all", taskTopic: "", taskMin: 3, sel: null, stuTab: "t" };
   const compose = { type: "all", classes: new Set(), keys: new Set(), q: "", title: "", text: "", imp: false, busy: false };
   const asg = { id: "", title: "", items: new Set(), type: "class", classes: new Set(), keys: new Set(), q: "", due: "", note: "", iq: "", busy: false, open: false };
-  const znoCache = {}, nmtCache = {}, taskCache = {};
+  const znoCache = {}, nmtCache = {}, taskCache = {}, AV = {};
 
   function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toast.h); toast.h = setTimeout(() => { t.hidden = true; }, 2800); }
 
@@ -135,9 +135,9 @@
     }
     let zok = 0; zu.forEach(v => { if (v === "1") zok++; });
     o.zn = { a: zu.size, c: zok, acc: zu.size ? zok / zu.size : null };
-    let best = 0, tests = 0;
-    for (const id in s.nmt || {}) { tests++; best = Math.max(best, Number(s.nmt[id].bs) || 0); }
-    o.nm = { tests, best };
+    let best = 0, tests = 0, sims = 0;
+    for (const id in s.nmt || {}) { tests++; sims += Number(s.nmt[id].n) || 0; best = Math.max(best, Number(s.nmt[id].bs) || 0); }
+    o.nm = { tests, best, sims };
     o.act = s.act || { last: 0, n: 0, ok: 0, fix: 0, mins: 0, days: {} };
     o.seen = Math.max(o.act.last || 0, s.updated || 0, s.lastLogin || 0);
     o.week = sumDays(o.act.days, 7);
@@ -323,6 +323,8 @@
       live: AP.routes.live, tests: AP.routes.tests, test: () => AP.routes.test(a1), rules: AP.routes.rules }[r] || overview;
     const y = window.scrollY;
     root.innerHTML = shell(V());
+    const avBox = document.getElementById("av-box");
+    if (avBox) { const k = avBox.dataset.key; (AV[k] || (AV[k] = MGAnswers(src => api({ action: "admin_answers", key: k, src })))).mount(avBox); }
     if (render.keepScroll) window.scrollTo(0, y);
     render.keepScroll = false;
   }
@@ -387,6 +389,7 @@
         { k: "acc", t: "Точність", v: r => r.tr.acc, h: r => cellBar(r.tr.acc) },
         { k: "zno", t: "ЗНО", v: r => r.zn.acc, h: r => r.zn.a ? cellBar(r.zn.acc, pctTxt(r.zn.acc) + " з " + r.zn.a) : "—" },
         { k: "nmt", t: "НМТ найкраще", v: r => r.nm.best || null, num: 1, h: r => r.nm.best || (r.nm.tests ? "поріг не подолано" : "—") },
+        { k: "sims", t: "Симуляцій НМТ", v: r => r.nm.sims, num: 1, h: r => r.nm.sims || "—" },
         { k: "fix", t: "Помилки виправлено", v: r => r.fx ? r.fx.done : null, h: r => r.fx && (r.fx.done + r.fx.open) ? r.fx.done + " з " + (r.fx.done + r.fx.open) : "—" },
         { k: "foc", t: "Зосередженість", v: r => r.fo ? r.fo.focus : null, h: r => focusCell(r) },
         { k: "exa", t: "Відп. після виходу", v: r => r.fo ? r.fo.exShare : null, num: 1, h: r => r.fo ? `<span class="${distracted(r) ? "err" : ""}">${pctTxt(r.fo.exShare)}</span>` : "—" },
@@ -408,11 +411,11 @@
         <button class="btn sm noprint" data-resetpin="${esc(s.key)}">Скинути PIN</button><button class="btn sm danger noprint" data-delstu="${esc(s.key)}">Видалити</button></div>
         <div class="hint">Профіль створено ${fmtDate(s.created)} · останній вхід ${fmtDT(s.lastLogin)} · остання активність ${ago(s.seen)}${s.pin ? "" : " · <b>PIN скинуто — учень задасть новий під час входу</b>"}</div>
         <div class="kpis">${kpi(s.tr.a + "/" + T.length * N, "виконано в тренажері", pctTxt(s.tr.prog))}${kpi(pctTxt(s.tr.acc), "точність у тренажері")}${kpi(s.zn.a ? pctTxt(s.zn.acc) : "—", "точність у ЗНО", s.zn.a + " завдань")}
-          ${kpi(s.nm.best || "—", "найкращий бал НМТ", s.nm.tests + " тестів")}${kpi(s.fx && (s.fx.done + s.fx.open) ? s.fx.done + "/" + (s.fx.done + s.fx.open) : "—", "виправлено помилок")}${kpi(hours(s.act.mins || 0), "час у тренажері", "за 7 днів: " + s.week + " відповідей")}</div></div>
+          ${kpi(s.nm.sims, "симуляцій НМТ пройдено", s.nm.sims ? "найкращий бал " + (s.nm.best || "—") + " · тестів " + s.nm.tests : "")}${kpi(s.fx && (s.fx.done + s.fx.open) ? s.fx.done + "/" + (s.fx.done + s.fx.open) : "—", "виправлено помилок")}${kpi(hours(s.act.mins || 0), "час у тренажері", "за 7 днів: " + s.week + " відповідей")}</div></div>
       <div class="card"><h3>Активність за 60 днів</h3>${chartDays(s.act.days || {}, 60)}</div>
       ${focusCard(s)}`;
     if (weak.length) h += `<div class="card"><h3>Найслабші теми</h3><div class="chips">${weak.map(x => `<a class="tag red" href="#topic/t:${x.t.id}">${esc(x.t.title)} · ${pctTxt(x.x.c / x.x.a)}</a>`).join("")}</div></div>`;
-    h += `<div class="card"><div class="row"><h3>Прогрес</h3><span class="spacer"></span><div class="seg">${[["t", "Тренажер"], ["z", "ЗНО"], ["n", "НМТ"], ["e", "Помилки"]].map(([k, l]) => `<button class="${ui.stuTab === k ? "on" : ""}" data-stab="${k}">${l}</button>`).join("")}</div></div>`;
+    h += `<div class="card"><div class="row"><h3>Прогрес</h3><span class="spacer"></span><div class="seg">${[["t", "Тренажер"], ["z", "ЗНО"], ["n", "НМТ"], ["e", "Помилки"], ["a", "Відповіді учня"]].map(([k, l]) => `<button class="${ui.stuTab === k ? "on" : ""}" data-stab="${k}">${l}</button>`).join("")}</div></div>`;
     if (ui.stuTab === "t") h += table("stu-t-" + s.key, [
       { k: "sec", t: "Розділ", v: r => r.t.sec }, { k: "t", t: "Тема", v: r => r.t.title, h: r => `<a href="#topic/t:${r.t.id}">${esc(r.t.title)}</a>` },
       { k: "a", t: "Виконано", v: r => r.x.a, h: r => cellBar(r.x.a / N, r.x.a + "/100", "lvl3") },
@@ -429,6 +432,7 @@
       { k: "n", t: "Спроб", v: r => (s.nmt[r.id] || {}).n || 0, num: 1, h: r => (s.nmt[r.id] || {}).n || "—" },
       { k: "d", t: "Коли", v: r => (s.nmt[r.id] || {}).at || 0, h: r => s.nmt[r.id] ? fmtDate(s.nmt[r.id].at) : "—" }], NI ? NI.tests : []);
     if (ui.stuTab === "e") h += studentMistakes(s);
+    if (ui.stuTab === "a") h += `<p class="hint">Кожна відповідь учня: завдання, обраний варіант і правильна відповідь. Згруповано за темою та спробою, найновіші вгорі.</p><div id="av-box" data-key="${esc(s.key)}"></div>`;
     h += `</div>`;
     h += AP.studentCards(s);
     const myAsg = D.assign.filter(a => addressed(a.code, s));
@@ -704,9 +708,9 @@
   }
   const p100 = v => v == null ? "" : Math.round(v * 1000) / 10;
   const CSV = {
-    "csv-students": () => csv("uchni", ["Учень", "Клас", "Остання активність", "Тренажер виконано", "Тренажер точність %", "ЗНО виконано", "ЗНО точність %", "НМТ найкращий", "Помилок виправлено", "Помилок усього", "Відповідей за 7 днів", "Хвилин",
+    "csv-students": () => csv("uchni", ["Учень", "Клас", "Остання активність", "Тренажер виконано", "Тренажер точність %", "ЗНО виконано", "ЗНО точність %", "НМТ найкращий", "Симуляцій НМТ", "Помилок виправлено", "Помилок усього", "Відповідей за 7 днів", "Хвилин",
       "Зосередженість %", "Виходів зі сторінки", "Відповідей після виходу %", "Сер. час на завдання, с", "Відповідей швидше 3 с %"],
-      S.map(s => [s.name, s.cls, s.seen ? new Date(s.seen).toLocaleString("uk-UA") : "", s.tr.a, p100(s.tr.acc), s.zn.a, p100(s.zn.acc), s.nm.best || "", s.fx ? s.fx.done : "", s.fx ? s.fx.done + s.fx.open : "", s.week, s.act.mins || 0,
+      S.map(s => [s.name, s.cls, s.seen ? new Date(s.seen).toLocaleString("uk-UA") : "", s.tr.a, p100(s.tr.acc), s.zn.a, p100(s.zn.acc), s.nm.best || "", s.nm.sims, s.fx ? s.fx.done : "", s.fx ? s.fx.done + s.fx.open : "", s.week, s.act.mins || 0,
         s.fo ? p100(s.fo.focus) : "", s.fo ? s.fo.exits : "", s.fo ? p100(s.fo.exShare) : "", s.fo ? Math.round(s.fo.avgSec) : "", s.fo ? p100(s.fo.fastShare) : ""])),
     "csv-topics": () => csv("temy", ["Розділ", "Тема", "Почали", "Завершили", "Середнє виконання", "Точність %", "Помилок"], topicStats(S).map(r => [r.t.sec, r.t.title, r.started, r.full, Math.round(r.avg), p100(r.acc), r.w])),
     "csv-tasks": () => csv("skladni-zavdannia", ["Тема", "№", "Завдання", "Помилок %", "Хибних", "Відповідей", "Найчастіші хибні"], hardRows().map(r => [r.title, r.i + 1, taskPreview(r), Math.round(r.e * 100), r.w, r.a, Object.keys(D.wrong[r.tid + "|" + (r.i + 1)] || {}).join(" | ")])),

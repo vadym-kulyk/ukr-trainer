@@ -30,7 +30,7 @@
     /* ── Активність, серія, тижнева ціль ── */
     function countEvents(events) {
       const x = plus(); if (!x || !events || !events.length) return;
-      events.forEach(ev => { const k = dk(ev.at || Date.now()); x.days[k] = (x.days[k] || 0) + 1; });
+      events.forEach(ev => { if (ev.type === "nmtq") return; const k = dk(ev.at || Date.now()); x.days[k] = (x.days[k] || 0) + 1; });
       const keys = Object.keys(x.days).sort();
       if (keys.length > 400) keys.slice(0, keys.length - 400).forEach(k => { delete x.days[k]; });
       badgeCheck();
