@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=39"></script>
+<script src="theme.js?v=40"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1114,15 +1114,75 @@ body.compact .hero-grid { display: none; }
   .login .pgrid { grid-template-columns: 1fr; }
   .stats dt { font-size: 22px; }
 }
+
+/* ── Розділи сайту: плитки, нижня панель (телефон), бокове меню ── */
+.nv-trainer { --nc: var(--lime); --nc-on: var(--on-lime); --nc-ink: var(--lime-ink); }
+.nv-zno { --nc: #c8327a; --nc-on: #fff; --nc-ink: #b02a6b; }
+.nv-nmt { --nc: #f2b632; --nc-on: #2a1d00; --nc-ink: #8a5f00; }
+.nv-fix { --nc: var(--wrong); --nc-on: #fff; --nc-ink: var(--wrong); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nv-zno { --nc: #ff8fc0; --nc-on: #2a0b1b; --nc-ink: #ff9cc8; } :root:not([data-theme="light"]) .nv-nmt { --nc: #ffd36b; --nc-ink: #ffd36b; } :root:not([data-theme="light"]) .nv-fix { --nc-on: #2a0a06; } }
+:root[data-theme="dark"] .nv-zno { --nc: #ff8fc0; --nc-on: #2a0b1b; --nc-ink: #ff9cc8; } :root[data-theme="dark"] .nv-nmt { --nc: #ffd36b; --nc-ink: #ffd36b; } :root[data-theme="dark"] .nv-fix { --nc-on: #2a0a06; }
+.nv-ic svg, .burger svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.navtiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-block: 18px 22px; }
+.nt { display: grid; justify-items: start; align-content: start; gap: 10px; padding: 16px; min-width: 0; border: 2px solid color-mix(in srgb, var(--nc) 35%, var(--line)); border-radius: 18px; background: color-mix(in srgb, var(--nc) 7%, var(--bg)); color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, transform .15s, box-shadow .15s; }
+.nt .nv-ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: color-mix(in srgb, var(--nc) 15%, transparent); color: var(--nc-ink); }
+.nt .nv-ic svg { width: 28px; height: 28px; }
+.nt-t { display: grid; gap: 3px; min-width: 0; }
+.nt b { font: 800 17px/1.2 var(--f-display); letter-spacing: -.01em; }
+.nt small { font-size: 13px; line-height: 1.35; color: var(--muted); }
+.nt:hover { border-color: var(--nc); transform: translateY(-2px); box-shadow: 0 8px 20px color-mix(in srgb, var(--nc) 22%, transparent); }
+.nt:focus-visible { outline: 3px solid var(--nc); outline-offset: 3px; }
+.nt[aria-selected="true"] { background: var(--nc); border-color: var(--nc); color: var(--nc-on); box-shadow: 0 10px 24px color-mix(in srgb, var(--nc) 35%, transparent); }
+.nt[aria-selected="true"] .nv-ic { background: color-mix(in srgb, var(--nc-on) 16%, transparent); color: var(--nc-on); }
+.nt[aria-selected="true"] small { color: inherit; opacity: .85; }
+.nt[aria-selected="true"] .tab-badge { background: var(--nc-on); color: var(--nc); }
+@media (max-width: 760px) { .navtiles { grid-template-columns: 1fr 1fr; } }
+.brand-l { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.burger { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); cursor: pointer; padding: 0; }
+.burger:hover { border-color: var(--text); }
+body.exam .burger, body.exam .bnav, body.showmode .bnav { display: none !important; }
+html.dr-on { overflow: hidden; }
+.drawer-bg { position: fixed; inset: 0; z-index: 55; background: rgb(10 13 38 / .45); opacity: 0; transition: opacity .2s; }
+.drawer-bg.open { opacity: 1; }
+.drawer { position: absolute; left: 0; top: 0; bottom: 0; width: min(320px, 86vw); background: var(--bg); color: var(--text); overflow-y: auto; display: grid; align-content: start; gap: 6px;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 14px calc(20px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); transform: translateX(-100%); transition: transform .22s ease-out; box-shadow: 8px 0 32px rgb(0 0 0 / .2); }
+.drawer-bg.open .drawer { transform: none; }
+.dr-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px 8px; }
+.dr-head .wordmark { font-size: 24px; }
+.dr-cap { margin: 10px 6px 2px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.dr-list { display: grid; gap: 2px; }
+.dr-it[data-dr] { --nc: var(--violet); --nc-ink: var(--violet-ink); }
+.dr-it { display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 12px; padding: 8px 10px; border: 0; border-radius: 12px; background: none; color: var(--text); font: 600 16px inherit; font-family: inherit; text-align: left; cursor: pointer; }
+.dr-it .nv-ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; position: relative; background: color-mix(in srgb, var(--nc) 15%, transparent); color: var(--nc-ink); }
+.dr-it:hover { background: var(--surface); }
+.dr-it[aria-current] { background: color-mix(in srgb, var(--nc) 14%, transparent); font-weight: 800; }
+.nv-dot { position: absolute; top: -5px; right: -7px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--wrong); color: #fff; font: 800 11px/18px var(--f-text, inherit); text-align: center; border: 2px solid var(--bg); box-sizing: content-box; }
+.bnav { display: none; }
+@media (max-width: 640px) {
+  .navtiles { display: none; }
+  .bnav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); position: fixed; left: 0; right: 0; bottom: 0; z-index: 35; background: var(--bg); border-top: 1px solid var(--line); box-shadow: 0 -6px 20px rgb(16 22 42 / .08);
+    padding: 6px max(4px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(4px, env(safe-area-inset-left, 0px)); }
+  .bn { display: grid; justify-items: center; gap: 3px; min-height: 56px; padding: 2px; border: 0; background: none; color: var(--muted); font: 600 12px/1.1 inherit; font-family: inherit; cursor: pointer; min-width: 0; }
+  .bn .nv-ic { width: 56px; height: 32px; border-radius: 999px; display: grid; place-items: center; position: relative; color: var(--nc-ink); transition: background .15s; }
+  .bn .nv-dot { right: 4px; }
+  .bn[aria-current] { color: var(--text); font-weight: 800; }
+  .bn[aria-current] .nv-ic { background: var(--nc); color: var(--nc-on); }
+  .bn:focus-visible { outline: 2px solid var(--nc); outline-offset: -2px; border-radius: 12px; }
+  body:not(.exam):not(.showmode) { padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)); }
+  body:not(.exam):not(.showmode) .fab, body:not(.exam):not(.showmode) .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+  body:not(.exam):not(.showmode) .selchip { bottom: calc(146px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { .nt, .drawer, .drawer-bg { transition: none; } .nt:hover { transform: none; } }
 </style>
 
 </head>
 <body>
-<script src="splash.js?v=39"></script>
+<script src="splash.js?v=40"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
-      <a class="logo wordmark" id="home-link" href="./" aria-label="Дослівно — на головну">Досл<span class="wm-st">і</span>вно</a>
+      <div class="brand-l"><button class="burger" id="menu-btn" type="button" aria-label="Відкрити меню" aria-expanded="false" aria-controls="drawer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <a class="logo wordmark" id="home-link" href="./" aria-label="Дослівно — на головну">Досл<span class="wm-st">і</span>вно</a></div>
       <div class="brand-tools">
         <span data-theme-slot=""></span>
         <button class="chip dict-btn" id="dict-btn" type="button" aria-label="Відкрити тлумачний словник"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4.5c2.6-.9 4.9-.6 7 .9 2.1-1.5 4.4-1.8 7-.9v11c-2.6-.9-4.9-.6-7 .9-2.1-1.5-4.4-1.8-7-.9z M10 5.4v11"/></svg><span class="lbl">Словник</span></button>
@@ -1146,6 +1206,20 @@ body.compact .hero-grid { display: none; }
 </header>
 
 <div id="app"></div>
+<nav class="bnav" id="bnav" aria-label="Розділи сайту"></nav>
+<div class="drawer-bg" id="drawer" hidden>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-label="Меню">
+    <div class="dr-head"><span class="wordmark">Досл<span class="wm-st">і</span>вно</span><button class="burger" id="drawer-close" type="button" aria-label="Закрити меню"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <p class="dr-cap">Розділи</p>
+    <div class="dr-list" id="dr-nav"></div>
+    <p class="dr-cap">Ще</p>
+    <div class="dr-list">
+      <button class="dr-it" type="button" data-dr="stats"><span class="nv-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg></span><span>Моя статистика</span></button>
+      <button class="dr-it" type="button" data-dr="dict"><span class="nv-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5.5c3-1 5.8-.7 8.5 1 2.7-1.7 5.5-2 8.5-1v13c-3-1-5.8-.7-8.5 1-2.7-1.7-5.5-2-8.5-1z M12 6.5v13"/></svg></span><span>Тлумачний словник</span></button>
+      <button class="dr-it" type="button" data-dr="profile"><span class="nv-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5"/></svg></span><span>Профіль</span></button>
+    </div>
+  </aside>
+</div>
 <footer class="site-foot">Створено Вадимом Куликом</footer>
 <div class="toast" id="toast" hidden></div>
 <button class="fab" id="fab-theory" type="button" hidden>Теорія</button>
@@ -1166,17 +1240,17 @@ body.compact .hero-grid { display: none; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=39"></script>
-<script src="data-extra.js?v=39"></script>
-<script src="data-morph.js?v=39"></script>
-<script src="engine.js?v=39"></script>
-<script src="zno-app.js?v=39"></script>
-<script src="nmt-app.js?v=39"></script>
-<script src="fix-app.js?v=39"></script>
-<script src="theory-app.js?v=39"></script>
-<script src="plus-app.js?v=39"></script>
-<script src="exam-app.js?v=39"></script>
-<script src="show-app.js?v=39"></script>
+<script src="data.js?v=40"></script>
+<script src="data-extra.js?v=40"></script>
+<script src="data-morph.js?v=40"></script>
+<script src="engine.js?v=40"></script>
+<script src="zno-app.js?v=40"></script>
+<script src="nmt-app.js?v=40"></script>
+<script src="fix-app.js?v=40"></script>
+<script src="theory-app.js?v=40"></script>
+<script src="plus-app.js?v=40"></script>
+<script src="exam-app.js?v=40"></script>
+<script src="show-app.js?v=40"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1227,7 +1301,7 @@ body.compact .hero-grid { display: none; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "39", THEORY = {}, theoryLoading = {};
+  const VER = "40", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1688,6 +1762,7 @@ body.compact .hero-grid { display: none; }
     else if (ui.view === "nmt") { const h = NM.pageHtml(); if (h === null) renderHome(); else app.innerHTML = h; document.body.classList.toggle("exam", NM.inExam()); }
     else renderHome();
     updateFab();
+    updateNav();
     SH.after();
   }
 
@@ -1714,15 +1789,31 @@ body.compact .hero-grid { display: none; }
     for (let i = 0; i < N; i++) { const c = r[i]; h += c === "1" ? '<i class="c1"></i>' : c === "0" ? '<i class="c0"></i>' : "<i></i>"; }
     return h + "</span>";
   }
+  /* Розділи сайту: плитки на головній, нижня панель на телефоні й бокове меню. */
+  const svgI = d => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+  const NAV = [
+    { id: "trainer", title: "Тренажер", short: "Тренажер", sub: "50 тем · 5000 завдань", ic: svgI('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>') },
+    { id: "zno", title: "Завдання ЗНО", short: "ЗНО", sub: "банк завдань за темами", ic: svgI('<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M8.5 9l1.5 1.5L13 7.5M8.5 15l1.5 1.5 3-3M15 9.5h1M15 15.5h1"/>') },
+    { id: "nmt", title: "Симуляція НМТ", short: "НМТ", sub: "тест на час, як на іспиті", ic: svgI('<circle cx="12" cy="13.5" r="7"/><path d="M12 13.5V10M10 3h4M18.5 6.5l1.2-1.2"/>') },
+    { id: "fix", title: "Мої помилки", short: "Помилки", sub: "повтори те, що не вийшло", ic: svgI('<path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3M4.5 4.5v3.7h3.7"/><path d="M10 10l4 4M14 10l-4 4"/>') }
+  ];
+  const navCur = () => ({ home: store.home || "trainer", topic: "trainer", ztopic: "zno", nmt: "nmt", fix: "fix" })[ui.view] || "";
+  function navHtml(cls) {
+    const cur = navCur(), nfix = loggedIn() ? FX.openCount() : 0;
+    return NAV.map(n => `<button class="${cls} nv-${n.id}" type="button" data-nav="${n.id}"${cur === n.id ? ' aria-current="page"' : ""}><span class="nv-ic">${n.ic}${n.id === "fix" && nfix ? `<span class="nv-dot" aria-label="відкритих помилок: ${nfix}">${nfix > 99 ? "99+" : nfix}</span>` : ""}</span><span class="nv-l">${cls === "bn" ? n.short : n.title}</span></button>`).join("");
+  }
+  function updateNav() { $("#bnav").innerHTML = navHtml("bn"); $("#dr-nav").innerHTML = navHtml("dr-it"); }
+  function goSection(id) {
+    if (NM.inExam()) { toast("Спершу завершіть тест НМТ."); return; }
+    store.home = id; saveLocal(); ui.view = "home"; confirmReset = false; render();
+    const y = app.getBoundingClientRect().top + window.scrollY - 8;
+    window.scrollTo({ top: Math.max(0, y), behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
   function renderHome() {
     ui.view = "home"; delete document.body.dataset.sec;
     const home = store.home || "trainer";
     const nfix = loggedIn() ? FX.openCount() : 0;
-    let h = `<main class="wrap"><div class="tabs hometabs four" role="tablist" aria-label="Розділи сайту">
-      <button class="tab" role="tab" aria-selected="${home === "trainer"}" data-home="trainer">Тренажер</button>
-      <button class="tab" role="tab" aria-selected="${home === "zno"}" data-home="zno">Завдання ЗНО</button>
-      <button class="tab" role="tab" aria-selected="${home === "nmt"}" data-home="nmt">Симуляція НМТ</button>
-      <button class="tab" role="tab" aria-selected="${home === "fix"}" data-home="fix">Мої помилки${nfix ? ` <span class="tab-badge" aria-label="відкритих помилок: ${nfix}">${nfix}</span>` : ""}</button></div>`;
+    let h = `<main class="wrap"><div class="navtiles" role="tablist" aria-label="Розділи сайту">${NAV.map(n => `<button class="nt nv-${n.id}" role="tab" aria-selected="${home === n.id}" data-home="${n.id}"><span class="nv-ic">${n.ic}</span><span class="nt-t"><b>${n.title}${n.id === "fix" && nfix ? ` <span class="tab-badge" aria-label="відкритих помилок: ${nfix}">${nfix}</span>` : ""}</b><small>${n.sub}</small></span></button>`).join("")}</div>`;
     if (home === "fix") { app.innerHTML = h + FX.homeHtml() + "</main>"; return; }
     h += assignHtml() + EX.homeHtml();
     if (home === "zno") { app.innerHTML = h + Z.homeHtml() + reportSection() + "</main>"; return; }
@@ -2128,6 +2219,36 @@ body.compact .hero-grid { display: none; }
   /* Назва сайту веде на головну (крім симуляції НМТ, де шапку сховано). */
   $("#home-link").addEventListener("click", e => { if (e.metaKey || e.ctrlKey || e.shiftKey) return; e.preventDefault(); if (NM.inExam()) return; ui.view = "home"; confirmReset = false; render(); window.scrollTo(0, 0); });
   $("#dict-btn").addEventListener("click", () => openDict(""));
+  /* Нижня панель і бокове меню */
+  const drawer = $("#drawer"), menuBtn = $("#menu-btn");
+  let drawerInert = [];
+  function openDrawer() {
+    drawer.hidden = false; menuBtn.setAttribute("aria-expanded", "true"); document.documentElement.classList.add("dr-on");
+    drawerInert = [...document.body.children].filter(c => c !== drawer && c.tagName !== "SCRIPT" && !c.inert);
+    drawerInert.forEach(c => { c.inert = true; });
+    requestAnimationFrame(() => drawer.classList.add("open"));
+    (drawer.querySelector("[aria-current]") || $("#drawer-close")).focus();
+  }
+  function closeDrawer(back) {
+    if (drawer.hidden) return;
+    drawerInert.forEach(c => { c.inert = false; }); drawerInert = [];
+    drawer.classList.remove("open"); menuBtn.setAttribute("aria-expanded", "false"); document.documentElement.classList.remove("dr-on");
+    drawer.hidden = true; if (back) menuBtn.focus();
+  }
+  menuBtn.addEventListener("click", openDrawer);
+  $("#drawer-close").addEventListener("click", () => closeDrawer(true));
+  drawer.addEventListener("click", e => {
+    if (e.target === drawer) return closeDrawer(true);
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.nav) { closeDrawer(); goSection(b.dataset.nav); return; }
+    const k = b.dataset.dr; if (!k) return;
+    closeDrawer();
+    if (k === "dict") openDict("");
+    else if (k === "profile") $("#who-change").click();
+    else if (k === "stats") { if (NM.inExam()) return; if (ui.view !== "home") { ui.view = "home"; render(); } const o = $(loggedIn() ? "#overall" : "#profilebox"); if (o) o.scrollIntoView({ block: "start", behavior: "smooth" }); }
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !drawer.hidden) closeDrawer(true); });
+  $("#bnav").addEventListener("click", e => { const b = e.target.closest("[data-nav]"); if (b) goSection(b.dataset.nav); });
 
   /* Кнопка «Теорія» під час виконання завдань теми. */
   const fab = $("#fab-theory");
