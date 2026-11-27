@@ -307,6 +307,7 @@
     function onClick(b) {
       const d = b.dataset, ui = host.ui;
       if (d.nopen) {
+        if (d.nstage !== "result") { const me = host.me(); if (me) me.lastSec = "nmt"; }
         Object.assign(ui, { view: "nmt", ntest: d.nopen, nstage: d.nstage || "rules" });
         modal = null; pick = null; host.render(); window.scrollTo(0, 0); return true;
       }
@@ -432,7 +433,13 @@
       for (const id in (s && s.nmt) || {}) { const st = s.nmt[id], n = doneCount(st); if (!n) continue; sims += n; tests++; const b = best(st); if (b) { bestS = Math.max(bestS, b.s || 0); bestP = Math.max(bestP, b.p || 0); } }
       return { sims, tests, bestS, bestP, total: index ? index.tests.length : 0 };
     }
-    return { summary, homeHtml, pageHtml, onClick, payload, merge, reportLines, loadIndex, bindDrag, inExam, stopTick, activeRun,
+    /* Для головної: незавершений тест, інакше перший ще не пройдений. */
+    function nextTest() {
+      if (!index) return null;
+      const s = host.me(), t = index.tests.find(x => liveRun(x.id)) || index.tests.find(x => !doneCount(s && s.nmt && s.nmt[x.id]));
+      return t ? { id: t.id, title: t.title, live: !!liveRun(t.id) } : null;
+    }
+    return { summary, nextTest, homeHtml, pageHtml, onClick, payload, merge, reportLines, loadIndex, bindDrag, inExam, stopTick, activeRun,
       getTest, mistakes, testTitle, points, maxOf };
   };
 })();

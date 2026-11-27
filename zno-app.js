@@ -274,7 +274,7 @@
     /* ── Події ── */
     function onClick(b) {
       const d = b.dataset, ui = host.ui;
-      if (d.zopen) { Object.assign(ui, { view: "ztopic", ztopic: d.zopen, tab: d.tab, zcur: -1, zreview: false, map: false }); confirmReset = false; pend = null; host.render(); window.scrollTo(0, 0); return true; }
+      if (d.zopen) { const me = host.me(); if (me && topicMeta(d.zopen)) { me.lastZ = d.zopen; me.lastSec = "zno"; } Object.assign(ui, { view: "ztopic", ztopic: d.zopen, tab: d.tab, zcur: -1, zreview: false, map: false }); confirmReset = false; pend = null; host.render(); window.scrollTo(0, 0); return true; }
       if (ui.view !== "ztopic") return false;
       const t = topicMeta(ui.ztopic), data = topicCache[ui.ztopic];
       if (d.tabto) { ui.tab = d.tabto; host.render(); window.scrollTo(0, 0); return true; }
@@ -390,6 +390,14 @@
     }
 
     return { overall, homeHtml, topicHtml, onClick, payload, sent, merge, reportLines, loadIndex, theoryFor, titleOf, md: M,
+      /* Для головної: остання відкрита тема ЗНО, інакше перша почата, інакше перша незавершена. */
+      nextTopic: last => {
+        if (!index) return null;
+        const a = t => topicStat(t).a;
+        let t = topicMeta(last);
+        if (!t || a(t) >= t.n) t = index.topics.find(x => { const v = a(x); return v > 0 && v < x.n; }) || index.topics.find(x => a(x) < x.n);
+        return t ? { id: t.id, title: t.title, a: a(t), n: t.n } : null;
+      },
       progress: id => { loadIndex(); const t = topicMeta(id), st = zstate(id); return { a: st ? Object.keys(st.res).length : 0, n: t ? t.n : (st && st.n) || 0, title: t ? t.title : "Тема ЗНО" }; },
       getTopic, taskView, input, newPend, readyOf, respOf, check, answerText, hintFor, mistakes, sectionOf: id => { const t = topicMeta(id); return t ? t.sec : ""; } };
   };

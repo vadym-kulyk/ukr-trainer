@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=47"></script>
+<script src="theme.js?v=48"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1223,20 +1223,32 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
 .hero-grid.in .about { display: none; }
 @media (min-width: 641px) { .hero-grid.in .login .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
-/* ══ Головна «Літери» (варіант C): темна шапка учня, «Продовжити», розділи-літери, однотонні меню ══ */
-/* Кольори: світла тема — світла шапка й темна смуга «Продовжити»; темна тема — темна шапка й біла смуга */
+/* ══ Головна «Літери»: шапка учня з великою літерою, статистика з кнопками, розділи з ковзною лінією, однотонні меню ══ */
+/* Кольори: світла тема — синя шапка учня (до входу — світла); темна тема — темно-синя */
 .hero, .secnav { --c-ink: #12163a; --c-sub: #5b6480; --c-rule: #dfe4ee; --c-big: #dfe3ff; --c-chip: #c9cfe6; --c-chip-bg: rgb(255 255 255 / .7);
-  --k1: #2445c7; --k2: #1e8a5a; --k3: #b07300; --k4: #d6336c;
-  --cont-bg: #12163a; --cont-ink: #fff; --cont-sub: #a7abd0; --cont-g: #8fa6ff; --cont-bar: #2a3068; --cont-fill: #8fa6ff; --go-bg: #fff; --go-ink: #12163a;
-  --sn-line: #dfe4ee; --sn-bg: #fff; --sn-hover: #f4f6fb; --sn-on: #eef1ff; --sn-sub: #5b6480; --sn-n: #c9cfe6; --sn-focus: #12163a; }
+  --k1: #2445c7; --k2: #1e8a5a; --k3: #b07300; --k4: #d6336c; --i1: #2445c7; --i2: #1e8a5a; --i3: #b07300;
+  --go-b: #c9cfe6; --go-ink: #12163a; --go-main: #12163a; --go-main-ink: #fff;
+  --sn-line: #dfe4ee; --sn-sub: #5b6480; --sn-on: #12163a; --sn-n: #c9cfe6; --sn-focus: #12163a; }
+:root[data-theme="light"] body.me-in:not(.compact) .hero, :root[data-theme="light"] body.me-in:not(.compact) .secnav { --bg: var(--cobalt); --surface: #3442e0; --surface-2: #4553ea; --line: rgb(255 255 255 / .35); --text: #fff; --muted: #c9cdfb;
+  --c-ink: #fff; --c-sub: #d5d9ff; --c-rule: rgb(255 255 255 / .22); --c-big: #3b4ae8; --c-chip: rgb(255 255 255 / .35); --c-chip-bg: transparent;
+  --k1: #fff; --k2: #fff; --k3: #fff; --i1: #c9d4ff; --i2: #9fe6c4; --i3: #ffe08a;
+  --go-b: rgb(255 255 255 / .45); --go-ink: #fff; --go-main: #fff; --go-main-ink: var(--cobalt);
+  --sn-line: rgb(255 255 255 / .22); --sn-sub: #c9cdfb; --sn-on: #fff; --sn-n: rgb(255 255 255 / .4); --sn-focus: #fff; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body.me-in:not(.compact) .hero, :root:not([data-theme="dark"]) body.me-in:not(.compact) .secnav { --bg: var(--cobalt); --surface: #3442e0; --surface-2: #4553ea; --line: rgb(255 255 255 / .35); --text: #fff; --muted: #c9cdfb;
+  --c-ink: #fff; --c-sub: #d5d9ff; --c-rule: rgb(255 255 255 / .22); --c-big: #3b4ae8; --c-chip: rgb(255 255 255 / .35); --c-chip-bg: transparent;
+  --k1: #fff; --k2: #fff; --k3: #fff; --i1: #c9d4ff; --i2: #9fe6c4; --i3: #ffe08a;
+  --go-b: rgb(255 255 255 / .45); --go-ink: #fff; --go-main: #fff; --go-main-ink: var(--cobalt);
+  --sn-line: rgb(255 255 255 / .22); --sn-sub: #c9cdfb; --sn-on: #fff; --sn-n: rgb(255 255 255 / .4); --sn-focus: #fff; } }
+:root[data-theme="light"] body.me-in:not(.compact) .hero { background: var(--cobalt); background-image: none; color: #fff; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body.me-in:not(.compact) .hero { background: var(--cobalt); background-image: none; color: #fff; } }
 :root[data-theme="dark"] .hero, :root[data-theme="dark"] .secnav { --c-ink: #fff; --c-sub: #a7abd0; --c-rule: #2a3068; --c-big: var(--cobalt); --c-chip: #3b43a0; --c-chip-bg: rgb(18 22 58 / .6);
-  --k1: #8fa6ff; --k2: #52c48d; --k3: #ffc94d; --k4: #ff7aa8;
-  --cont-bg: #fff; --cont-ink: #12163a; --cont-sub: #5b6480; --cont-g: var(--cobalt); --cont-bar: #e3e6f2; --cont-fill: var(--cobalt); --go-bg: var(--cobalt); --go-ink: #fff;
-  --sn-line: #262c66; --sn-bg: #12163a; --sn-hover: #181d4a; --sn-on: #222a6e; --sn-sub: #8f94bf; --sn-n: #3b43a0; --sn-focus: #fff; }
+  --k1: #8fa6ff; --k2: #52c48d; --k3: #ffc94d; --k4: #ff7aa8; --i1: #8fa6ff; --i2: #52c48d; --i3: #ffc94d;
+  --go-b: #3b43a0; --go-ink: #fff; --go-main: #fff; --go-main-ink: #12163a;
+  --sn-line: #2a3068; --sn-sub: #8f94bf; --sn-on: #fff; --sn-n: #3b43a0; --sn-focus: #fff; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .hero, :root:not([data-theme="light"]) .secnav { --c-ink: #fff; --c-sub: #a7abd0; --c-rule: #2a3068; --c-big: var(--cobalt); --c-chip: #3b43a0; --c-chip-bg: rgb(18 22 58 / .6);
-  --k1: #8fa6ff; --k2: #52c48d; --k3: #ffc94d; --k4: #ff7aa8;
-  --cont-bg: #fff; --cont-ink: #12163a; --cont-sub: #5b6480; --cont-g: var(--cobalt); --cont-bar: #e3e6f2; --cont-fill: var(--cobalt); --go-bg: var(--cobalt); --go-ink: #fff;
-  --sn-line: #262c66; --sn-bg: #12163a; --sn-hover: #181d4a; --sn-on: #222a6e; --sn-sub: #8f94bf; --sn-n: #3b43a0; --sn-focus: #fff; } }
+  --k1: #8fa6ff; --k2: #52c48d; --k3: #ffc94d; --k4: #ff7aa8; --i1: #8fa6ff; --i2: #52c48d; --i3: #ffc94d;
+  --go-b: #3b43a0; --go-ink: #fff; --go-main: #fff; --go-main-ink: #12163a;
+  --sn-line: #2a3068; --sn-sub: #8f94bf; --sn-on: #fff; --sn-n: #3b43a0; --sn-focus: #fff; } }
 :root[data-theme="dark"] body.me-in:not(.compact) .hero { --bg: #12163a; --surface: #1b2050; --surface-2: #262c66; --line: #2f3670; --text: #fff; --muted: #a7abd0; background: #12163a; background-image: none; color: #fff; border-bottom: 0; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body.me-in:not(.compact) .hero { --bg: #12163a; --surface: #1b2050; --surface-2: #262c66; --line: #2f3670; --text: #fff; --muted: #a7abd0; background: #12163a; background-image: none; color: #fff; border-bottom: 0; } }
 body.me-in:not(.compact) .hero { border-bottom: 0; }
@@ -1251,41 +1263,33 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
 .cme-out { font: 600 13px var(--f-text); color: var(--c-sub); background: var(--c-chip-bg); border: 0; padding: 4px 6px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .cme-out:hover { color: var(--c-ink); }
 .hero-grid.in .login .st-band { background: none; padding: 0 0 22px; border-radius: 0; display: block; }
-.cst { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 16px; padding: 14px 0; border-top: 1px solid var(--c-rule); }
+.cst { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 2px 18px; padding: 13px 0; border-top: 1px solid var(--c-rule); }
 .cst:last-child { border-bottom: 1px solid var(--c-rule); }
-.cst-k { grid-column: 1; font: 700 15px var(--f-text); color: var(--c); }
-.cst-s { grid-column: 1; font-size: 13px; color: var(--c-sub); }
+.cst-k { grid-column: 1; grid-row: 1; display: flex; align-items: center; gap: 8px; font: 700 15px var(--f-text); color: var(--c); }
+.cst-i { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--ci); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.cst-s { grid-column: 1; grid-row: 2; font-size: 13px; color: var(--c-sub); }
 .cst-s b { color: var(--c-ink); }
-.cst-v { grid-column: 2; grid-row: 1 / 3; text-align: right; font: 800 34px/1 var(--f-poster); letter-spacing: -.03em; color: var(--c-ink); white-space: nowrap; }
+.cst-v { grid-column: 2; grid-row: 1 / 3; text-align: right; font: 800 30px/1 var(--f-poster); letter-spacing: -.03em; color: var(--c-ink); white-space: nowrap; }
 .cst-v small { display: block; font: 600 12px var(--f-text); color: var(--c-sub); letter-spacing: 0; margin-bottom: 4px; }
 .cst-v i { font: 600 14px var(--f-text); font-style: normal; color: var(--c-sub); letter-spacing: 0; margin-left: 2px; }
-.hero-grid.in .me-hint { grid-column: 1 / -1; margin: 0 0 12px; }
-/* «Продовжити з того місця, де зупинився» */
-.cont { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px 22px; padding: 18px 24px; margin: 4px 0 14px; background: var(--cont-bg); color: var(--cont-ink); border-radius: 16px; }
-.cont:empty, body.compact .cont { display: none; }
-.cont-g { font: 900 60px/.8 var(--f-poster); color: var(--cont-g); letter-spacing: -.05em; min-width: 52px; }
-.cont-t small { display: block; font: 600 13px var(--f-text); color: var(--cont-sub); }
-.cont-t b { display: block; margin-top: 3px; font: 800 22px/1.15 var(--f-poster); letter-spacing: -.025em; }
-.cont-t em { font: 500 14px var(--f-text); font-style: normal; color: var(--cont-sub); }
-.cont-bar { display: block; max-width: 360px; height: 5px; margin-top: 10px; border-radius: 3px; background: var(--cont-bar); overflow: hidden; }
-.cont-bar i { display: block; height: 100%; background: var(--cont-fill); }
-.cont-go { font: 800 15px var(--f-poster); color: var(--go-ink); background: var(--go-bg); border: 0; border-radius: 10px; padding: 15px 24px; white-space: nowrap; cursor: pointer; }
-.cont-go:hover { filter: brightness(1.15); }
-.cont-go:focus-visible { outline: 3px solid var(--cont-g); outline-offset: 2px; }
-/* Розділи-літери (комп’ютер) */
-.secnav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin: 6px 0 16px; background: var(--sn-line); border: 1px solid var(--sn-line); border-radius: 16px; overflow: hidden; }
+.cst-go { grid-column: 3; grid-row: 1 / 3; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font: 700 14px var(--f-text); color: var(--go-ink); background: none; border: 1px solid var(--go-b); border-radius: 10px; padding: 10px 16px; white-space: nowrap; cursor: pointer; }
+.cst.main .cst-go { background: var(--go-main); color: var(--go-main-ink); border-color: var(--go-main); }
+.cst-go:hover { box-shadow: inset 0 0 0 1px var(--go-ink); }
+.cst.main .cst-go:hover { filter: brightness(1.08); box-shadow: none; }
+.cst-go:focus-visible { outline: 3px solid var(--c-ink); outline-offset: 2px; }
+.cst-gi { width: 15px; height: 15px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.cst-gi.pl { fill: currentColor; stroke: none; }
+.hero-grid.in .me-hint { grid-column: 1 / -1; margin: 0 0 12px; color: var(--c-sub); }
+/* Розділи (комп’ютер): назви в ряд, під активною — лінія, що переїжджає */
+.secnav { position: relative; display: flex; flex-wrap: wrap; gap: 4px 34px; margin: 8px 0 14px; padding: 0; border-bottom: 1px solid var(--sn-line); }
 .secnav:empty, body.compact .secnav { display: none; }
-.sn { --c: var(--k1); display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 2px 12px; padding: 14px 16px 16px; background: var(--sn-bg); color: var(--c-sub); border: 0; font: inherit; text-align: left; cursor: pointer; min-width: 0; }
-.sn.nv-zno { --c: var(--k2); } .sn.nv-nmt { --c: var(--k3); } .sn.nv-fix { --c: var(--k4); }
-.sn-g { grid-row: span 2; width: 36px; font: 900 34px/1 var(--f-poster); color: var(--c); }
-.sn b { font: 700 16px/1.2 var(--f-text); color: var(--c-ink); }
-.sn small { font-size: 13px; color: var(--sn-sub); }
-.sn:hover { background: var(--sn-hover); }
-.sn[aria-current] { background: var(--sn-on); box-shadow: inset 0 -4px 0 var(--c); }
-.sn[aria-current] small { color: var(--c-sub); }
-.sn:focus-visible { outline: 3px solid var(--sn-focus); outline-offset: -3px; }
-.sn-n { display: inline-block; margin-left: 6px; vertical-align: 2px; font: 700 11px/16px var(--f-text); color: var(--c-sub); border: 1px solid var(--sn-n); border-radius: 9px; padding: 0 6px; }
-@media (max-width: 900px) { .sn { padding: 12px; gap: 2px 8px; } .sn-g { font-size: 26px; width: 26px; } .sn b { font-size: 14px; } .sn small { display: none; } }
+.sn { display: inline-flex; align-items: center; gap: 8px; padding: 6px 0 14px; background: none; border: 0; color: var(--sn-sub); font: 700 17px var(--f-text); white-space: nowrap; cursor: pointer; }
+.sn:hover, .sn[aria-current] { color: var(--c-ink); }
+.sn:focus-visible { outline: 2px solid var(--sn-focus); outline-offset: 2px; border-radius: 4px; }
+.sn-n { font: 700 12px/18px var(--f-text); color: var(--sn-sub); border: 1px solid var(--sn-n); border-radius: 10px; padding: 0 7px; }
+.sn-pl { position: absolute; left: 0; bottom: -2px; width: 0; height: 3px; border-radius: 3px; background: var(--sn-on); pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .sn-pl { transition: transform .28s cubic-bezier(.3, .7, .2, 1), width .28s cubic-bezier(.3, .7, .2, 1); } }
+@media (max-width: 900px) { .secnav { gap: 4px 22px; } .sn { font-size: 15px; } }
 /* Бокове й нижнє меню: однотонні, тонкі значки; кольори за темою */
 .drawer, .bnav { --m-bg: #fff; --m-ink: #12163a; --m-sub: #5b6480; --m-ic: #6b7193; --m-line: #e3e6f0; --m-hover: #f2f4fa; --m-on-bg: #12163a; --m-on-ink: #fff; --m-n: #c9cfe6; }
 :root[data-theme="dark"] .drawer, :root[data-theme="dark"] .bnav { --m-bg: #0d1030; --m-ink: #fff; --m-sub: #c9cdfb; --m-ic: #8f94bf; --m-line: #2a3068; --m-hover: #161b46; --m-on-bg: #fff; --m-on-ink: #12163a; --m-n: #3b43a0; }
@@ -1321,18 +1325,15 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
   .cme-big { left: auto; right: -8px; top: 8px; font-size: 190px; }
   .cme-name { font-size: 32px; }
   .cst { padding: 10px 0; }
-  .cst-v { font-size: 26px; }
-  .cont { grid-template-columns: auto minmax(0, 1fr); gap: 12px 14px; padding: 16px; margin-top: 14px; }
-  .cont-g { font-size: 46px; min-width: 40px; }
-  .cont-t b { font-size: 18px; }
-  .cont-bar { display: none; }
-  .cont-go { grid-column: 1 / -1; padding: 13px; }
+  .cst { grid-template-columns: minmax(0, 1fr) auto; }
+  .cst-v { font-size: 24px; }
+  .cst-go { grid-column: 1 / -1; grid-row: 3; margin-top: 8px; padding: 9px; }
 }
 </style>
 
 </head>
 <body>
-<script src="splash.js?v=47"></script>
+<script src="splash.js?v=48"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
@@ -1357,7 +1358,6 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
         <p class="hint me-hint" id="me-hint" hidden></p>
       </section>
     </div>
-    <div class="cont" id="cont"></div>
     <nav class="secnav" id="secnav" aria-label="Розділи сайту"></nav>
     <div class="who" id="who"><span>Учень: <b id="who-name"></b></span><button class="btn small ghost" id="who-change">Профіль</button></div>
   </div>
@@ -1398,17 +1398,17 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=47"></script>
-<script src="data-extra.js?v=47"></script>
-<script src="data-morph.js?v=47"></script>
-<script src="engine.js?v=47"></script>
-<script src="zno-app.js?v=47"></script>
-<script src="nmt-app.js?v=47"></script>
-<script src="fix-app.js?v=47"></script>
-<script src="theory-app.js?v=47"></script>
-<script src="plus-app.js?v=47"></script>
-<script src="exam-app.js?v=47"></script>
-<script src="show-app.js?v=47"></script>
+<script src="data.js?v=48"></script>
+<script src="data-extra.js?v=48"></script>
+<script src="data-morph.js?v=48"></script>
+<script src="engine.js?v=48"></script>
+<script src="zno-app.js?v=48"></script>
+<script src="nmt-app.js?v=48"></script>
+<script src="fix-app.js?v=48"></script>
+<script src="theory-app.js?v=48"></script>
+<script src="plus-app.js?v=48"></script>
+<script src="exam-app.js?v=48"></script>
+<script src="show-app.js?v=48"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1459,7 +1459,7 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "47", THEORY = {}, theoryLoading = {};
+  const VER = "48", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
@@ -1888,11 +1888,14 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
   }
 
   /* ───── Рендер ───── */
-  /* Статистика учня: тренажер, ЗНО, НМТ. Точність — частка правильних серед виконаних. */
+  /* Статистика учня: тренажер, ЗНО, НМТ. Точність — частка правильних серед виконаних.
+     У кожному рядку кнопка, що веде туди, де учень зупинився; кнопка розділу, де він був останнім, залита. */
+  const playI = '<svg class="cst-gi pl" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
+  const plusI = '<svg class="cst-gi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
   function renderOverall() {
     const box = $("#overall");
     document.body.classList.toggle("me-in", loggedIn());
-    if (!loggedIn()) { box.innerHTML = ""; $("#cont").innerHTML = ""; return; }
+    if (!loggedIn()) { box.innerHTML = ""; return; }
     const s = me(); let a = 0, c = 0;
     T.forEach(t => { const st = statsOf(s && s.topics[t.id] ? s.topics[t.id].r : EMPTY); a += st.a; c += st.c; });
     const total = T.length * N;
@@ -1900,25 +1903,29 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
     const z = Z.overall(), zt = z.total || 2077, nm = NM.summary();
     const pc = (x, y) => Math.round(x / y * 100);
     const fmt = n => n.toLocaleString("uk-UA");
-    const row = (c, title, line, cap, big) => `<div class="cst" style="--c:${c}"><span class="cst-k">${title}</span><span class="cst-v"><small>${cap}</small>${big}</span><span class="cst-s">${line}</span></div>`;
-    box.innerHTML = row("var(--k1)", "Тренажер", `виконано <b>${fmt(a)}</b> із ${fmt(total)}`, "правильно", a ? pc(c, a) + "&nbsp;%" : "—")
-      + row("var(--k2)", "Завдання ЗНО", `виконано <b>${fmt(z.done)}</b> із ${fmt(zt)}`, "правильно", z.done ? pc(z.ok, z.done) + "&nbsp;%" : "—")
-      + row("var(--k3)", "Симуляції НМТ", nm.sims ? `пройдено <b>${nm.tests}</b> із ${nm.total || "—"} тестів` : "спробуйте перший тест", "найкращий бал", nm.bestS ? `${nm.bestS}<i>/200</i>` : "—");
-    $("#cont").innerHTML = contHtml(s);
+    const main = ["trainer", "zno", "nmt"].includes(s.lastSec) ? s.lastSec : "trainer";
+    const ic = id => NAV.find(n => n.id === id).ic.replace("<svg ", '<svg class="cst-i" ');
+    const go = (sec, attrs, label, icon, what) => `<button class="cst-go" type="button" ${attrs}${what ? ` aria-label="${esc(label + ": " + what)}" title="${esc(what)}"` : ""}>${icon}${label}</button>`;
+    const row = (sec, n, title, line, cap, big, btn) => `<div class="cst${main === sec ? " main" : ""}" style="--c:var(--k${n});--ci:var(--i${n})"><span class="cst-k">${ic(sec)}${title}</span><span class="cst-v"><small>${cap}</small>${big}</span>${btn}<span class="cst-s">${line}</span></div>`;
+    const tn = trainerNext(s), zn = Z.nextTopic(s.lastZ), nn = NM.nextTest();
+    const tBtn = tn ? go("trainer", `data-open="${tn.t.id}" data-tab="tasks"`, tn.started ? "Продовжити" : "Почати", playI, `${tn.t.title}, завдання ${tn.next} зі ${N}`)
+      : go("trainer", 'data-home="trainer"', "До тем", playI);
+    const zBtn = zn ? go("zno", `data-zopen="${esc(zn.id)}" data-tab="tasks"`, zn.a ? "Продовжити" : "Почати", playI, `${zn.title}, завдання ${Math.min(zn.a + 1, zn.n)} з ${zn.n}`)
+      : go("zno", 'data-home="zno"', "До тем", playI);
+    const nBtn = nn ? (nn.live ? go("nmt", `data-nopen="${esc(nn.id)}" data-nstage="exam"`, "Продовжити", playI, nn.title) : go("nmt", `data-nopen="${esc(nn.id)}" data-nstage="rules"`, "Новий тест", plusI, nn.title))
+      : go("nmt", 'data-home="nmt"', "До тестів", playI);
+    box.innerHTML = row("trainer", 1, "Тренажер", `виконано <b>${fmt(a)}</b> із ${fmt(total)}`, "правильно", a ? pc(c, a) + "&nbsp;%" : "—", tBtn)
+      + row("zno", 2, "Завдання ЗНО", `виконано <b>${fmt(z.done)}</b> із ${fmt(zt)}`, "правильно", z.done ? pc(z.ok, z.done) + "&nbsp;%" : "—", zBtn)
+      + row("nmt", 3, "Симуляції НМТ", nm.sims ? `пройдено <b>${nm.tests}</b> із ${nm.total || "—"} тестів` : "спробуйте перший тест", "найкращий бал", nm.bestS ? `${nm.bestS}<i>/200</i>` : "—", nBtn);
   }
-  /* «Продовжити з того місця, де зупинився»: остання відкрита тема тренажера, інакше перша незавершена. */
-  function contHtml(s) {
+  /* Куди «Продовжити» в тренажері: остання відкрита тема, інакше перша почата, інакше перша незавершена. */
+  function trainerNext(s) {
     const st = id => statsOf(s.topics[id] ? s.topics[id].r : EMPTY);
     let t = T.find(x => x.id === s.lastT);
     if (!t || st(t.id).a >= N) t = T.find(x => { const v = st(x.id).a; return v > 0 && v < N; }) || T.find(x => st(x.id).a < N);
-    if (!t) return "";
-    const v = st(t.id), r = s.topics[t.id] ? s.topics[t.id].r : EMPTY, next = Math.max(0, r.indexOf(".")) + 1;
-    const sec = (S.find(x => x.id === t.sec) || {}).title || "";
-    const started = v.a > 0;
-    return `<span class="cont-g" aria-hidden="true">${esc(t.title.trim()[0].toUpperCase())}</span>
-      <div class="cont-t"><small>${started ? "Продовжити з того місця, де зупинився" : "З чого почати"}</small><b>${esc(t.title)}</b><em>${esc(sec)}${sec ? ", " : ""}завдання ${next} зі ${N}</em>
-      <span class="cont-bar" aria-hidden="true"><i style="width:${v.a / N * 100}%"></i></span></div>
-      <button class="cont-go" type="button" data-open="${t.id}" data-tab="tasks">${started ? "Продовжити" : "Почати"}</button>`;
+    if (!t) return null;
+    const r = s.topics[t.id] ? s.topics[t.id].r : EMPTY;
+    return { t, next: Math.max(0, r.indexOf(".")) + 1, started: st(t.id).a > 0 };
   }
 
   function render() {
@@ -1980,9 +1987,25 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
   }
   function secHtml() {
     const cur = navCur(), nfix = loggedIn() ? FX.openCount() : 0;
-    return NAV.map(n => `<button class="sn nv-${n.id}" type="button" data-home="${n.id}"${cur === n.id ? ' aria-current="page"' : ""}><span class="sn-g" aria-hidden="true">${n.g}</span><b>${n.title}${n.id === "fix" && nfix ? `<span class="sn-n" aria-label="відкритих помилок: ${nfix}">${nfix > 99 ? "99+" : nfix}</span>` : ""}</b><small>${n.sub}</small></button>`).join("");
+    return NAV.map(n => `<button class="sn nv-${n.id}" type="button" data-home="${n.id}"${cur === n.id ? ' aria-current="page"' : ""}>${n.title}${n.id === "fix" && nfix ? `<span class="sn-n" aria-label="відкритих помилок: ${nfix}">${nfix > 99 ? "99+" : nfix}</span>` : ""}</button>`).join("") + '<span class="sn-pl" aria-hidden="true"></span>';
   }
-  function updateNav() { $("#bnav").innerHTML = navHtml("bn"); $("#dr-nav").innerHTML = navHtml("dr-it"); $("#secnav").innerHTML = secHtml(); }
+  function updateNav() {
+    $("#bnav").innerHTML = navHtml("bn"); $("#dr-nav").innerHTML = navHtml("dr-it");
+    const old = $("#secnav .sn-pl"), prev = old && old.offsetWidth ? { w: old.style.width, t: old.style.transform } : null;
+    $("#secnav").innerHTML = secHtml(); placeSn(prev);
+  }
+  /* Лінія під активним розділом: переїжджає з попереднього місця під новий розділ. */
+  function placeSn(prev) {
+    const pl = $("#secnav .sn-pl"), b = $("#secnav .sn[aria-current]");
+    if (!pl) return;
+    pl.hidden = !b; if (!b || !b.offsetWidth) return;
+    pl.style.transition = "none";
+    if (prev) { pl.style.width = prev.w; pl.style.transform = prev.t; void pl.offsetWidth; pl.style.transition = ""; }
+    pl.style.width = b.offsetWidth + "px"; pl.style.transform = `translateX(${b.offsetLeft}px)`;
+    if (!prev) { void pl.offsetWidth; pl.style.transition = ""; }
+  }
+  window.addEventListener("resize", () => placeSn());
+  if (document.fonts) document.fonts.ready.then(() => placeSn());
   function goSection(id) {
     if (NM.inExam()) { toast("Спершу завершіть тест НМТ."); return; }
     store.home = id; saveLocal(); ui.view = "home"; confirmReset = false; render();
@@ -2278,7 +2301,7 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
     return false;
   }
   function openTopic(id, tab) {
-    const s = me(); if (s && T.some(x => x.id === id)) { s.lastT = id; saveLocal(); }
+    const s = me(); if (s && T.some(x => x.id === id)) { s.lastT = id; s.lastSec = "trainer"; saveLocal(); }
     ui = Object.assign(ui, { view: "topic", topic: id, tab, reviewing: false }); confirmReset = false; pend = null; jumpFirst(); render(); window.scrollTo(0, 0);
   }
   function jumpFirst() {
@@ -2435,7 +2458,13 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !drawer.hidden) closeDrawer(true); });
   $("#bnav").addEventListener("click", e => { const b = e.target.closest("[data-nav]"); if (b) goSection(b.dataset.nav); });
   $("#secnav").addEventListener("click", e => { const b = e.target.closest("[data-home]"); if (!b || NM.inExam()) return; store.home = b.dataset.home; saveLocal(); render(); });
-  $("#cont").addEventListener("click", e => { const b = e.target.closest("[data-open]"); if (b) openTopic(b.dataset.open, b.dataset.tab); });
+  $("#overall").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || NM.inExam()) return;
+    const d = b.dataset;
+    if (d.open) openTopic(d.open, d.tab);
+    else if (d.home) goSection(d.home);
+    else if (!NM.onClick(b)) Z.onClick(b);
+  });
 
   /* Кнопка «Теорія» під час виконання завдань теми. */
   const fab = $("#fab-theory");
