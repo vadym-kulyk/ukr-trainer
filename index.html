@@ -14,12 +14,12 @@
 /* Layout: одна центральна колонка (макс. 860px) — шапка з ім’ям, картки тем, екран теми з вкладками «Теорія / Завдання». */
 :root {
   /* «Дослівно»: зошит і ручки — синє чорнило (основний колір), бірюзова позначка вибору, зелена й червона ручка вчителя, жовтий маркер. */
-  --lime: #2445c7; --on-lime: #ffffff; --violet: #0d7a85; --yellow: #e5b33a;
+  --lime: #2433d6; --on-lime: #ffffff; --violet: #0d7a85; --yellow: #e5b33a;
   --stress: #b0245f; --stress-bg: #fbe3ee;
   --wrong: #c2382b; --right: #1e7f4f;
   --bg: #ffffff; --surface: #f5f7fb; --surface-2: #eaeef6; --line: #d9e0ec; --text: #18223a;
   --muted: color-mix(in srgb, var(--text) 64%, transparent);
-  --lime-ink: #2445c7; --violet-ink: #0a6670; --marker: #ffe58a;
+  --lime-ink: #2433d6; --violet-ink: #0a6670; --marker: #ffe58a;
   --right-bg: color-mix(in srgb, var(--right) 11%, transparent);
   --wrong-bg: color-mix(in srgb, var(--wrong) 10%, transparent);
   --f-display: 'Onest', 'Segoe UI', system-ui, sans-serif;
@@ -853,7 +853,7 @@ body.compact .wordmark { font-size: 22px; }
 
 /* ═════ «Дослівно», другий шар: розбір речення, знаки тем, кольори розділів ═════ */
 :root { --grid: rgb(36 69 199 / .07); --margin: rgb(194 56 43 / .45); --f-book: 'Literata', Georgia, 'Times New Roman', serif;
-  --s11: #0d7a85; --s12: #2445c7; --s13: #a65f00; --s14: #2e7d4f; --s16: #8b3a9e; --sc: var(--lime); }
+  --s11: #0d7a85; --s12: #2433d6; --s13: #a65f00; --s14: #2e7d4f; --s16: #8b3a9e; --sc: var(--lime); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --grid: rgb(143 166 255 / .07); --margin: rgb(255 128 114 / .4); --s11: #46bfcb; --s12: #8fa6ff; --s13: #e3b05a; --s14: #6fcf97; --s16: #d59be3; } }
 :root[data-theme="dark"] { --grid: rgb(143 166 255 / .07); --margin: rgb(255 128 114 / .4); --s11: #46bfcb; --s12: #8fa6ff; --s13: #e3b05a; --s14: #6fcf97; --s16: #d59be3; }
 [data-sec="1.1"] { --sc: var(--s11); } [data-sec="1.2"] { --sc: var(--s12); } [data-sec="1.3"] { --sc: var(--s13); } [data-sec="1.4"] { --sc: var(--s14); } [data-sec="1.6"] { --sc: var(--s16); }
@@ -1226,7 +1226,7 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
 /* ══ Головна «Літери»: шапка учня з великою літерою, статистика з кнопками, розділи з ковзною лінією, однотонні меню ══ */
 /* Кольори: світла тема — синя шапка учня (до входу — світла); темна тема — темно-синя */
 .hero, .secnav { --c-ink: #12163a; --c-sub: #5b6480; --c-rule: #dfe4ee; --c-big: #dfe3ff; --c-chip: #c9cfe6; --c-chip-bg: rgb(255 255 255 / .7);
-  --k1: #2445c7; --k2: #1e8a5a; --k3: #b07300; --k4: #d6336c; --i1: #2445c7; --i2: #1e8a5a; --i3: #b07300;
+  --k1: #2433d6; --k2: #1e8a5a; --k3: #b07300; --k4: #d6336c; --i1: #2433d6; --i2: #1e8a5a; --i3: #b07300;
   --go-b: #c9cfe6; --go-ink: #12163a; --go-main: #12163a; --go-main-ink: #fff;
   --sn-line: #dfe4ee; --sn-sub: #5b6480; --sn-on: #12163a; --sn-n: #c9cfe6; --sn-focus: #12163a; }
 :root[data-theme="light"] body.me-in:not(.compact) .hero, :root[data-theme="light"] body.me-in:not(.compact) .secnav { --bg: var(--cobalt); --surface: #3442e0; --surface-2: #4553ea; --line: rgb(255 255 255 / .35); --text: #fff; --muted: #c9cdfb;
