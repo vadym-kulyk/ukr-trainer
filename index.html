@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="Тренажер з української мови: фонетика, орфографія, лексика. Теорія та 100 завдань з кожної теми.">
 <title>Дослівно — тренажер з української мови</title>
-<script src="theme.js?v=48"></script>
+<script src="theme.js?v=49"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800;900&family=Onest:wght@400;500;600;700;800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap">
@@ -1224,23 +1224,23 @@ body[data-sec] main > .ctl-home { margin-top: 16px; }
 @media (min-width: 641px) { .hero-grid.in .login .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* ══ Головна «Літери»: шапка учня з великою літерою, статистика з кнопками, розділи з ковзною лінією, однотонні меню ══ */
-/* Кольори: світла тема — синя шапка учня (до входу — світла); темна тема — темно-синя */
+/* Кольори: світла тема — приглушено-синя шапка учня (до входу — світла); темна тема — темно-синя */
 .hero, .secnav { --c-ink: #12163a; --c-sub: #5b6480; --c-rule: #dfe4ee; --c-big: #dfe3ff; --c-chip: #c9cfe6; --c-chip-bg: rgb(255 255 255 / .7);
   --k1: #2445c7; --k2: #1e8a5a; --k3: #b07300; --k4: #d6336c; --i1: #2445c7; --i2: #1e8a5a; --i3: #b07300;
   --go-b: #c9cfe6; --go-ink: #12163a; --go-main: #12163a; --go-main-ink: #fff;
   --sn-line: #dfe4ee; --sn-sub: #5b6480; --sn-on: #12163a; --sn-n: #c9cfe6; --sn-focus: #12163a; }
-:root[data-theme="light"] body.me-in:not(.compact) .hero, :root[data-theme="light"] body.me-in:not(.compact) .secnav { --bg: var(--cobalt); --surface: #3442e0; --surface-2: #4553ea; --line: rgb(255 255 255 / .35); --text: #fff; --muted: #c9cdfb;
-  --c-ink: #fff; --c-sub: #d5d9ff; --c-rule: rgb(255 255 255 / .22); --c-big: #3b4ae8; --c-chip: rgb(255 255 255 / .35); --c-chip-bg: transparent;
+:root[data-theme="light"] body.me-in:not(.compact) .hero, :root[data-theme="light"] body.me-in:not(.compact) .secnav { --bg: #2c379f; --surface: #3642a8; --surface-2: #414db2; --line: rgb(255 255 255 / .32); --text: #fff; --muted: #c3c8ef;
+  --c-ink: #fff; --c-sub: #c3c8ef; --c-rule: rgb(255 255 255 / .18); --c-big: #36429f; --c-chip: rgb(255 255 255 / .32); --c-chip-bg: transparent;
   --k1: #fff; --k2: #fff; --k3: #fff; --i1: #c9d4ff; --i2: #9fe6c4; --i3: #ffe08a;
-  --go-b: rgb(255 255 255 / .45); --go-ink: #fff; --go-main: #fff; --go-main-ink: var(--cobalt);
-  --sn-line: rgb(255 255 255 / .22); --sn-sub: #c9cdfb; --sn-on: #fff; --sn-n: rgb(255 255 255 / .4); --sn-focus: #fff; }
-@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body.me-in:not(.compact) .hero, :root:not([data-theme="dark"]) body.me-in:not(.compact) .secnav { --bg: var(--cobalt); --surface: #3442e0; --surface-2: #4553ea; --line: rgb(255 255 255 / .35); --text: #fff; --muted: #c9cdfb;
-  --c-ink: #fff; --c-sub: #d5d9ff; --c-rule: rgb(255 255 255 / .22); --c-big: #3b4ae8; --c-chip: rgb(255 255 255 / .35); --c-chip-bg: transparent;
+  --go-b: rgb(255 255 255 / .4); --go-ink: #fff; --go-main: #fff; --go-main-ink: #2c379f;
+  --sn-line: rgb(255 255 255 / .18); --sn-sub: #c3c8ef; --sn-on: #fff; --sn-n: rgb(255 255 255 / .4); --sn-focus: #fff; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body.me-in:not(.compact) .hero, :root:not([data-theme="dark"]) body.me-in:not(.compact) .secnav { --bg: #2c379f; --surface: #3642a8; --surface-2: #414db2; --line: rgb(255 255 255 / .32); --text: #fff; --muted: #c3c8ef;
+  --c-ink: #fff; --c-sub: #c3c8ef; --c-rule: rgb(255 255 255 / .18); --c-big: #36429f; --c-chip: rgb(255 255 255 / .32); --c-chip-bg: transparent;
   --k1: #fff; --k2: #fff; --k3: #fff; --i1: #c9d4ff; --i2: #9fe6c4; --i3: #ffe08a;
-  --go-b: rgb(255 255 255 / .45); --go-ink: #fff; --go-main: #fff; --go-main-ink: var(--cobalt);
-  --sn-line: rgb(255 255 255 / .22); --sn-sub: #c9cdfb; --sn-on: #fff; --sn-n: rgb(255 255 255 / .4); --sn-focus: #fff; } }
-:root[data-theme="light"] body.me-in:not(.compact) .hero { background: var(--cobalt); background-image: none; color: #fff; }
-@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body.me-in:not(.compact) .hero { background: var(--cobalt); background-image: none; color: #fff; } }
+  --go-b: rgb(255 255 255 / .4); --go-ink: #fff; --go-main: #fff; --go-main-ink: #2c379f;
+  --sn-line: rgb(255 255 255 / .18); --sn-sub: #c3c8ef; --sn-on: #fff; --sn-n: rgb(255 255 255 / .4); --sn-focus: #fff; } }
+:root[data-theme="light"] body.me-in:not(.compact) .hero { background: #2c379f; background-image: none; color: #fff; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body.me-in:not(.compact) .hero { background: #2c379f; background-image: none; color: #fff; } }
 :root[data-theme="dark"] .hero, :root[data-theme="dark"] .secnav { --c-ink: #fff; --c-sub: #a7abd0; --c-rule: #2a3068; --c-big: var(--cobalt); --c-chip: #3b43a0; --c-chip-bg: rgb(18 22 58 / .6);
   --k1: #8fa6ff; --k2: #52c48d; --k3: #ffc94d; --k4: #ff7aa8; --i1: #8fa6ff; --i2: #52c48d; --i3: #ffc94d;
   --go-b: #3b43a0; --go-ink: #fff; --go-main: #fff; --go-main-ink: #12163a;
@@ -1333,7 +1333,7 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
 
 </head>
 <body>
-<script src="splash.js?v=48"></script>
+<script src="splash.js?v=49"></script>
 <header class="hero">
   <div class="wrap">
     <div class="brand">
@@ -1398,17 +1398,17 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
 </div>
 
 <script src="config.js"></script>
-<script src="data.js?v=48"></script>
-<script src="data-extra.js?v=48"></script>
-<script src="data-morph.js?v=48"></script>
-<script src="engine.js?v=48"></script>
-<script src="zno-app.js?v=48"></script>
-<script src="nmt-app.js?v=48"></script>
-<script src="fix-app.js?v=48"></script>
-<script src="theory-app.js?v=48"></script>
-<script src="plus-app.js?v=48"></script>
-<script src="exam-app.js?v=48"></script>
-<script src="show-app.js?v=48"></script>
+<script src="data.js?v=49"></script>
+<script src="data-extra.js?v=49"></script>
+<script src="data-morph.js?v=49"></script>
+<script src="engine.js?v=49"></script>
+<script src="zno-app.js?v=49"></script>
+<script src="nmt-app.js?v=49"></script>
+<script src="fix-app.js?v=49"></script>
+<script src="theory-app.js?v=49"></script>
+<script src="plus-app.js?v=49"></script>
+<script src="exam-app.js?v=49"></script>
+<script src="show-app.js?v=49"></script>
 <script>
 (function () {
   const T = window.TOPICS, S = window.SECTIONS, E = window.MGEngine, N = E.TOTAL;
@@ -1459,7 +1459,7 @@ body.me-in:not(.compact) .hero .wrap { padding-block: 14px 6px; gap: 6px; }
   const topicStats = id => { const s = me(); return statsOf(s && s.topics[id] ? s.topics[id].r : EMPTY); };
 
   /* ───── Теорія тем тренажера: theory/<id>.html, завантажуємо під час першого відкриття ───── */
-  const VER = "48", THEORY = {}, theoryLoading = {};
+  const VER = "49", THEORY = {}, theoryLoading = {};
   function loadTheoryFile(id) {
     if (THEORY[id] != null) return Promise.resolve(THEORY[id]);
     if (!theoryLoading[id]) theoryLoading[id] = fetch("theory/" + id + ".html?v=" + VER).then(r => r.ok ? r.text() : Promise.reject(r.status))
